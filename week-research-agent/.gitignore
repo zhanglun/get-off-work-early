@@ -1,0 +1,12 @@
+# 千万别把 API Key 提交到 git！
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# 日志
+*.log
