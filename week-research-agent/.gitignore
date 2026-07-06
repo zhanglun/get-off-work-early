@@ -8,5 +8,6 @@ __pycache__/
 .venv/
 venv/
 
-# 日志
+# 日志（运行时生成的临时数据，不进仓库）
 *.log
+logs/
