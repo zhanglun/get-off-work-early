@@ -83,8 +83,49 @@ def read_file(path: str) -> dict:
             return {"success": True, "result": f.read()}
     except FileNotFoundError:
         return {"success": False, "result": f"文件不存在：{path}"}
+    except IsADirectoryError:
+        # 明确告诉 LLM：这是目录，请改用 list_dir
+        # 这样 LLM 收到错误后能自主切换到正确的工具
+        return {"success": False, "result": f"路径是目录，不是文件：{path}（请改用 list_dir 工具）"}
     except Exception as e:
         return {"success": False, "result": f"读取失败：{type(e).__name__}: {e}"}
+
+
+# ============================================================
+# 工具 2.5：list_dir（列目录，本地操作）
+# ============================================================
+def list_dir(path: str = ".") -> dict:
+    """
+    列出目录下的文件和子目录。
+
+    用 os.scandir 比 os.listdir 更高效，且能拿到「是文件还是目录」的信息。
+    返回结构化列表，方便 LLM 直接总结。
+    """
+    try:
+        import os
+        if not os.path.exists(path):
+            return {"success": False, "result": f"目录不存在：{path}"}
+        if not os.path.isdir(path):
+            return {"success": False, "result": f"路径不是目录：{path}（请改用 read_file 工具）"}
+
+        entries = []
+        with os.scandir(path) as it:
+            # 按名字排序，输出稳定
+            for entry in sorted(it, key=lambda e: e.name):
+                entries.append({
+                    "name": entry.name,
+                    "type": "dir" if entry.is_dir() else "file",
+                    "size": entry.stat().st_size if entry.is_file() else None,
+                })
+
+        return {
+            "success": True,
+            "path": path,
+            "count": len(entries),
+            "entries": entries,
+        }
+    except Exception as e:
+        return {"success": False, "result": f"列目录失败：{type(e).__name__}: {e}"}
 
 
 # ============================================================

@@ -14,6 +14,8 @@ import json
 import sys
 import os
 import time
+from dataclasses import dataclass
+from typing import Any
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -22,7 +24,7 @@ from config import Config
 
 # Day 4 新增：日志系统（必须先 import，因为后面要用）
 from logger import setup_logger, save_run_summary
-from tools import add, read_file, search_web
+from tools import add, read_file, list_dir, search_web
 from schemas import TOOLS_SCHEMA, RESPONSE_FORMAT
 
 # 复用 Day 3 的 State（代码资产积累）
@@ -34,13 +36,29 @@ _day3_state_path = os.path.join(
 _spec = importlib.util.spec_from_file_location("day3_state", _day3_state_path)
 _day3_state_module = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_day3_state_module)
-AgentState = _day3_state_module.AgentState
+_Day3AgentState = _day3_state_module.AgentState
 ToolCallRecord = _day3_state_module.ToolCallRecord
+
+
+# ============================================================
+# Day 4 专属 State：继承 Day 3 的 AgentState，新增结构化输出字段
+# ============================================================
+# 为什么用继承而不是改 Day 3 的 state.py？
+# - 体现"代码资产积累"：Day 3 的 State 不动，Day 4 在它上面扩展
+# - @dataclass 继承会自动把 structured_answer 加入 __init__/__repr__/__eq__
+#   避免"运行时给对象加属性"导致字段被序列化/打印/比较时漏掉
+# 注意：dataclass 继承时，父类带默认值的字段，子类新字段也必须给默认值，
+#       否则参数顺序冲突（Python dataclass 的已知约束）。
+@dataclass
+class AgentState(_Day3AgentState):
+    """Day 4 Agent 状态：Day 3 状态 + 结构化输出。"""
+    structured_answer: Any = None  # 结构化输出模式下的解析结果（dict 或 None）
 
 
 TOOL_REGISTRY = {
     "add": add,
     "read_file": read_file,
+    "list_dir": list_dir,
     "search_web": search_web,
 }
 

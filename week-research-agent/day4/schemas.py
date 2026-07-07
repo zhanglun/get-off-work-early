@@ -54,6 +54,27 @@ TOOLS_SCHEMA = [
     {
         "type": "function",
         "function": {
+            "name": "list_dir",
+            "description": (
+                "列出目录下的文件和子目录（不含文件内容）。"
+                "当用户问'当前目录有什么''列一下文件夹''查看目录结构'时使用。"
+                "注意：如果要读文件内容，请用 read_file；如果要看目录里有什么，用本工具。"
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "path": {
+                        "type": "string",
+                        "description": "目录路径，默认 '.' 表示当前目录，例如 '.' 或 '..' 或 'day4'",
+                    },
+                },
+                "required": [],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "search_web",
             "description": "联网搜索最新信息。",
             "parameters": {
