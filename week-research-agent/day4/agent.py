@@ -22,31 +22,19 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from zhipuai import ZhipuAI
 from config import Config
 
-# Day 4 新增：日志系统（必须先 import，因为后面要用）
-from logger import setup_logger, save_run_summary
-from tools import add, read_file, list_dir, search_web
-from schemas import TOOLS_SCHEMA, RESPONSE_FORMAT
-
-# 复用 Day 3 的 State（代码资产积累）
-# 注意：要用绝对路径 import，避免和 day4 的 state 冲突
-import importlib.util
-_day3_state_path = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "day3", "state.py"
-)
-_spec = importlib.util.spec_from_file_location("day3_state", _day3_state_path)
-_day3_state_module = importlib.util.module_from_spec(_spec)
-_spec.loader.exec_module(_day3_state_module)
-_Day3AgentState = _day3_state_module.AgentState
-ToolCallRecord = _day3_state_module.ToolCallRecord
+# Day 5 重构：公共代码提到 common/，不再用 importlib 加载 day3/state.py
+from common.logger import setup_logger, save_run_summary
+from common.tools import add, read_file, list_dir, search_web
+from common.schemas import TOOLS_SCHEMA, RESPONSE_FORMAT
+from common.state import AgentState as _Day3AgentState, ToolCallRecord
 
 
 # ============================================================
-# Day 4 专属 State：继承 Day 3 的 AgentState，新增结构化输出字段
+# Day 4 专属 State：继承 common 的 AgentState，新增结构化输出字段
 # ============================================================
-# 为什么用继承而不是改 Day 3 的 state.py？
-# - 体现"代码资产积累"：Day 3 的 State 不动，Day 4 在它上面扩展
+# 为什么用继承？
 # - @dataclass 继承会自动把 structured_answer 加入 __init__/__repr__/__eq__
-#   避免"运行时给对象加属性"导致字段被序列化/打印/比较时漏掉
+#   避免"运行时给对象加属性"导致字段在序列化/打印/比较时漏掉
 # 注意：dataclass 继承时，父类带默认值的字段，子类新字段也必须给默认值，
 #       否则参数顺序冲突（Python dataclass 的已知约束）。
 @dataclass
