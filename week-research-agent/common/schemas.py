@@ -69,10 +69,33 @@ TOOLS_SCHEMA = [
     {
         "type": "function",
         "function": {
+            "name": "fetch_url",
+            "description": (
+                "抓取指定网页的完整正文内容。当某个搜索结果看起来很相关、"
+                "需要深入了解详情时使用——比如 search_web 找到了几篇文章，"
+                "你想读其中一篇的全文而不是摘要。"
+                "注意：先用 search_web 找链接，再用本工具读全文。"
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "url": {
+                        "type": "string",
+                        "description": "要抓取的网页链接（通常来自 search_web 结果中的 link 字段）",
+                    },
+                },
+                "required": ["url"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "search_web",
             "description": (
                 "联网搜索互联网上的最新信息。当用户问需要联网查询的问题时使用，例如"
                 "'搜索...''查一下最近...''2026年最新的...'。适合查新闻、技术动态、实时数据。"
+                "返回多个结果的摘要（每条约 300 字）。如果某条结果很相关想读全文，请用 fetch_url。"
             ),
             "parameters": {
                 "type": "object",

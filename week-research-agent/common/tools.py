@@ -115,15 +115,115 @@ def list_dir(path: str = ".") -> dict:
 
 
 # ============================================================
-# 工具 4：search_web（联网搜索，需要重试 + 超时）
+# 工具 4：fetch_url（抓取网页正文，Day 5 新增）
 # ============================================================
-@retry_with_timeout(timeout=10.0, retries=3)
+# 和 search_web 的区别：
+# - search_web 返回多个结果的「摘要」（每条 300 字，广度优先）
+# - fetch_url 返回单个网页的「完整正文」（几千字，深度优先）
+# 配合使用：先 search_web 找到相关链接，再 fetch_url 读全文。
+@retry_with_timeout(timeout=15.0, retries=2)
+def fetch_url(url: str, max_length: int = 5000) -> dict:
+    """
+    抓取指定 URL 的网页正文。
+
+    用 readability-lxml 自动提取正文（去掉导航/广告/侧边栏）。
+    返回纯文本，方便 LLM 直接阅读。
+
+    参数：
+        url:        网页链接（通常来自 search_web 的结果）
+        max_length: 最多返回多少字符（避免超长网页撑爆上下文）
+    """
+    try:
+        # 延迟导入，加快启动
+        import urllib.request
+        from readability import Document
+
+        req = urllib.request.Request(
+            url,
+            headers={
+                # 伪装成浏览器，否则很多网站会拒绝
+                "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                              "AppleWebKit/537.36 (KHTML, like Gecko) "
+                              "Chrome/120.0.0.0 Safari/537.36",
+            },
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            # 拿到 HTML 字节流，解码成文本
+            html_bytes = resp.read()
+            # 自动探测编码（中文网站常用 gbk 或 utf-8）
+            html = _decode_html(html_bytes, resp.headers.get("Content-Type", ""))
+
+        # readability 提取正文
+        doc = Document(html)
+        title = doc.short_title() or url
+        # summary() 返回正文 HTML，转成纯文本
+        content_html = doc.summary()
+        text = _html_to_text(content_html)
+
+        # 清理多余空白
+        text = " ".join(text.split())
+
+        # 截断到 max_length，避免撑爆 LLM 上下文
+        truncated = False
+        if len(text) > max_length:
+            text = text[:max_length]
+            truncated = True
+
+        return {
+            "success": True,
+            "url": url,
+            "title": title,
+            "content": text,
+            "length": len(text),
+            "truncated": truncated,
+        }
+    except Exception as e:
+        return {"success": False, "result": f"抓取失败：{type(e).__name__}: {e}"}
+
+
+def _decode_html(html_bytes: bytes, content_type: str) -> str:
+    """根据 HTTP 头或 meta 标签探测编码，解码 HTML。"""
+    # 先从 Content-Type 头找编码
+    encoding = "utf-8"
+    if "charset=" in content_type.lower():
+        encoding = content_type.lower().split("charset=")[-1].split(";")[0].strip()
+
+    try:
+        return html_bytes.decode(encoding, errors="replace")
+    except (LookupError, UnicodeDecodeError):
+        # 编码名不合法，退回 utf-8
+        return html_bytes.decode("utf-8", errors="replace")
+
+
+def _html_to_text(html: str) -> str:
+    """简单的 HTML 转纯文本（去标签，保留换行）。"""
+    import re
+    import html as html_module
+    # 把 <p> <br> <div> 等块级标签换成换行
+    text = re.sub(r"<(?:p|br|div|h[1-6]|li)[^>]*>", "\n", html, flags=re.IGNORECASE)
+    # 去掉所有其他标签
+    text = re.sub(r"<[^>]+>", "", text)
+    # 反转义 HTML 实体（&amp; → & 等）
+    text = html_module.unescape(text)
+    return text
+
+
+# ============================================================
+# 工具 5：search_web（联网搜索，需要重试 + 超时）
+# ============================================================
+@retry_with_timeout(timeout=30.0, retries=5)
 def search_web(query: str, count: int = 5) -> dict:
-    """联网搜索（DuckDuckGo，免费无需 key）。"""
+    """联网搜索（DuckDuckGo，免费无需 key）。
+
+    注意：DuckDuckGo 在某些网络环境下偶发超时，所以这里超时和重试都设得比较宽松。
+    """
     from ddgs import DDGS
+    import os
 
     results = []
-    ddgs = DDGS()
+    # ddgs 库需要显式传 proxy 才会走系统代理（否则可能直连被墙）
+    proxy = os.environ.get("HTTPS_PROXY") or os.environ.get("https_proxy")
+    ddgs = DDGS(proxy=proxy) if proxy else DDGS()
     for r in ddgs.text(query, max_results=count):
         results.append({
             "title": r.get("title", ""),

@@ -23,20 +23,23 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from zhipuai import ZhipuAI
 import logging
 from config import Config
-from common.tools import search_web
+from common.tools import search_web, fetch_url
 from common.schemas import TOOLS_SCHEMA
 from common.state import ToolCallRecord
 from research_agent.prompts import RESEARCHER_SYSTEM_PROMPT
 from research_agent.state import ResearchState
 
 
-# 研究阶段只允许搜索（加法/读文件对"研究"没意义，避免 LLM 误用）
+# 研究阶段允许的工具：搜索（找线索）+ 抓取（读全文）
+# 加法/读文件/列目录对"研究"没意义，不给 LLM，避免误用
 RESEARCH_TOOL_REGISTRY = {
     "search_web": search_web,
+    "fetch_url": fetch_url,
 }
 
-# 只把 search_web 的 schema 给 LLM（少而精，降低选择困难）
-RESEARCH_TOOLS_SCHEMA = [t for t in TOOLS_SCHEMA if t["function"]["name"] == "search_web"]
+# 只把研究相关工具的 schema 给 LLM（少而精）
+RESEARCH_TOOL_NAMES = {"search_web", "fetch_url"}
+RESEARCH_TOOLS_SCHEMA = [t for t in TOOLS_SCHEMA if t["function"]["name"] in RESEARCH_TOOL_NAMES]
 
 
 def run_research(state: ResearchState, client: ZhipuAI, logger: logging.Logger,
@@ -78,16 +81,22 @@ def run_research(state: ResearchState, client: ZhipuAI, logger: logging.Logger,
                 break
 
             state.steps += 1
-            logger.info(f"--- 搜索第 {state.steps} 轮 ---")
+            logger.info(f"--- 第 {state.steps} 轮 ---")
             state.messages.append(message.model_dump())
 
             for tool_call in message.tool_calls:
                 fn_name = tool_call.function.name
                 args = json.loads(tool_call.function.arguments)
 
-                logger.info(f"🔎 搜索关键词：{args.get('query', '?')}")
+                # 不同工具打印不同的日志（语义清晰）
+                if fn_name == "search_web":
+                    logger.info(f"🔎 搜索：{args.get('query', '?')}")
+                elif fn_name == "fetch_url":
+                    logger.info(f"📖 读全文：{args.get('url', '?')[:60]}")
+                else:
+                    logger.info(f"🔧 调用：{fn_name}({args})")
 
-                # 执行搜索（search_web 自带 @retry_with_timeout）
+                # 执行工具（都自带 @retry_with_timeout）
                 import time
                 start = time.time()
                 if fn_name not in RESEARCH_TOOL_REGISTRY:
@@ -103,8 +112,16 @@ def run_research(state: ResearchState, client: ZhipuAI, logger: logging.Logger,
                 ))
 
                 ok = "✓" if result.get("success") else "✗"
-                cnt = result.get("count", 0)
-                logger.info(f"   {ok} 找到 {cnt} 条结果（{elapsed:.1f}s）")
+                # 不同工具的"结果规模"指标不同
+                if fn_name == "search_web":
+                    cnt = result.get("count", 0)
+                    logger.info(f"   {ok} 找到 {cnt} 条结果（{elapsed:.1f}s）")
+                elif fn_name == "fetch_url":
+                    length = result.get("length", 0)
+                    truncated = "（已截断）" if result.get("truncated") else ""
+                    logger.info(f"   {ok} 正文 {length} 字符{truncated}（{elapsed:.1f}s）")
+                else:
+                    logger.info(f"   {ok} 完成（{elapsed:.1f}s）")
 
                 # 回传给 LLM
                 state.messages.append({
@@ -141,25 +158,37 @@ def run_research(state: ResearchState, client: ZhipuAI, logger: logging.Logger,
 
 def _extract_findings(state: ResearchState) -> str:
     """
-    从 state 中提取所有搜索结果，整理成结构化文本素材。
+    从 state 中提取所有搜索 + 抓取结果，整理成结构化文本素材。
 
     【为什么不直接把 messages 给阶段 B？】
     messages 里有大量无关内容（system prompt、assistant 思考过程、tool_call 元数据）。
-    阶段 B 只需要"搜索到了什么"。提取成干净的文本，token 更省、效果更好。
-    """
-    search_records = [tc for tc in state.tool_history
-                      if tc.tool_name == "search_web" and tc.success]
+    阶段 B 只需要"搜索到了什么 + 读到了什么"。提取成干净的文本，token 更省、效果更好。
 
-    if not search_records:
+    【两类素材的分工】
+    - search_web 结果：广度线索（每条 300 字摘要）
+    - fetch_url 结果：深度内容（单篇文章几千字正文）
+    """
+    # 取所有成功的工具调用，按时间顺序（step）
+    useful_records = [tc for tc in state.tool_history
+                      if tc.success and tc.tool_name in ("search_web", "fetch_url")]
+
+    if not useful_records:
         return "(本次研究未获得有效搜索结果)"
 
     lines = []
-    for i, tc in enumerate(search_records, 1):
-        query = tc.arguments.get("query", "?")
-        lines.append(f"【搜索 {i}】关键词：{query}")
+    search_idx = 0
+    fetch_idx = 0
+
+    for tc in useful_records:
         result = tc.result
-        if isinstance(result, dict) and "results" in result:
-            for j, item in enumerate(result["results"], 1):
+        if not isinstance(result, dict):
+            continue
+
+        if tc.tool_name == "search_web":
+            search_idx += 1
+            query = tc.arguments.get("query", "?")
+            lines.append(f"【搜索 {search_idx}】关键词：{query}")
+            for j, item in enumerate(result.get("results", []), 1):
                 title = item.get("title", "")
                 content = item.get("content", "")
                 link = item.get("link", "")
@@ -168,7 +197,17 @@ def _extract_findings(state: ResearchState) -> str:
                     lines.append(f"     {content}")
                 if link:
                     lines.append(f"     来源：{link}")
-        lines.append("")
+            lines.append("")
+
+        elif tc.tool_name == "fetch_url":
+            fetch_idx += 1
+            url = tc.arguments.get("url", "?")
+            title = result.get("title", "")
+            content = result.get("content", "")
+            lines.append(f"【深度阅读 {fetch_idx}】{title}")
+            lines.append(f"  来源：{url}")
+            lines.append(f"  正文：{content}")
+            lines.append("")
 
     # 附上 LLM 在阶段 A 末尾给的小结（如果有）
     if state.final_answer:
