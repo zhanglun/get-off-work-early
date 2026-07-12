@@ -49,12 +49,12 @@ ai-platform-interview-handbook/
 | [第六章](docs/chapter-06-nodejs.md) | Node.js | ✅ 已完成 | 15 |
 | [第七章](docs/chapter-07-redis.md) | Redis | ✅ 已完成 | 14 |
 | [第八章](docs/chapter-08-postgresql.md) | PostgreSQL | ✅ 已完成 | 14 |
-| [第九章](docs/chapter-09-system-design.md) | 系统设计 | ✅ 已完成 | 10 |
+| [第九章](docs/chapter-09-system-design.md) | 系统设计 | ✅ 已完成 | 18 |
 | [第十章](docs/chapter-10-team-management.md) | 团队管理 | ✅ 已完成 | 10 |
 | [第十一章](docs/chapter-11-behavioral.md) | 行为面试 | ✅ 已完成 | 7 |
 | [第十二章](docs/chapter-12-docker-k8s.md) | Docker & Kubernetes | ✅ 已完成 | 10 |
 | [第十三章](docs/chapter-13-go-basics.md) | Go 语言基础 | ✅ 已完成 | 8 |
-| **合计** | | **全部完成** | **182** |
+| **合计** | | **全部完成** | **190** |
 
 ## 写作原则
 
