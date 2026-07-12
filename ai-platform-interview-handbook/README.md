@@ -32,7 +32,9 @@ ai-platform-interview-handbook/
     ├── chapter-08-postgresql.md         # 第八章 PostgreSQL
     ├── chapter-09-system-design.md      # 第九章 系统设计
     ├── chapter-10-team-management.md    # 第十章 团队管理
-    └── chapter-11-behavioral.md         # 第十一章 行为面试
+    ├── chapter-11-behavioral.md         # 第十一章 行为面试
+    ├── chapter-12-docker-k8s.md         # 第十二章 Docker & Kubernetes
+    └── chapter-13-go-basics.md          # 第十三章 Go 语言基础
 ```
 
 ## 章节索引
@@ -45,12 +47,14 @@ ai-platform-interview-handbook/
 | [第四章](docs/chapter-04-task-platform.md) | Task Platform（重点） | ✅ 已完成 | 29 |
 | [第五章](docs/chapter-05-ai-platform.md) | AI Platform | ✅ 已完成 | 19 |
 | [第六章](docs/chapter-06-nodejs.md) | Node.js | ✅ 已完成 | 15 |
-| [第七章](docs/chapter-07-redis.md) | Redis | ✅ 已完成 | 8 |
-| [第八章](docs/chapter-08-postgresql.md) | PostgreSQL | ✅ 已完成 | 8 |
+| [第七章](docs/chapter-07-redis.md) | Redis | ✅ 已完成 | 14 |
+| [第八章](docs/chapter-08-postgresql.md) | PostgreSQL | ✅ 已完成 | 14 |
 | [第九章](docs/chapter-09-system-design.md) | 系统设计 | ✅ 已完成 | 10 |
 | [第十章](docs/chapter-10-team-management.md) | 团队管理 | ✅ 已完成 | 10 |
 | [第十一章](docs/chapter-11-behavioral.md) | 行为面试 | ✅ 已完成 | 7 |
-| **合计** | | **全部完成** | **152** |
+| [第十二章](docs/chapter-12-docker-k8s.md) | Docker & Kubernetes | ✅ 已完成 | 10 |
+| [第十三章](docs/chapter-13-go-basics.md) | Go 语言基础 | ✅ 已完成 | 8 |
+| **合计** | | **全部完成** | **182** |
 
 ## 写作原则
 
