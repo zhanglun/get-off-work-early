@@ -20,7 +20,7 @@
 
 第一个是**前端工程化**，组件库、工具库、CLI、脚手架、开发规范，把团队的基础设施统一起来。
 
-第二个是 **Task Platform**，一个统一的任务中心。我们公司有大量异步任务——视频生成、AI 推理、批量处理，之前散落在各个业务线，每个团队自己搞 Celery 或者定时任务。我建了一个基于 BullMQ + Redis 的统一任务平台，支持 Node 和 Python 两种 Runtime，有完整的生命周期管理、WebSocket 实时进度、日志和 Trace。
+第二个是 **Task Platform**，多语言的任务平台。我们公司有大量异步任务——视频生成、AI 推理、批量处理。架构是多语言多队列：Go（asynq）做任务中心底座，Python（Celery）跑音视频处理，NestJS（BullMQ）跑业务异步，正在向 Go 统一迁移。有完整的生命周期管理、WebSocket 实时进度、日志和 Trace。
 
 第三个是 **AI Platform**，把公司的 AI 能力收敛到一个平台。统一 Provider 管理、Prompt 管理、模型调用接口、SDK，业务方不用自己对接 OpenAI、Claude、通义这些，直接调我们的统一 API。
 
@@ -98,7 +98,7 @@ Node → 关心数据和服务怎么跑
 
 ### ✅ 推荐回答
 
-> 11 年 Web 经验，路径是前端 → Node 后端 → 平台工程。现在负责工具组，推三个方向：前端工程化、统一任务平台（BullMQ + Redis + 多语言 Runtime）、AI 能力平台（统一 Provider/Prompt/SDK）。我的核心能力不是某门语言，而是**把散乱能力收敛成平台**——从组件库到 Task Platform 到 AI Platform，方法论一以贯之。如果只留一个标签：平台工程师。
+> 11 年 Web 经验，路径是前端 → Node 后端 → 平台工程。现在负责工具组，推三个方向：前端工程化、多语言任务平台（Go asynq 底座 + Python Celery + NestJS BullMQ，向 Go 统一）、AI 能力平台（统一 Provider/Prompt/SDK）。我的核心能力不是某门语言，而是**把散乱能力收敛成平台**——从组件库到 Task Platform 到 AI Platform，方法论一以贯之。如果只留一个标签：平台工程师。
 
 ### 📚 延伸知识
 
@@ -219,7 +219,7 @@ Node → 关心数据和服务怎么跑
 
 **亿次网联（2025）**：会议批注工具，从零用 Fastify 设计后端，集成 tldraw 白板 + WebSocket 实时协同。
 
-**现在（九州）**：技术栈升级到 NestJS + Prisma + PostgreSQL + BullMQ。做了 Task Platform（完整任务生命周期、Node/Python 双 Runtime、WebSocket 进度推送、Trace 链路）和 AI Platform（统一 Provider、Prompt 管理、Token 计费）。还有配套基础设施——统一 Logger、统一 Request、统一 Config。
+**现在（九州）**：多语言技术栈——NestJS 做业务 API 和 AI Platform，Go 做任务中心底座（asynq），Python 做音视频处理（Celery + FFmpeg）。做了 Task Platform（完整任务生命周期、WebSocket 进度推送、Trace 链路）和 AI Platform（统一 Provider、Prompt 管理、Token 计费）。还有配套基础设施——统一 Logger、统一 Request、统一 Config。
 
 所以我的 Node 经历是一条线：**Koa（滴滴）→ Fastify（亿次网联）→ NestJS（九州）**，从数据聚合层逐步走到承载完整业务逻辑和平台能力。不是只会 NestJS，而是经历了几个 Node 框架的演进。
 

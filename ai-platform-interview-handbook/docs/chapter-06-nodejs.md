@@ -383,22 +383,21 @@ const tasks = await prisma.task.findMany({
 - **消息队列**（RabbitMQ/Kafka）：消息无状态、消费即删。适合"服务间通信"。
 - **工作流引擎**（Temporal）：工作流有状态持久化、支持复杂编排（分支/循环/人工审批）。适合"跨天/跨服务的复杂流程"。
 
-**我们的选择逻辑：**
+**我们的选择逻辑（多语言多队列并存）：**
 
 ```
 需要任务调度？
-├─ Node 主语言 → BullMQ（我们选的）
-├─ Python 主语言 → Celery（视频生产平台选的）
+├─ NestJS 业务侧 → BullMQ（Node 生态最成熟，复用 Redis）
+├─ Python 音视频侧 → Celery（Python 标配，AI/FFmpeg 生态）
+├─ Go 任务中心底座 → asynq（高性能调度，目标统一）
 └─ 需要复杂工作流 → Temporal（未来演进考虑）
 
 需要服务间通信？
-└─ RabbitMQ/Kafka（我们不需要，用 HTTP API 通信）
-
-需要数据管道？
-└─ Kafka（我们不需要，不是数据密集型）
+└─ HTTP（我们选的，简单直接，语言无关）
+└─ RabbitMQ/Kafka（不需要，不是数据密集型）
 ```
 
-**关键认知：没有"最好的"队列，只有"最适合场景的"队列。** 很多人面试时说"BullMQ 比 RabbitMQ 好"——这是错的，它们定位不同。
+**我们的真实状态是三队列并存，正在向 Go asynq 统一。** 这是"不同语言团队各选各的生态工具"的自然结果（康威定律）。关键认知：没有"最好的"队列，只有"最适合场景的"队列。
 
 ### 🏗 架构分析
 
@@ -410,9 +409,9 @@ const tasks = await prisma.task.findMany({
 
 **为什么不用其它方案**
 
-- **Celery**：Python 技术栈才合适，我们主语言是 Node，强行用要跨语言调度，徒增复杂度（视频生产平台是 Python 栈才选 Celery）。
+- **Celery**：我们 Python 侧（音视频处理）确实在用 Celery——它适合 Python 技术栈。但 NestJS 侧不用 Celery，因为跨语言调度徒增复杂度。
 - **Temporal**：功能强大但对当前任务过重——需要单独部署、学习曲线陡、运维成本高。只有当任务编排复杂到需要分支循环 + 长时间持久化时才值得引入（未来演进方向）。
-- **RabbitMQ/Kafka**：定位是服务间通信/数据管道，不是任务调度。我们不需要跨服务消息路由，引入它们等于杀鸡用牛刀，还增加一个中间件要运维。
+- **RabbitMQ/Kafka**：定位是服务间通信/数据管道，不是任务调度。我们服务间通信用 HTTP，不需要跨服务消息路由，引入它们等于杀鸡用牛刀。
 
 **权衡与演进**
 
@@ -431,7 +430,7 @@ const tasks = await prisma.task.findMany({
 
 ### ✅ 推荐回答
 
-> 四者定位不同：BullMQ/Celery 是任务队列（有状态+重试+超时，适合执行操作并跟踪结果），RabbitMQ 是消息队列（无状态消费即删，适合服务间解耦），Temporal 是工作流引擎（状态持久化+复杂编排，适合跨天跨服务流程）。选择逻辑：Node 主语言→BullMQ，Python 主语言→Celery，复杂工作流→Temporal，服务间通信→RabbitMQ，数据管道→Kafka。没有最好的队列只有最适合场景的。我们选 BullMQ 因为 Node 技术栈+需要任务调度（有状态有重试）+复用 Redis。
+> 四者定位不同：BullMQ/Celery/asynq 是任务队列，RabbitMQ 是消息队列，Temporal 是工作流引擎。选择跟着语言和场景走：NestJS→BullMQ，Python→Celery，Go→asynq，复杂工作流→Temporal。我们三队列并存（康威定律），正在向 Go asynq 统一。服务间通信用 HTTP。
 
 ### 📚 延伸知识
 
