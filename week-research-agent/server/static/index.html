@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔬 Research Agent</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: #f5f5f7;
+            color: #1d1d1f;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        .container { max-width: 800px; margin: 0 auto; }
+
+        header {
+            text-align: center;
+            padding: 30px 0 20px;
+        }
+        header h1 { font-size: 28px; }
+        header p { color: #6e6e73; margin-top: 8px; }
+
+        .input-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            margin-bottom: 24px;
+        }
+        .input-row { display: flex; gap: 12px; }
+        input[type="text"] {
+            flex: 1;
+            padding: 14px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+        input[type="text"]:focus { outline: none; border-color: #0071e3; }
+        button {
+            padding: 14px 28px;
+            background: #0071e3;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.2s;
+            white-space: nowrap;
+        }
+        button:hover { background: #005bb5; }
+        button:disabled { background: #a0c4eb; cursor: not-allowed; }
+
+        .suggestions {
+            margin-top: 16px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .suggestions span {
+            font-size: 13px;
+            color: #6e6e73;
+        }
+        .chip {
+            padding: 4px 12px;
+            background: #f0f0f5;
+            border-radius: 16px;
+            font-size: 13px;
+            color: #0071e3;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .chip:hover { background: #e0e0f0; }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6e6e73;
+        }
+        .spinner {
+            display: inline-block;
+            width: 32px;
+            height: 32px;
+            border: 3px solid #e0e0e0;
+            border-top-color: #0071e3;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 12px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .report-card {
+            background: white;
+            border-radius: 12px;
+            padding: 28px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        }
+        .report-card h2 { font-size: 20px; margin-bottom: 20px; }
+        .section { margin-bottom: 24px; }
+        .section-title {
+            font-size: 14px;
+            color: #6e6e73;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        .summary { font-size: 16px; }
+
+        ol.key-points { padding-left: 20px; }
+        ol.key-points li { margin-bottom: 8px; }
+
+        .sources { list-style: none; }
+        .sources li {
+            padding: 6px 0;
+            font-size: 14px;
+            color: #0071e3;
+            word-break: break-all;
+        }
+
+        .confidence {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .conf-high { background: #d4f4dd; color: #1a7d3e; }
+        .conf-medium { background: #fff3cd; color: #856404; }
+        .conf-low { background: #f8d7da; color: #721c24; }
+
+        .metadata {
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+            font-size: 13px;
+            color: #6e6e73;
+        }
+        .tool-trace { margin-top: 12px; }
+        .tool-trace div {
+            padding: 4px 0;
+            font-family: "SF Mono", Monaco, monospace;
+            font-size: 12px;
+        }
+        .tool-ok { color: #1a7d3e; }
+        .tool-fail { color: #c0392b; }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 16px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>🔬 Research Agent</h1>
+        <p>给我一个课题，我帮你联网研究并生成报告</p>
+    </header>
+
+    <div class="input-card">
+        <div class="input-row">
+            <input type="text" id="topic" placeholder="输入研究课题，如：LangChain 是什么" />
+            <button id="submit" onclick="doResearch()">研究</button>
+        </div>
+        <div class="suggestions">
+            <span>试试：</span>
+            <span class="chip" onclick="fill('LangChain 是什么')">LangChain 是什么</span>
+            <span class="chip" onclick="fill('React 和 Vue 有什么区别')">React vs Vue</span>
+            <span class="chip" onclick="fill('2026 年最新的 AI 模型')">2026 AI 模型</span>
+        </div>
+    </div>
+
+    <div id="result"></div>
+</div>
+
+<script>
+function fill(topic) {
+    document.getElementById('topic').value = topic;
+}
+
+async function doResearch() {
+    const topic = document.getElementById('topic').value.trim();
+    if (!topic) { alert('请输入课题'); return; }
+
+    const btn = document.getElementById('submit');
+    const result = document.getElementById('result');
+
+    btn.disabled = true;
+    result.innerHTML = `
+        <div class="loading">
+            <div class="spinner"></div>
+            <p>🔬 正在研究「${escapeHtml(topic)}」...</p>
+            <p style="font-size:13px; margin-top:8px">Agent 正在联网搜索和深度阅读，约需 20-60 秒</p>
+        </div>
+    `;
+
+    try {
+        const resp = await fetch('/api/research', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ topic }),
+        });
+        const data = await resp.json();
+
+        if (!resp.ok) {
+            throw new Error(data.detail || '请求失败');
+        }
+
+        result.innerHTML = renderReport(data);
+    } catch (e) {
+        result.innerHTML = `<div class="error">❌ 出错了：${escapeHtml(e.message)}</div>`;
+    } finally {
+        btn.disabled = false;
+    }
+}
+
+function renderReport(data) {
+    const r = data.report || {};
+    const m = data.metadata;
+
+    const summary = r.summary || '(无摘要)';
+    const keyPoints = (r.key_points || []).map(p => `<li>${escapeHtml(p)}</li>`).join('');
+    const sources = (r.sources || []).map(s => `<li>${escapeHtml(s)}</li>`).join('');
+    const conf = r.confidence || 'unknown';
+    const confClass = { high: 'conf-high', medium: 'conf-medium', low: 'conf-low' }[conf] || 'conf-low';
+    const confText = { high: '🟢 高', medium: '🟡 中', low: '🔴 低' }[conf] || conf;
+
+    const tools = (m.tool_calls || []).map(t => {
+        const mark = t.success ? '✓' : '✗';
+        const cls = t.success ? 'tool-ok' : 'tool-fail';
+        const arg = typeof t.args === 'object' ? JSON.stringify(t.args) : t.args;
+        return `<div class="${cls}">${mark} [${t.step}] ${t.tool}(${escapeHtml(arg)}) — ${t.elapsed}s</div>`;
+    }).join('');
+
+    return `
+        <div class="report-card">
+            <h2>📊 研究报告：${escapeHtml(data.topic)}</h2>
+
+            <div class="section">
+                <div class="section-title">📝 摘要</div>
+                <div class="summary">${escapeHtml(summary)}</div>
+            </div>
+
+            ${keyPoints ? `
+            <div class="section">
+                <div class="section-title">🔑 关键发现</div>
+                <ol class="key-points">${keyPoints}</ol>
+            </div>` : ''}
+
+            ${sources ? `
+            <div class="section">
+                <div class="section-title">📎 来源</div>
+                <ul class="sources">${sources}</ul>
+            </div>` : ''}
+
+            <div class="section">
+                <span class="confidence ${confClass}">置信度：${confText}</span>
+            </div>
+
+            <div class="metadata">
+                ⏱ ${m.elapsed}s · 🔧 ${m.steps}步 · 状态：${m.status}
+                ${tools ? `<div class="tool-trace">${tools}</div>` : ''}
+            </div>
+        </div>
+    `;
+}
+
+function escapeHtml(str) {
+    if (str == null) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
+// 回车键提交
+document.getElementById('topic').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') doResearch();
+});
+</script>
+</body>
+</html>

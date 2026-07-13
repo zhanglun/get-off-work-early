@@ -17,6 +17,10 @@ venv/
 logs/
 .pytest_cache/
 
+# ===== 评估结果（运行时数据，不进仓库）=====
+eval_results/
+eval_results_before_optimize/
+
 # ===== 编辑器 =====
 .vscode/
 .idea/

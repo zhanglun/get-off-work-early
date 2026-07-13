@@ -132,26 +132,45 @@ def fetch_url(url: str, max_length: int = 5000) -> dict:
     参数：
         url:        网页链接（通常来自 search_web 的结果）
         max_length: 最多返回多少字符（避免超长网页撑爆上下文）
+
+    注意：很多网站会防爬虫（返回 403），所以 fetch 失败是常态。
+    Agent 不应依赖 fetch 成功，而应把 fetch 当作"锦上添花"。
     """
     try:
         # 延迟导入，加快启动
         import urllib.request
+        import urllib.error
         from readability import Document
 
         req = urllib.request.Request(
             url,
             headers={
-                # 伪装成浏览器，否则很多网站会拒绝
+                # 完整的浏览器 UA + Accept 头，降低被识别为爬虫的概率
                 "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
                               "AppleWebKit/537.36 (KHTML, like Gecko) "
-                              "Chrome/120.0.0.0 Safari/537.36",
+                              "Chrome/131.0.0.0 Safari/537.36",
+                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
             },
         )
-        with urllib.request.urlopen(req, timeout=10) as resp:
-            # 拿到 HTML 字节流，解码成文本
-            html_bytes = resp.read()
-            # 自动探测编码（中文网站常用 gbk 或 utf-8）
-            html = _decode_html(html_bytes, resp.headers.get("Content-Type", ""))
+        try:
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                html_bytes = resp.read()
+                content_type = resp.headers.get("Content-Type", "")
+        except urllib.error.HTTPError as e:
+            # 403/404 这类错误，重试也没用，直接返回明确错误
+            # （retry 装饰器会重试，但这里给个清晰的消息让 Agent 知道原因）
+            no_retry_codes = {403, 404, 401, 410}
+            if e.code in no_retry_codes:
+                return {
+                    "success": False,
+                    "result": f"网站拒绝访问（HTTP {e.code}），换个链接或用搜索摘要",
+                    "status_code": e.code,
+                }
+            raise  # 其他 HTTP 错误（500 等）继续抛出，让重试机制处理
+
+        # 自动探测编码（中文网站常用 gbk 或 utf-8）
+        html = _decode_html(html_bytes, content_type)
 
         # readability 提取正文
         doc = Document(html)
@@ -162,6 +181,10 @@ def fetch_url(url: str, max_length: int = 5000) -> dict:
 
         # 清理多余空白
         text = " ".join(text.split())
+
+        # 内容太短可能是误提取（如只剩导航），标记为失败
+        if len(text) < 50:
+            return {"success": False, "result": f"提取到的正文太短（{len(text)}字），可能是 JS 渲染页面，无法抓取"}
 
         # 截断到 max_length，避免撑爆 LLM 上下文
         truncated = False
