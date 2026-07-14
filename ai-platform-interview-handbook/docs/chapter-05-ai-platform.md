@@ -2291,7 +2291,7 @@ const result = await ai.chat({
 
 **🙋 候选人回答**
 
-**对，用的是创建时锁定的版本，这是"引用一致性"问题，和第三章 Prompt 版本锁定（Q3）是同一套思路。**
+**对，用的是创建时锁定的版本，这是"引用一致性"问题，和本章 Prompt 版本锁定（Q3）是同一套思路。**
 
 ```typescript
 interface TaskNode {
