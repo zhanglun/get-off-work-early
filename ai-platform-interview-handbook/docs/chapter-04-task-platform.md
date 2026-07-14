@@ -1969,7 +1969,7 @@ logger.info('task.step_completed', {
 
 **用 AsyncLocalStorage 自动传播 taskId。**
 
-在第三章 Q7 讲过 AsyncLocalStorage 的原理。在 Task Platform 里，Worker 领取任务后把 taskId 存入 ALS，后续所有日志自动带上：
+在第三章 Q8 讲过 AsyncLocalStorage 的原理。在 Task Platform 里，Worker 领取任务后把 taskId 存入 ALS，后续所有日志自动带上：
 
 ```typescript
 new Worker('tasks', async (job) => {

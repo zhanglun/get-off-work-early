@@ -2,7 +2,7 @@
 
 > 系统设计题考察的是"从零设计一个系统"的能力。本章的题目不是背答案，而是展示设计思路——需求分析、架构选择、数据模型、扩展性、容错。
 >
-> 本章共 12 题，每个题是一个完整的系统设计。
+> 本章共 18 题，每个题是一个完整的系统设计。
 
 ---
 
@@ -10,7 +10,7 @@
 
 **🎤 面试官**
 
-> 假设你要从零设计一个统一任务调度平台，支持十万级日任务量、多语言 Worker、实时进度推送。给我讲讲你的设计。
+> 假设你要从零设计一个统一任务调度平台，支持日几万任务量、多语言 Worker、实时进度推送。给我讲讲你的设计。
 
 **🙋 候选人回答**
 
@@ -19,7 +19,7 @@
 **① 需求分析**
 
 - 功能：任务创建、调度、执行、状态追踪、进度推送、重试、取消
-- 非功能：十万日任务量、多语言 Worker（Node+Python）、99.5% 可用性、任务不丢
+- 非功能：日几万任务量、多语言 Worker（Node+Python）、99.5% 可用性、任务不丢
 - 约束：团队以 Node 为主，已有 Redis 和 PostgreSQL
 
 **② 架构总览**
@@ -100,7 +100,7 @@ token_usage: id, task_id, project_id, provider, model,
 |------|------|------|------|
 | BullMQ + Redis | Node 原生、复用现有 Redis、API 成熟 | Redis 持久化要配 RDB+AOF | ✅ 选它（团队 Node 为主，已有 Redis） |
 | RabbitMQ | 路由能力强、ACK 语义完善 | 引入新组件、运维成本、Node 客户端不如 BullMQ 顺手 | ❌ 过重 |
-| Kafka | 吞吐高、日志友好 | 任务调度语义弱（偏流式）、运维重 | ❌ 不匹配十万日任务量级 |
+| Kafka | 吞吐高、日志友好 | 任务调度语义弱（偏流式）、运维重 | ❌ 不匹配日几万任务量级 |
 | Temporal | 状态持久化、复杂工作流 | 对简单任务过重 | ❌ 仅 Workflow 引擎用 |
 
 **核心权衡**：状态走 Redis+PG 双写，是"快"与"可靠"的折中——Redis 挂了能用 PG 恢复，但写放大是代价，靠双写脚本和版本号控制一致性。
@@ -122,7 +122,7 @@ token_usage: id, task_id, project_id, provider, model,
 
 ### ✅ 推荐回答
 
-> 需求：十万日任务+多语言 Worker+实时进度+任务不丢。架构：API(NestJS)→BullMQ(Redis 队列)→Worker(Node I/O+Python CPU 桥接)→PG 持久化+Redis Pub/Sub 推送→WS Gateway→前端。数据模型：tasks(id/status/payload/step_results/priority/attempts/version)+token_usage。核心决策：BullMQ 选型（Node 原生+复用 Redis）、Redis+PG 双写（快+可靠 Redis 挂了 PG 恢复）、Node+Python 混合（I/O 高并发+CPU 低并发 Redis List 桥接）、WebSocket+Pub/Sub+独立 Gateway（连接层业务层解耦）、幂等三层（SET NX 锁+检查点+upsert）、可靠性三层（Redis HA+PG 双写+恢复脚本）。扩展：K8s HPA（I/O 按队列/CPU 按使用率）+Redis Cluster（百万级）+PG 读写分离。完整设计在第四章 29 题展开。
+> 需求：日几万任务+多语言 Worker+实时进度+任务不丢。架构：API(NestJS)→BullMQ(Redis 队列)→Worker(Node I/O+Python CPU 桥接)→PG 持久化+Redis Pub/Sub 推送→WS Gateway→前端。数据模型：tasks(id/status/payload/step_results/priority/attempts/version)+token_usage。核心决策：BullMQ 选型（Node 原生+复用 Redis）、Redis+PG 双写（快+可靠 Redis 挂了 PG 恢复）、Node+Python 混合（I/O 高并发+CPU 低并发 Redis List 桥接）、WebSocket+Pub/Sub+独立 Gateway（连接层业务层解耦）、幂等三层（SET NX 锁+检查点+upsert）、可靠性三层（Redis HA+PG 双写+恢复脚本）。扩展：K8s HPA（I/O 按队列/CPU 按使用率）+Redis Cluster（百万级）+PG 读写分离。完整设计在第四章 29 题展开。
 
 ### 📚 延伸知识
 
