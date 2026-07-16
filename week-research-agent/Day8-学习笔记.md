@@ -254,24 +254,109 @@ Day 8+ 不会重写 Day 1-7 的代码
 
 ---
 
-## 六、下一步行动
+## 六、实现记录
+
+### 6.1 阶段 A：Session Memory（已完成 ✅）
+
+**做了什么**：让 Agent 能记住同一会话内的多轮对话。
+
+**改动**：
+- `run_research_agent` 新增 `history` 参数——Agent 可"带着记忆"研究
+- `researcher` 把历史 messages 拼进对话，让 LLM 理解上下文指代
+- `server` 新增 `SESSIONS` 会话存储 + `get_or_create_session`
+- `/api/research` 接收 `session_id`，存取历史对话
+- Web UI 生成/传递 session_id（localStorage）+ 历史对话展示区
+
+**实测验证**：
+```
+第 1 轮："LangChain 是什么"
+  → Agent 研究，摘要："LangChain 是开源框架..."
+  → 存入 session
+
+第 2 轮："它和 AutoGen 比呢"
+  → 加载 session 历史
+  → Agent 正确理解"它"=LangChain！
+  → 摘要："LangChain 和 AutoGen 是构建 AI 代理系统的两个不同框架..."
+  → 🎉 Session Memory 生效！
+```
+
+**关键认知**：Session Memory 的本质很简单——就是"把上次对话的 messages 带进这次的 prompt"。没有黑魔法，就是 messages 列表的拼接。
+
+### 6.2 阶段 B+C：Workflow（已完成 ✅）
+
+**做了什么**：把单课题浅研究升级为大课题深度研究。
+
+**架构**：
+```
+大课题 → [Planner 拆解] → 子课题们
+                              ↓
+         [Executor 执行] ← 每个复用 Day 5 的 run_research_agent
+                              ↓
+         [Synthesizer 综合] → 完整总报告
+```
+
+**新增文件**：
+- `workflow/planner.py`：LLM 把大课题拆成 3-6 个子课题
+- `workflow/executor.py`：对每个子课题复用 `run_research_agent`（代码资产积累！）
+- `workflow/synthesizer.py`：把多份子报告综合成总报告（去重/重组/提炼）
+- `workflow/agent.py`：编排 Planner→Executor→Synthesizer 三步
+
+**实测验证**：
+```
+课题："全面研究 AI Agent 领域"
+
+Planner 拆出 4 个子课题：
+  1. AI Agent 主流框架对比
+  2. AI Agent 典型应用场景
+  3. AI Agent 核心技术原理
+  4. AI Agent 面临的挑战和局限
+
+Executor：4 份子报告全部完成（confidence=high）
+Synthesizer：综合成覆盖框架/场景/技术/挑战的总报告
+→ 总耗时 252s，confidence=high
+```
+
+**关键认知**：Workflow 的 Executor 就是 **Day 5 的 `run_research_agent`**。7 天的代码成了 Workflow 的积木——这就是"代码资产积累"的回报。
+
+### 6.3 两个阶段的核心洞察
+
+| 洞察 | 说明 |
+|------|------|
+| Memory 不神秘 | 本质是"把历史 messages 带进 prompt"，没有黑魔法 |
+| Workflow 不复杂 | 本质是"拆 → 做 → 合"三步，每步都是已有能力 |
+| 进阶不是推翻重来 | Day 1-7 的代码是 Day 8 的地基，不是被丢弃的脚手架 |
+| 复用是最大的回报 | Workflow 直接复用 Day 5 Agent，0 行重复代码 |
+
+---
+
+## 七、踩坑记录
+
+### 🕳️ 踩坑 1：session 存回时 KeyError
+
+**现象**：第一次请求（客户端传了 session_id）报 `KeyError: 'test001'`。
+
+**原因**：客户端传了 session_id，但服务端 SESSIONS 里还没有这个 key（还没创建）。直接 `SESSIONS[session_id].append(...)` 就报错。
+
+**解决**：用 `get_or_create_session(session_id)` 确保存在再操作。
+
+**教训**：**读写共享状态前，必须确保状态存在**。这是并发编程的基本功。
+
+---
+
+## 八、下一步（阶段 D/E）
 
 ```
-⬜ 阶段 A：Session Memory（改 server，加会话历史）
-   → 体验"Agent 记住我了"
-   → 写笔记 + 提交
-   → 进入阶段 B
-
-⬜ 阶段 B+C：Workflow（新建 workflow/，Planner+Executor+Synthesizer）
-   → 体验"Agent 能干大事了"
-   → 写笔记 + 提交
-   → 进入阶段 D
-
-⬜ 阶段 D：Long-term Memory（加数据库）
-⬜ 阶段 E：Memory Retrieval（加向量库）
+✅ 阶段 A：Session Memory（同会话记忆）
+✅ 阶段 B+C：Workflow（大课题拆解）
+⬜ 阶段 D：Long-term Memory（跨会话记忆，加数据库）
+⬜ 阶段 E：Memory Retrieval（智能检索，加向量库）
 ```
 
-**先做阶段 A**——改动最小（~50 行），效果最直观（立刻能体验多轮对话），是 Memory 的最佳起点。
+阶段 D/E 是 Memory 的进阶：
+- D：用数据库存用户偏好，跨会话记住"这个用户是前端工程师"
+- E：记忆太多时用向量检索，只取和当前问题相关的记忆
+
+这两个阶段需要引入数据库/向量库，复杂度更高。但有了 A-C 的基础，它们是自然延伸。
 
 ---
 
