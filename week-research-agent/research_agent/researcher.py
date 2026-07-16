@@ -43,7 +43,7 @@ RESEARCH_TOOLS_SCHEMA = [t for t in TOOLS_SCHEMA if t["function"]["name"] in RES
 
 
 def run_research(state: ResearchState, client: ZhipuAI, logger: logging.Logger,
-                 max_steps: int = 8) -> ResearchState:
+                 max_steps: int = 8, history: list = None) -> ResearchState:
     """
     阶段 A：研究循环。
 
@@ -52,16 +52,24 @@ def run_research(state: ResearchState, client: ZhipuAI, logger: logging.Logger,
         client:    ZhipuAI 客户端（外部传入，复用连接）
         logger:    日志器
         max_steps: 最大搜索轮次
+        history:   历史对话 messages（Day 8 Session Memory）。
+                   传入则 Agent 能理解上下文指代（"它""上次"等）。
     返回：
         更新后的 state（findings 字段被填充）
     """
     logger.info(f"🔍 阶段 A 开始研究：{state.topic}")
 
-    # System Prompt + 用户课题
+    # 构建消息列表：System Prompt + [历史对话] + 本次课题
+    # 关键：历史对话插在 system 和本次 user 之间，让 LLM 有上下文
     state.messages = [
         {"role": "system", "content": RESEARCHER_SYSTEM_PROMPT},
-        {"role": "user", "content": f"请研究以下课题：{state.topic}"},
     ]
+    if history:
+        state.messages.extend(history)
+        logger.info(f"📚 已加载 {len(history)} 条历史消息")
+    state.messages.append(
+        {"role": "user", "content": f"请研究以下课题：{state.topic}"},
+    )
 
     try:
         # 第 1 轮：发课题 + 工具清单

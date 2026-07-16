@@ -29,7 +29,8 @@ from research_agent.researcher import run_research
 from research_agent.reporter import run_report
 
 
-def run_research_agent(topic: str, max_steps: int = 8, verbose: bool = True) -> ResearchState:
+def run_research_agent(topic: str, max_steps: int = 8, verbose: bool = True,
+                       history: list = None) -> ResearchState:
     """
     运行完整的 Research Agent（两步法）。
 
@@ -37,8 +38,12 @@ def run_research_agent(topic: str, max_steps: int = 8, verbose: bool = True) -> 
         topic:     研究课题
         max_steps: 阶段 A 最大搜索轮次
         verbose:   是否在终端打印过程
+        history:   历史对话 messages（Day 8 Session Memory）。
+                   传入则 Agent"带着记忆"研究——能理解"它""上次"等指代。
+                   格式：[{"role": "user", "content": "..."},
+                          {"role": "assistant", "content": "..."}, ...]
     返回：
-        ResearchState（含完整研究过程 + 结构化报告）
+        ResearchState（含完整研究过程 + 结构化报告 + 完整 messages）
     """
     Config.check()
     client = ZhipuAI(api_key=Config.API_KEY)
@@ -46,14 +51,16 @@ def run_research_agent(topic: str, max_steps: int = 8, verbose: bool = True) -> 
 
     logger.info("=" * 60)
     logger.info(f"🔬 研究课题：{topic}")
+    if history:
+        logger.info(f"📚 带历史记忆：{len(history)} 条消息")
     logger.info("=" * 60)
 
     # 初始化研究状态
     state = ResearchState(max_steps=max_steps)
     state.topic = topic
 
-    # ===== 阶段 A：研究 =====
-    state = run_research(state, client, logger, max_steps=max_steps)
+    # ===== 阶段 A：研究（传入 history）=====
+    state = run_research(state, client, logger, max_steps=max_steps, history=history)
 
     # 即使阶段 A 失败或达到步数上限，也尝试基于已有素材生成报告
     # （Day 4 健壮性：部分失败不影响整体可用）

@@ -151,6 +151,32 @@
             padding: 16px;
             border-radius: 8px;
         }
+
+        /* Day 8 历史对话区 */
+        #history-list {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        }
+        #history-list::before {
+            content: "📚 本次会话历史（Agent 记得这些）";
+            display: block;
+            font-size: 14px;
+            color: #6e6e73;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+        .history-item {
+            display: flex;
+            gap: 8px;
+            padding: 6px 0;
+            font-size: 14px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .history-item:last-child { border-bottom: none; }
+        .history-role { flex-shrink: 0; }
+        .history-text { color: #1d1d1f; }
     </style>
 </head>
 <body>
@@ -174,9 +200,52 @@
     </div>
 
     <div id="result"></div>
+
+    <div id="history-section" style="margin-top: 24px;">
+        <div id="history-list" style="display:none;"></div>
+    </div>
 </div>
 
 <script>
+// 页面加载时显示历史
+loadHistory();
+</script>
+
+<script>
+// Day 8 Session Memory：前端管理 session_id
+// 存在 localStorage，刷新页面也不丢，浏览器关了才丢（=会话级）
+function getSessionId() {
+    let sid = localStorage.getItem('research_session_id');
+    if (!sid) {
+        sid = 'sess_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+        localStorage.setItem('research_session_id', sid);
+    }
+    return sid;
+}
+
+// 显示历史对话记录（Session Memory 的可见化）
+function loadHistory() {
+    const history = JSON.parse(localStorage.getItem('research_history') || '[]');
+    if (history.length === 0) return;
+    const list = document.getElementById('history-list');
+    list.innerHTML = history.map(h =>
+        `<div class="history-item">
+            <span class="history-role">${h.role === 'user' ? '🧑' : '🤖'}</span>
+            <span class="history-text">${escapeHtml(h.text.slice(0, 50))}${h.text.length > 50 ? '...' : ''}</span>
+        </div>`
+    ).join('');
+    list.style.display = 'block';
+}
+
+function appendHistory(role, text) {
+    const history = JSON.parse(localStorage.getItem('research_history') || '[]');
+    history.push({ role, text });
+    // 最多保留 20 条，避免无限增长
+    if (history.length > 20) history.shift();
+    localStorage.setItem('research_history', JSON.stringify(history));
+    loadHistory();
+}
+
 function fill(topic) {
     document.getElementById('topic').value = topic;
 }
@@ -198,10 +267,11 @@ async function doResearch() {
     `;
 
     try {
+        const sessionId = getSessionId();
         const resp = await fetch('/api/research', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ topic }),
+            body: JSON.stringify({ topic, session_id: sessionId }),
         });
         const data = await resp.json();
 
@@ -209,7 +279,13 @@ async function doResearch() {
             throw new Error(data.detail || '请求失败');
         }
 
+        // 把本轮对话存入前端历史（Session Memory 可见化）
+        appendHistory('user', topic);
+        const answer = data.report?.summary || '(研究完成)';
+        appendHistory('assistant', answer);
+
         result.innerHTML = renderReport(data);
+        loadHistory();
     } catch (e) {
         result.innerHTML = `<div class="error">❌ 出错了：${escapeHtml(e.message)}</div>`;
     } finally {

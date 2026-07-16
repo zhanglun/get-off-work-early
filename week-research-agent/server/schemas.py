@@ -11,12 +11,15 @@ Pydantic 的作用：
 - 自动序列化（dict ↔ JSON）
 """
 from pydantic import BaseModel, Field
-from typing import List, Optional, Dict, Any
+from typing import List, Dict, Any, Optional
 
 
 class ResearchRequest(BaseModel):
     """研究请求：客户端 POST 过来的内容。"""
     topic: str = Field(..., min_length=1, max_length=200, description="研究课题")
+    session_id: Optional[str] = Field(
+        None, description="会话 ID（Day 8 Session Memory）。传入则 Agent 带历史记忆研究"
+    )
 
 
 class ResearchMetadata(BaseModel):
@@ -34,6 +37,7 @@ class ResearchResponse(BaseModel):
     topic: str = Field(..., description="研究课题")
     report: Dict[str, Any] = Field(default_factory=dict, description="结构化研究报告")
     metadata: ResearchMetadata = Field(..., description="运行元信息")
+    session_id: Optional[str] = Field(None, description="会话 ID（前端下次请求带上它）")
 
 
 class HealthResponse(BaseModel):
