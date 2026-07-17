@@ -30,18 +30,17 @@ from research_agent.reporter import run_report
 
 
 def run_research_agent(topic: str, max_steps: int = 8, verbose: bool = True,
-                       history: list = None) -> ResearchState:
+                       history: list = None, on_progress=None) -> ResearchState:
     """
     运行完整的 Research Agent（两步法）。
 
     参数：
-        topic:     研究课题
-        max_steps: 阶段 A 最大搜索轮次
-        verbose:   是否在终端打印过程
-        history:   历史对话 messages（Day 8 Session Memory）。
-                   传入则 Agent"带着记忆"研究——能理解"它""上次"等指代。
-                   格式：[{"role": "user", "content": "..."},
-                          {"role": "assistant", "content": "..."}, ...]
+        topic:      研究课题
+        max_steps:  阶段 A 最大搜索轮次
+        verbose:    是否在终端打印过程
+        history:    历史对话 messages（Day 8 Session Memory）。
+        on_progress: 进度回调（Day 9 Streaming）。
+                     每个关键步骤调用，传入事件 dict。
     返回：
         ResearchState（含完整研究过程 + 结构化报告 + 完整 messages）
     """
@@ -59,8 +58,9 @@ def run_research_agent(topic: str, max_steps: int = 8, verbose: bool = True,
     state = ResearchState(max_steps=max_steps)
     state.topic = topic
 
-    # ===== 阶段 A：研究（传入 history）=====
-    state = run_research(state, client, logger, max_steps=max_steps, history=history)
+    # ===== 阶段 A：研究（传入 history + on_progress）=====
+    state = run_research(state, client, logger, max_steps=max_steps,
+                         history=history, on_progress=on_progress)
 
     # 即使阶段 A 失败或达到步数上限，也尝试基于已有素材生成报告
     # （Day 4 健壮性：部分失败不影响整体可用）
@@ -69,8 +69,8 @@ def run_research_agent(topic: str, max_steps: int = 8, verbose: bool = True,
         save_run_summary(state, topic, logger)
         return state
 
-    # ===== 阶段 B：报告 =====
-    state = run_report(state, client, logger)
+    # ===== 阶段 B：报告（透传 on_progress）=====
+    state = run_report(state, client, logger, on_progress=on_progress)
 
     # 保存运行摘要到 JSONL
     save_run_summary(state, topic, logger)

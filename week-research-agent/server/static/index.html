@@ -177,6 +177,27 @@
         .history-item:last-child { border-bottom: none; }
         .history-role { flex-shrink: 0; }
         .history-text { color: #1d1d1f; }
+
+        /* Day 9 流式进度区 */
+        .stream-log {
+            font-family: "SF Mono", Monaco, monospace;
+            font-size: 13px;
+            line-height: 1.8;
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 12px;
+            background: #fafafa;
+            border-radius: 8px;
+            margin: 16px 0;
+        }
+        .stream-item { padding: 2px 0; color: #1d1d1f; }
+        .stream-phase { font-weight: 600; color: #0071e3; margin-top: 8px; }
+        .stream-step { color: #6e6e73; font-size: 12px; }
+        .stream-result.ok { color: #1a7d3e; }
+        .stream-result.fail { color: #c0392b; }
+        .stream-warn { color: #856404; }
+        .stream-info { color: #6e6e73; font-size: 12px; }
+        .loading { text-align: center; padding: 20px; color: #6e6e73; }
     </style>
 </head>
 <body>
@@ -258,39 +279,108 @@ async function doResearch() {
     const result = document.getElementById('result');
 
     btn.disabled = true;
+
+    // Day 9：用 SSE 流式接收，实时显示进度
+    const sessionId = getSessionId();
+    const url = `/api/research/stream?topic=${encodeURIComponent(topic)}&session_id=${encodeURIComponent(sessionId)}`;
+
+    // 先显示进度区
     result.innerHTML = `
-        <div class="loading">
-            <div class="spinner"></div>
-            <p>🔬 正在研究「${escapeHtml(topic)}」...</p>
-            <p style="font-size:13px; margin-top:8px">Agent 正在联网搜索和深度阅读，约需 20-60 秒</p>
+        <div class="report-card">
+            <h2>🔬 正在研究：${escapeHtml(topic)}</h2>
+            <div id="stream-log" class="stream-log"></div>
+            <div id="stream-spinner" class="loading">
+                <div class="spinner"></div>
+                <p>Agent 工作中...</p>
+            </div>
         </div>
     `;
+    const streamLog = document.getElementById('stream-log');
 
-    try {
-        const sessionId = getSessionId();
-        const resp = await fetch('/api/research', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ topic, session_id: sessionId }),
-        });
-        const data = await resp.json();
+    const eventSource = new EventSource(url);
 
-        if (!resp.ok) {
-            throw new Error(data.detail || '请求失败');
+    eventSource.onmessage = (e) => {
+        const data = JSON.parse(e.data);
+        const evt = data.event;
+
+        if (evt === 'done') {
+            eventSource.close();
+            // 存历史
+            appendHistory('user', topic);
+            const answer = data.report?.summary || '(研究完成)';
+            appendHistory('assistant', answer);
+            // 渲染最终报告
+            result.innerHTML = renderReport({
+                topic, report: data.report, metadata: {status: data.status},
+                session_id: data.session_id
+            });
+            loadHistory();
+            btn.disabled = false;
+        } else if (evt === 'fatal_error') {
+            eventSource.close();
+            result.innerHTML = `<div class="error">❌ ${escapeHtml(data.error)}</div>`;
+            btn.disabled = false;
+        } else if (evt === 'error') {
+            appendStreamLog(`❌ ${data.phase} 出错：${escapeHtml(data.error || '')}`, 'fail');
+        } else {
+            // 各种进度事件
+            appendStreamEvent(data, streamLog);
         }
+    };
 
-        // 把本轮对话存入前端历史（Session Memory 可见化）
-        appendHistory('user', topic);
-        const answer = data.report?.summary || '(研究完成)';
-        appendHistory('assistant', answer);
-
-        result.innerHTML = renderReport(data);
-        loadHistory();
-    } catch (e) {
-        result.innerHTML = `<div class="error">❌ 出错了：${escapeHtml(e.message)}</div>`;
-    } finally {
+    eventSource.onerror = () => {
+        eventSource.close();
         btn.disabled = false;
+    };
+}
+
+function appendStreamEvent(data, container) {
+    const evt = data.event;
+    let html = '';
+
+    if (evt === 'phase') {
+        const label = data.phase === 'research' ? '🔍 开始研究' : '📊 生成报告';
+        html = `<div class="stream-item stream-phase">${label}</div>`;
+    } else if (evt === 'history') {
+        html = `<div class="stream-item stream-info">📚 加载历史 ${data.count} 条</div>`;
+    } else if (evt === 'step') {
+        html = `<div class="stream-item stream-step">— 第 ${data.step} 步 —</div>`;
+    } else if (evt === 'tool_start') {
+        if (data.tool === 'search_web') {
+            html = `<div class="stream-item">🔎 搜索：<b>${escapeHtml(data.query)}</b></div>`;
+        } else if (data.tool === 'fetch_url') {
+            html = `<div class="stream-item">📖 读全文：<b>${escapeHtml(data.url)}</b></div>`;
+        } else {
+            html = `<div class="stream-item">🔧 ${escapeHtml(data.tool)}</div>`;
+        }
+    } else if (evt === 'tool_end') {
+        const mark = data.success ? '✓' : '✗';
+        const cls = data.success ? 'ok' : 'fail';
+        let detail = '';
+        if (data.tool === 'search_web') detail = `${data.count} 条结果`;
+        else if (data.tool === 'fetch_url') detail = `${data.length} 字符`;
+        html = `<div class="stream-item stream-result ${cls}">   ${mark} ${detail}（${data.elapsed}s）</div>`;
+    } else if (evt === 'max_steps') {
+        html = `<div class="stream-item stream-warn">⚠️ 达到最大步数 ${data.max_steps}</div>`;
+    } else if (evt === 'phase_done') {
+        if (data.phase === 'research') {
+            html = `<div class="stream-item stream-info">📝 研究完成：${data.steps} 步，素材 ${data.findings_length} 字符</div>`;
+        } else if (data.phase === 'report' && !data.skipped) {
+            html = `<div class="stream-item stream-info">✓ 报告完成：${data.key_points} 条发现，confidence=${data.confidence}</div>`;
+        }
     }
+
+    if (html) {
+        container.insertAdjacentHTML('beforeend', html);
+        container.scrollTop = container.scrollHeight;
+    }
+}
+
+function appendStreamLog(text, cls) {
+    const container = document.getElementById('stream-log');
+    if (!container) return;
+    container.insertAdjacentHTML('beforeend', `<div class="stream-item ${cls}">${text}</div>`);
+    container.scrollTop = container.scrollHeight;
 }
 
 function renderReport(data) {

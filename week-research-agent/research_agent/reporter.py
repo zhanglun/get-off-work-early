@@ -30,18 +30,28 @@ from research_agent.state import ResearchState
 
 
 def run_report(state: ResearchState, client: ZhipuAI,
-               logger: logging.Logger) -> ResearchState:
+               logger: logging.Logger, on_progress=None) -> ResearchState:
     """
     阶段 B：基于 findings 生成结构化报告。
 
     参数：
-        state:  ResearchState（findings 已被阶段 A 填充）
-        client: ZhipuAI 客户端
-        logger: 日志器
+        state:      ResearchState（findings 已被阶段 A 填充）
+        client:     ZhipuAI 客户端
+        logger:     日志器
+        on_progress: 进度回调（Day 9 Streaming）
     返回：
         更新后的 state（report 字段被填充为 dict）
     """
+
+    def _emit(event: dict):
+        if on_progress:
+            try:
+                on_progress(event)
+            except Exception:
+                pass
+
     logger.info("📊 阶段 B 开始生成报告")
+    _emit({"event": "phase", "phase": "report"})
 
     if not state.findings or state.findings.startswith("(本次研究未获得"):
         logger.warning("⚠️ 没有可用素材，跳过报告生成")
@@ -51,6 +61,7 @@ def run_report(state: ResearchState, client: ZhipuAI,
             "sources": [],
             "confidence": "low",
         }
+        _emit({"event": "phase_done", "phase": "report", "skipped": True})
         return state
 
     try:
@@ -95,10 +106,14 @@ def run_report(state: ResearchState, client: ZhipuAI,
         state.report = parsed
         logger.info(f"✓ 报告生成成功：confidence={parsed.get('confidence', '?')}, "
                     f"key_points={len(parsed.get('key_points', []))} 条")
+        _emit({"event": "phase_done", "phase": "report",
+               "confidence": parsed.get('confidence', '?'),
+               "key_points": len(parsed.get('key_points', []))})
 
     except Exception as e:
         state.status = "error"
         state.error = f"报告生成出错：{type(e).__name__}: {e}"
         logger.error(f"❌ {state.error}")
+        _emit({"event": "error", "phase": "report", "error": state.error})
 
     return state

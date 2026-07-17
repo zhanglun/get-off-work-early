@@ -6,19 +6,23 @@ Day 5 的 run_research_agent(topic) 已经是个干净函数。
 Day 7 不改它，只在外面套一层 HTTP 接口——业务逻辑复用，只加传输层。
 这是"关注点分离"：Agent 管研究，HTTP 管传输。
 
-【3 个接口】
-- GET  /              返回网页（Web UI）
-- GET  /api/health    健康检查（部署用）
-- POST /api/research  提交课题，返回研究报告（核心接口）
+【4 个接口】
+- GET  /                    返回网页（Web UI）
+- GET  /api/health          健康检查（部署用）
+- POST /api/research        提交课题，返回研究报告（核心接口，同步）
+- GET  /api/research/stream 提交课题，SSE 流式返回进度（Day 9 Streaming）
 """
 import os
 import sys
 import time
+import json
+import queue
+import threading
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from fastapi import FastAPI, HTTPException
-from fastapi.responses import HTMLResponse
+from fastapi import FastAPI, HTTPException, Query
+from fastapi.responses import HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
 from server.schemas import ResearchRequest, ResearchResponse, ResearchMetadata, HealthResponse
@@ -151,6 +155,112 @@ async def research(req: ResearchRequest):
             status_code=500,
             detail=f"研究过程出错：{type(e).__name__}: {e}",
         )
+
+
+@app.get("/api/research/stream")
+async def research_stream(topic: str = Query(..., min_length=1, max_length=200),
+                          session_id: str = Query(None)):
+    """
+    Day 9 SSE 流式接口：实时推送 Agent 研究进度。
+
+    【SSE 原理】
+    服务器持续推送 event 流，浏览器用 EventSource 接收。
+    每条消息格式：
+        data: {"event": "tool_start", "tool": "search_web", ...}\\n\\n
+
+    【技术难点：同步 Agent + 异步 SSE 的桥接】
+    Agent（run_research_agent）是同步阻塞函数，跑 30 秒。
+    SSE 是 async generator，要持续 yield。
+    解法：用线程跑 Agent + Queue 传事件给 generator。
+
+    【为什么用 GET 不用 POST】
+    EventSource 标准只支持 GET。课题放 URL 参数（<200 字够用）。
+    """
+    from research_agent.agent import run_research_agent
+
+    # 用 Queue 在 Agent 线程和 SSE generator 之间传事件
+    event_queue: queue.Queue = queue.Queue()
+    # 用 dict 传最终结果（线程不能直接 return 给 generator）
+    result_holder: dict = {}
+
+    def on_progress(event: dict):
+        """Agent 的回调：把事件塞进 Queue，generator 会取出来推给前端。"""
+        event_queue.put(event)
+
+    def run_agent_thread():
+        """在子线程跑 Agent（不阻塞 async generator）。"""
+        try:
+            sid = get_or_create_session(session_id)
+            history = SESSIONS.get(sid, [])
+
+            state = run_research_agent(
+                topic, max_steps=8, verbose=False,
+                history=history, on_progress=on_progress,
+            )
+
+            # 存回 session（和同步接口一样的逻辑）
+            SESSIONS[sid].append({"role": "user", "content": topic})
+            answer = state.report.get("summary", "（无摘要）") if state.report else "（研究失败）"
+            SESSIONS[sid].append({"role": "assistant", "content": answer})
+
+            result_holder["state"] = state
+            result_holder["session_id"] = sid
+        except Exception as e:
+            result_holder["error"] = f"{type(e).__name__}: {e}"
+        finally:
+            event_queue.put(None)  # 哨兵：告诉 generator 结束了
+
+    def event_generator():
+        """
+        SSE generator（同步版）：从 Queue 取事件，推给浏览器。
+
+        【为什么用同步 generator 而不是 async】
+        FastAPI 的 StreamingResponse 支持同步 generator——它会自动放到线程池跑。
+        这样可以直接用阻塞的 queue.get(timeout=)，简单可靠。
+        async 版的 run_in_executor + wait_for 在超时取消时有坑（线程泄漏 + 事件丢失）。
+        """
+        # 启动 Agent 线程
+        thread = threading.Thread(target=run_agent_thread, daemon=True)
+        thread.start()
+
+        # 持续推送事件
+        while True:
+            try:
+                # 阻塞取，0.5 秒超时（没事件时发心跳，保持连接）
+                event = event_queue.get(timeout=0.5)
+            except queue.Empty:
+                yield ": heartbeat\n\n"
+                continue
+
+            if event is None:
+                # 哨兵：Agent 线程结束了
+                break
+
+            # 推送事件给前端
+            yield f"data: {json.dumps(event, ensure_ascii=False)}\n\n"
+
+        # 推送最终结果（done 或 error）
+        if "error" in result_holder:
+            err = {"event": "fatal_error", "error": result_holder["error"]}
+            yield f"data: {json.dumps(err, ensure_ascii=False)}\n\n"
+        else:
+            state = result_holder.get("state")
+            final = {
+                "event": "done",
+                "report": state.report if state else {},
+                "session_id": result_holder.get("session_id"),
+                "status": state.status if state else "unknown",
+            }
+            yield f"data: {json.dumps(final, ensure_ascii=False)}\n\n"
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",  # 禁用 nginx 缓冲（重要！否则流式失效）
+        },
+    )
 
 
 # ============================================================

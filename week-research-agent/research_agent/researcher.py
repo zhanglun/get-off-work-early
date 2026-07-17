@@ -43,21 +43,33 @@ RESEARCH_TOOLS_SCHEMA = [t for t in TOOLS_SCHEMA if t["function"]["name"] in RES
 
 
 def run_research(state: ResearchState, client: ZhipuAI, logger: logging.Logger,
-                 max_steps: int = 8, history: list = None) -> ResearchState:
+                 max_steps: int = 8, history: list = None,
+                 on_progress=None) -> ResearchState:
     """
     阶段 A：研究循环。
 
     参数：
-        state:     ResearchState（外部创建，topic 已设好）
-        client:    ZhipuAI 客户端（外部传入，复用连接）
-        logger:    日志器
-        max_steps: 最大搜索轮次
-        history:   历史对话 messages（Day 8 Session Memory）。
-                   传入则 Agent 能理解上下文指代（"它""上次"等）。
+        state:       ResearchState（外部创建，topic 已设好）
+        client:      ZhipuAI 客户端（外部传入，复用连接）
+        logger:      日志器
+        max_steps:   最大搜索轮次
+        history:     历史对话 messages（Day 8 Session Memory）。
+        on_progress: 进度回调（Day 9 Streaming）。
+                     每个关键步骤调用，传入事件 dict，外部据此推送 SSE。
     返回：
         更新后的 state（findings 字段被填充）
     """
+
+    def _emit(event: dict):
+        """安全地触发进度回调（没有回调时啥也不做）。"""
+        if on_progress:
+            try:
+                on_progress(event)
+            except Exception:
+                pass  # 回调失败不能影响 Agent 主流程
+
     logger.info(f"🔍 阶段 A 开始研究：{state.topic}")
+    _emit({"event": "phase", "phase": "research", "topic": state.topic})
 
     # 构建消息列表：System Prompt + [历史对话] + 本次课题
     # 关键：历史对话插在 system 和本次 user 之间，让 LLM 有上下文
@@ -67,6 +79,7 @@ def run_research(state: ResearchState, client: ZhipuAI, logger: logging.Logger,
     if history:
         state.messages.extend(history)
         logger.info(f"📚 已加载 {len(history)} 条历史消息")
+        _emit({"event": "history", "count": len(history)})
     state.messages.append(
         {"role": "user", "content": f"请研究以下课题：{state.topic}"},
     )
@@ -86,10 +99,12 @@ def run_research(state: ResearchState, client: ZhipuAI, logger: logging.Logger,
             if not state.can_continue():
                 state.status = "max_steps_reached"
                 logger.warning(f"⚠️ 达到最大步数 {state.max_steps}，停止搜索")
+                _emit({"event": "max_steps", "max_steps": state.max_steps})
                 break
 
             state.steps += 1
             logger.info(f"--- 第 {state.steps} 轮 ---")
+            _emit({"event": "step", "step": state.steps})
             state.messages.append(message.model_dump())
 
             for tool_call in message.tool_calls:
@@ -99,10 +114,15 @@ def run_research(state: ResearchState, client: ZhipuAI, logger: logging.Logger,
                 # 不同工具打印不同的日志（语义清晰）
                 if fn_name == "search_web":
                     logger.info(f"🔎 搜索：{args.get('query', '?')}")
+                    _emit({"event": "tool_start", "tool": "search_web",
+                           "query": args.get('query', '?')})
                 elif fn_name == "fetch_url":
-                    logger.info(f"📖 读全文：{args.get('url', '?')[:60]}")
+                    url = args.get('url', '?')[:60]
+                    logger.info(f"📖 读全文：{url}")
+                    _emit({"event": "tool_start", "tool": "fetch_url", "url": url})
                 else:
                     logger.info(f"🔧 调用：{fn_name}({args})")
+                    _emit({"event": "tool_start", "tool": fn_name, "args": args})
 
                 # 执行工具（都自带 @retry_with_timeout）
                 import time
@@ -124,12 +144,21 @@ def run_research(state: ResearchState, client: ZhipuAI, logger: logging.Logger,
                 if fn_name == "search_web":
                     cnt = result.get("count", 0)
                     logger.info(f"   {ok} 找到 {cnt} 条结果（{elapsed:.1f}s）")
+                    _emit({"event": "tool_end", "tool": "search_web",
+                           "success": result.get("success", False),
+                           "count": cnt, "elapsed": round(elapsed, 1)})
                 elif fn_name == "fetch_url":
                     length = result.get("length", 0)
                     truncated = "（已截断）" if result.get("truncated") else ""
                     logger.info(f"   {ok} 正文 {length} 字符{truncated}（{elapsed:.1f}s）")
+                    _emit({"event": "tool_end", "tool": "fetch_url",
+                           "success": result.get("success", False),
+                           "length": length, "elapsed": round(elapsed, 1)})
                 else:
                     logger.info(f"   {ok} 完成（{elapsed:.1f}s）")
+                    _emit({"event": "tool_end", "tool": fn_name,
+                           "success": result.get("success", False),
+                           "elapsed": round(elapsed, 1)})
 
                 # 回传给 LLM
                 state.messages.append({
@@ -155,11 +184,14 @@ def run_research(state: ResearchState, client: ZhipuAI, logger: logging.Logger,
         # 把对话过程中的搜索结果整理成 findings 文本，喂给阶段 B
         state.findings = _extract_findings(state)
         logger.info(f"📝 阶段 A 完成：搜索 {state.steps} 轮，素材 {len(state.findings)} 字符")
+        _emit({"event": "phase_done", "phase": "research",
+               "steps": state.steps, "findings_length": len(state.findings)})
 
     except Exception as e:
         state.status = "error"
         state.error = f"研究阶段出错：{type(e).__name__}: {e}"
         logger.error(f"❌ {state.error}")
+        _emit({"event": "error", "phase": "research", "error": state.error})
 
     return state
 
