@@ -24,6 +24,10 @@ eval_results_before_optimize/
 # ===== 数据库（运行时数据，不进仓库）=====
 data/
 
+# ===== RAG 向量库（运行时数据）=====
+# knowledge/ 里的源文档要进仓库，但向量库索引不进
+# （chroma 存在 data/chroma/ 下，已被 data/ 覆盖）
+
 # ===== 编辑器 =====
 .vscode/
 .idea/

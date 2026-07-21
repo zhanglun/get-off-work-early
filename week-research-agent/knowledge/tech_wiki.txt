@@ -1,0 +1,29 @@
+技术wiki：团队开发规范
+
+一、代码规范
+所有 Python 代码遵循 PEP 8 规范。
+使用 4 个空格缩进，不用 Tab。
+函数和类必须有 docstring，说明参数和返回值。
+变量名用 snake_case，类名用 CamelCase。
+类型注解必须写（def foo(x: int) -> str:）。
+
+二、Git 工作流
+主分支 main，开发分支 develop。
+功能开发从 develop 拉feature/xxx 分支。
+提交信息格式：type(scope): description（如 feat(auth): 加登录）。
+合并前必须经过至少一人 Code Review。
+禁止直接 push 到 main 和 develop。
+
+三、部署流程
+1. 开发环境（dev）：本地开发，随意测试
+2. 测试环境（staging）：合并到 develop 自动部署，QA 测试
+3. 预发布（pre-prod）：发版前最后验证
+4. 生产（prod）：正式环境，只能通过发布平台操作
+每次部署必须有回滚方案，部署窗口为工作日 10:00-18:00。
+
+四、技术栈
+后端：Python 3.11 + FastAPI + PostgreSQL
+前端：React 18 + TypeScript + Vite
+基础设施：Docker + Kubernetes + ArgoCD
+监控：Prometheus + Grafana
+日志：ELK（Elasticsearch + Logstash + Kibana）
