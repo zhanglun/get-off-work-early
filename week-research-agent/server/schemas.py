@@ -30,6 +30,9 @@ class ResearchMetadata(BaseModel):
     tool_calls: List[Dict[str, Any]] = Field(
         default_factory=list, description="工具调用明细"
     )
+    tokens: Optional[Dict[str, int]] = Field(
+        None, description="Token 用量（Day 10）：prompt/completion/total"
+    )
 
 
 class ResearchResponse(BaseModel):

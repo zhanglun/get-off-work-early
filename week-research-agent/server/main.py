@@ -34,30 +34,11 @@ app = FastAPI(
     version="1.0.0",
 )
 
-# ===== Day 8 Session Memory：会话存储 =====
-# 结构：{session_id: [{"role": "user/assistant", "content": "..."}, ...]}
-# 注意：内存存储，服务重启即丢失。生产环境用 Redis 持久化。
-SESSIONS: dict = {}
-
-# 会话上限：防止内存无限增长（超过则清理最早的）
-MAX_SESSIONS = 100
-
-
-def get_or_create_session(session_id: str = None) -> str:
-    """获取或创建会话，返回 session_id。"""
-    import uuid
-    if not session_id:
-        session_id = str(uuid.uuid4())[:8]
-
-    if session_id not in SESSIONS:
-        # 清理：会话数超上限时，删最早的（简单的 LRU 策略）
-        if len(SESSIONS) >= MAX_SESSIONS:
-            oldest = next(iter(SESSIONS))
-            del SESSIONS[oldest]
-        SESSIONS[session_id] = []
-        print(f"🆕 创建会话 {session_id}")
-
-    return session_id
+# ===== Day 8/10 Session Memory：会话存储 =====
+# Day 8：内存 dict（重启即丢）
+# Day 10：换成 SQLite 持久化（重启不丢）—— storage.py 封装
+import server.storage as storage
+from server.storage import get_or_create_session  # 接口兼容，签名一致
 
 # 挂载静态文件目录（网页、图片等放在 static/ 下）
 STATIC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
@@ -100,10 +81,9 @@ async def research(req: ResearchRequest):
     try:
         start = time.time()
 
-        # ===== Day 8 Session Memory：取出历史对话 =====
-        # 用 get_or_create_session 确保 session 存在（即使客户端传了新的 id）
+        # ===== Session Memory：取出历史对话（Day 10 改用 SQLite 持久化）=====
         session_id = get_or_create_session(req.session_id)
-        history = SESSIONS.get(session_id, [])
+        history = storage.get_history(session_id)
         if history:
             print(f"📚 会话 {session_id}：加载 {len(history)} 条历史")
 
@@ -111,19 +91,14 @@ async def research(req: ResearchRequest):
         state = run_research_agent(req.topic, max_steps=8, verbose=False, history=history)
         elapsed = time.time() - start
 
-        # ===== Day 8 Session Memory：把本次对话存回会话 =====
+        # ===== Session Memory：把本次对话存回会话（持久化到 SQLite）=====
         if session_id:
-            # 把本轮的"用户问 + Agent 答"追加到会话历史
-            # 注意：只存 user + assistant 的核心对话，不存 tool 中间消息（太长）
-            SESSIONS[session_id].append(
-                {"role": "user", "content": req.topic}
-            )
-            # Agent 的回答用报告的 summary（精炼，不存完整报告省 token）
+            # 只存 user + assistant 核心对话，不存 tool 中间消息（太长）
+            storage.append_message(session_id, "user", req.topic)
+            # Agent 的回答用报告的 summary（精炼，省 token）
             answer = state.report.get("summary", "（无摘要）") if state.report else "（研究失败）"
-            SESSIONS[session_id].append(
-                {"role": "assistant", "content": answer}
-            )
-            print(f"💾 会话 {session_id}：已存回，共 {len(SESSIONS[session_id])} 条")
+            storage.append_message(session_id, "assistant", answer)
+            print(f"💾 会话 {session_id}：已存回 SQLite")
 
         # 打包工具调用明细（给前端展示 Agent 干了什么）
         tool_calls_meta = [
@@ -145,6 +120,11 @@ async def research(req: ResearchRequest):
                 elapsed=round(elapsed, 1),
                 status=state.status,
                 tool_calls=tool_calls_meta,
+                tokens={
+                    "prompt": state.prompt_tokens,
+                    "completion": state.completion_tokens,
+                    "total": state.total_tokens,
+                } if state.total_tokens > 0 else None,
             ),
             session_id=session_id,
         )
@@ -191,17 +171,17 @@ async def research_stream(topic: str = Query(..., min_length=1, max_length=200),
         """在子线程跑 Agent（不阻塞 async generator）。"""
         try:
             sid = get_or_create_session(session_id)
-            history = SESSIONS.get(sid, [])
+            history = storage.get_history(sid)
 
             state = run_research_agent(
                 topic, max_steps=8, verbose=False,
                 history=history, on_progress=on_progress,
             )
 
-            # 存回 session（和同步接口一样的逻辑）
-            SESSIONS[sid].append({"role": "user", "content": topic})
+            # 存回 session（持久化到 SQLite）
+            storage.append_message(sid, "user", topic)
             answer = state.report.get("summary", "（无摘要）") if state.report else "（研究失败）"
-            SESSIONS[sid].append({"role": "assistant", "content": answer})
+            storage.append_message(sid, "assistant", answer)
 
             result_holder["state"] = state
             result_holder["session_id"] = sid

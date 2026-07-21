@@ -79,6 +79,7 @@ def run_report(state: ResearchState, client: ZhipuAI,
             temperature=Config.TEMPERATURE,
             response_format=RESPONSE_FORMAT,
         )
+        state.add_usage(response.usage)  # Day 10 token 统计
         raw = response.choices[0].message.content or ""
 
         # 解析 JSON（三层防护：API 参数 + prompt 要求 + 解析校验）

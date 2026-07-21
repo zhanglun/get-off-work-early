@@ -35,6 +35,18 @@ class ResearchState(_BaseAgentState):
     findings: str = ""                           # 阶段 A 收集的素材（文本汇总）
     report: dict = field(default_factory=dict)   # 阶段 B 生成的结构化报告
 
+    # ---- Day 10 Token 成本统计 ----
+    prompt_tokens: int = 0       # 输入 token（发给 LLM 的）
+    completion_tokens: int = 0   # 输出 token（LLM 生成的）
+    total_tokens: int = 0        # 总 token
+
+    def add_usage(self, usage) -> None:
+        """累加一次 LLM 调用的 token 用量。usage 是 response.usage 对象。"""
+        if usage:
+            self.prompt_tokens += getattr(usage, "prompt_tokens", 0)
+            self.completion_tokens += getattr(usage, "completion_tokens", 0)
+            self.total_tokens += getattr(usage, "total_tokens", 0)
+
     def research_summary(self) -> str:
         """生成研究专用的运行摘要（比 summary() 多报告研究维度）。"""
         base = self.summary()
@@ -54,6 +66,9 @@ class ResearchState(_BaseAgentState):
                 q = tc.arguments.get("query", "?")
                 mark = "✓" if tc.success else "✗"
                 extra.append(f"  {i}. {mark} {q}")
+        # Token 成本统计（Day 10）
+        if self.total_tokens > 0:
+            extra.append(f"Token: 输入 {self.prompt_tokens} + 输出 {self.completion_tokens} = {self.total_tokens}")
         return "\n".join([base] + extra)
 
 

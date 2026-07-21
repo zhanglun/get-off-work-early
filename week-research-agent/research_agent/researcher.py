@@ -92,6 +92,7 @@ def run_research(state: ResearchState, client: ZhipuAI, logger: logging.Logger,
             tools=RESEARCH_TOOLS_SCHEMA,
             temperature=Config.TEMPERATURE,
         )
+        state.add_usage(response.usage)  # Day 10 token 统计
         message = response.choices[0].message
 
         while message.tool_calls:
@@ -174,6 +175,7 @@ def run_research(state: ResearchState, client: ZhipuAI, logger: logging.Logger,
                 tools=RESEARCH_TOOLS_SCHEMA,
                 temperature=Config.TEMPERATURE,
             )
+            state.add_usage(response.usage)  # Day 10 token 统计
             message = response.choices[0].message
 
         # 循环结束：LLM 不再要工具，给出阶段 A 的小结
