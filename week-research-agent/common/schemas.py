@@ -109,6 +109,29 @@ TOOLS_SCHEMA = [
             },
         },
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "query_docs",
+            "description": (
+                "从本地知识库检索文档。当用户问关于私有文档的问题时使用——例如"
+                "'我们公司的报销流程''团队的代码规范''产品文档里怎么写的'。"
+                "这些内容互联网上搜不到，必须用本工具查本地知识库。"
+                "注意：公开信息（如 LangChain 是什么）用 search_web，"
+                "私有文档（如公司制度）用 query_docs。"
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "question": {
+                        "type": "string",
+                        "description": "要查询的问题，例如 '报销流程是什么'",
+                    },
+                },
+                "required": ["question"],
+            },
+        },
+    },
 ]
 
 

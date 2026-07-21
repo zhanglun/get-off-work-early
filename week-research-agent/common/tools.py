@@ -204,6 +204,62 @@ def fetch_url(url: str, max_length: int = 5000) -> dict:
         return {"success": False, "result": f"抓取失败：{type(e).__name__}: {e}"}
 
 
+# ============================================================
+# 工具 6：query_docs（查本地知识库，RAG，Lesson 04）
+# ============================================================
+# 和 search_web 的区别：
+# - search_web：搜互联网（公开信息）
+# - query_docs：查本地知识库（私有文档：公司手册/代码规范/产品文档）
+# Agent 根据问题性质自主选择。
+def query_docs(question: str, top_k: int = 3) -> dict:
+    """
+    从本地知识库检索相关文档，返回检索到的内容。
+
+    用于回答关于私有文档的问题（公司制度、团队规范、产品文档等）。
+    这些内容互联网上搜不到，必须用本工具。
+
+    参数：
+        question: 要查询的问题
+        top_k:    检索几个最相关的文档块
+    """
+    try:
+        # 延迟 import，避免启动时加载向量库
+        import sys, os
+        sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        from rag.store import VectorStore
+
+        store = VectorStore()
+
+        # 知识库为空的情况
+        if store.count() == 0:
+            return {
+                "success": False,
+                "result": "知识库为空。请先运行 python -m rag index 索引文档。",
+            }
+
+        # 语义检索
+        hits = store.search(question, top_k=top_k)
+
+        if not hits:
+            return {"success": False, "result": f"知识库中未找到与「{question}」相关的内容"}
+
+        # 格式化检索结果
+        parts = []
+        for i, hit in enumerate(hits, 1):
+            parts.append(f"[{i}]（来源：{hit['source']}，相关度：{hit['score']}）\n{hit['text']}")
+        context = "\n\n".join(parts)
+
+        return {
+            "success": True,
+            "question": question,
+            "count": len(hits),
+            "sources": list({h["source"] for h in hits}),
+            "context": context,
+        }
+    except Exception as e:
+        return {"success": False, "result": f"知识库查询失败：{type(e).__name__}: {e}"}
+
+
 def _decode_html(html_bytes: bytes, content_type: str) -> str:
     """根据 HTTP 头或 meta 标签探测编码，解码 HTML。"""
     # 先从 Content-Type 头找编码

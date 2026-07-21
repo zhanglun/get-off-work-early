@@ -23,22 +23,25 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from zhipuai import ZhipuAI
 import logging
 from config import Config
-from common.tools import search_web, fetch_url
+from common.tools import search_web, fetch_url, query_docs
 from common.schemas import TOOLS_SCHEMA
 from common.state import ToolCallRecord
 from research_agent.prompts import RESEARCHER_SYSTEM_PROMPT
 from research_agent.state import ResearchState
 
 
-# 研究阶段允许的工具：搜索（找线索）+ 抓取（读全文）
-# 加法/读文件/列目录对"研究"没意义，不给 LLM，避免误用
+# 研究阶段允许的工具：
+# - search_web：搜互联网（公开信息）
+# - fetch_url：读网页全文（深度）
+# - query_docs：查本地知识库（私有文档，RAG）
 RESEARCH_TOOL_REGISTRY = {
     "search_web": search_web,
     "fetch_url": fetch_url,
+    "query_docs": query_docs,
 }
 
 # 只把研究相关工具的 schema 给 LLM（少而精）
-RESEARCH_TOOL_NAMES = {"search_web", "fetch_url"}
+RESEARCH_TOOL_NAMES = {"search_web", "fetch_url", "query_docs"}
 RESEARCH_TOOLS_SCHEMA = [t for t in TOOLS_SCHEMA if t["function"]["name"] in RESEARCH_TOOL_NAMES]
 
 
@@ -121,6 +124,10 @@ def run_research(state: ResearchState, client: ZhipuAI, logger: logging.Logger,
                     url = args.get('url', '?')[:60]
                     logger.info(f"📖 读全文：{url}")
                     _emit({"event": "tool_start", "tool": "fetch_url", "url": url})
+                elif fn_name == "query_docs":
+                    logger.info(f"📚 查知识库：{args.get('question', '?')}")
+                    _emit({"event": "tool_start", "tool": "query_docs",
+                           "question": args.get('question', '?')})
                 else:
                     logger.info(f"🔧 调用：{fn_name}({args})")
                     _emit({"event": "tool_start", "tool": fn_name, "args": args})
@@ -155,6 +162,14 @@ def run_research(state: ResearchState, client: ZhipuAI, logger: logging.Logger,
                     _emit({"event": "tool_end", "tool": "fetch_url",
                            "success": result.get("success", False),
                            "length": length, "elapsed": round(elapsed, 1)})
+                elif fn_name == "query_docs":
+                    cnt = result.get("count", 0)
+                    sources = result.get("sources", [])
+                    logger.info(f"   {ok} 检索到 {cnt} 块（来源 {sources}）（{elapsed:.1f}s）")
+                    _emit({"event": "tool_end", "tool": "query_docs",
+                           "success": result.get("success", False),
+                           "count": cnt, "sources": sources,
+                           "elapsed": round(elapsed, 1)})
                 else:
                     logger.info(f"   {ok} 完成（{elapsed:.1f}s）")
                     _emit({"event": "tool_end", "tool": fn_name,
