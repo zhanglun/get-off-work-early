@@ -3,6 +3,14 @@
 > 学习方式：用 LangChain 重写手写版 Agent，对比看透框架在做什么。
 > 核心认知：**你 10 天手写的代码，框架都有对应封装。先学原理的价值在这里兑现。**
 
+> 📂 **关联代码**
+> - 目录：`langchain_version/`（用框架重写的版本，和手写版做对比）
+>   - `tools.py`（用 `@tool` 重写工具，对比手写 `TOOLS_SCHEMA`；含 `show_what_framework_generates` 演示自动生成 schema）
+>   - `agent.py`（用 `ChatZhipuAI` + `bind_tools` 重写 Loop，对比手写 while；另含 `AgentExecutor` 一行版）
+> - 对比的手写版：`research_agent/`、`common/tools.py`、`common/schemas.py`
+> - 运行：`python langchain_version/tools.py`（看自动 schema）、`python langchain_version/agent.py`（跑 LangChain 版 Agent）
+> - 依赖：`langchain` + `langchain-community` + `langchain-zhipuai`
+
 ---
 
 ## 〇、心智模型：LangChain = 你写的代码的封装

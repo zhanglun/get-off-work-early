@@ -5,6 +5,14 @@
 >
 > 本篇记录从"能用"到"好用"的思考：为什么 Memory 和 Workflow 是下一步，以及路线图。
 
+> 📂 **关联代码**
+> - Session Memory：`server/main.py`（SESSIONS 会话存储）、`research_agent/agent.py`（+ `history` 参数）、`research_agent/researcher.py`（history 拼进 messages）
+> - Workflow：`workflow/`（Planner + Executor + Synthesizer）
+>   - `planner.py`（LLM 拆解大课题）、`executor.py`（复用 `run_research_agent`）、`synthesizer.py`（综合子报告）、`agent.py`（编排三步）、`__main__.py`（CLI）
+> - 运行：`python -m workflow "全面研究 AI Agent 领域"`、Web 端自动带 session_id
+
+---
+
 ---
 
 ## 〇、起点：Day 7 完成后的反思

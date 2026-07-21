@@ -3,6 +3,12 @@
 > 对应：单 Agent 打磨收尾（持久化 Memory + Token 成本统计）
 > 核心升级：**Memory 从内存到 SQLite（重启不丢）+ 量化每次研究的 token 成本**
 
+> 📂 **关联代码**
+> - 持久化 Memory：`server/storage.py`（SQLite 封装，`get_history`/`append_message`/`get_or_create_session`）、`server/main.py`（用 storage 替换内存 dict，接口兼容）
+> - Token 统计：`research_agent/state.py`（+`prompt_tokens`/`completion_tokens`/`total_tokens` + `add_usage`）、`researcher.py` + `reporter.py`（每次 LLM 调用后 `state.add_usage(response.usage)`）、`server/schemas.py`（响应含 `tokens`）
+> - 数据：`data/sessions.db`（SQLite，运行时生成，gitignore）
+> - 运行：`python -m server` → 重启服务，记忆不丢
+
 ---
 
 ## 〇、心智模型：从"能用"到"可用"

@@ -4,6 +4,15 @@
 > 让 Agent 能读私有文档——从"只能搜互联网"到"能读知识库"
 > 技术栈：sentence-transformers + Chroma + 智谱 GLM
 
+> 📂 **关联代码**
+> - 独立 RAG 模块：`rag/`（四件套）
+>   - `loader.py`（文档加载 + 滑动窗口切块）、`embedder.py`（本地 Embedding：bge-small-zh，512 维）、`store.py`（Chroma 向量库封装）、`chain.py`（RAG 主流程：检索→生成）、`__main__.py`（CLI：index/ask）
+> - 接入 Agent：`common/tools.py`（`query_docs` 函数）、`common/schemas.py`（`query_docs` schema）、`research_agent/researcher.py`（注册到工具表）
+> - 测试文档：`knowledge/company_handbook.txt`、`knowledge/tech_wiki.txt`
+> - 向量库：`data/chroma/`（运行时生成，gitignore）
+> - 运行：`python -m rag index` → `python -m rag ask "报销流程是什么"`
+> - 依赖：`chromadb` + `sentence-transformers`（智谱 embedding-2 收费 429，换本地模型）
+
 ---
 
 ## 〇、心智模型：从"搜互联网"到"读私有文档"

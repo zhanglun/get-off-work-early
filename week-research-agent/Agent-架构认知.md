@@ -5,6 +5,15 @@
 >
 > 所有认知都来自亲手实现的 Research Agent（Day 1-7），不是纸上谈兵。
 
+> 📂 **关联代码**（这篇是架构思考，关联整个项目的关键位置）
+> - Agent 三要素实证：`research_agent/researcher.py`（while 循环 = Loop）
+> - 接口 = 远程函数：`server/main.py`（`@app.post` 把函数暴露成 HTTP）
+> - 请求级隔离：`server/main.py`（每次请求独立 state）
+> - messages 标准：`research_agent/researcher.py`（role/content 结构）
+> - Session Memory：`server/main.py` + `server/storage.py`（SQLite 持久化）
+> - 多用户/生产架构：尚未实现（笔记里标了 Level 1-4 路线）
+> - 核心代码位置见第十二章"这些认知从哪来"的对照表
+
 ---
 
 ## 一、什么才算 Agent？三要素是铁律

@@ -4,6 +4,13 @@
 > 技术栈：智谱 GLM-4-Flash + DuckDuckGo + readability-lxml + Python
 > 核心升级：**两步法 + System Prompt + 包结构 + fetch_url 深度阅读**
 
+> 📂 **关联代码**
+> - 目录：`research_agent/`（Python 包，产品形态）+ `common/`（公共代码）
+> - 核心文件：`research_agent/agent.py`（两步法编排）、`researcher.py`（阶段 A 研究 Loop）、`reporter.py`（阶段 B 报告生成）、`prompts.py`（System Prompt）、`state.py`（ResearchState，三层继承）
+> - 公共：`common/tools.py`（+ `fetch_url`）、`common/schemas.py`、`common/state.py`、`common/logger.py`
+> - 运行：`python -m research_agent`
+> - 关键设计：业务逻辑零改动，是 Day 7 部署、Day 8 Workflow、Day 9 Streaming 的地基
+
 ---
 
 ## 〇、一个心智模型：从"零件"到"产品"

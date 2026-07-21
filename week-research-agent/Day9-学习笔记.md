@@ -4,6 +4,14 @@
 > 技术栈：SSE + 观察者模式 + 线程/Queue 桥接 + EventSource
 > 核心升级：**从"30 秒白屏"到"实时看到 Agent 每一步"**
 
+> 📂 **关联代码**
+> - 三层改动：
+>   - Agent 层：`research_agent/agent.py`（+`on_progress`）、`researcher.py`（`_emit` 事件）、`reporter.py`（同）
+>   - Server 层：`server/main.py`（`/api/research/stream` SSE 接口，StreamingResponse + 线程 + Queue + 同步 generator）
+>   - 前端：`server/static/index.html`（`EventSource` 接收 + 实时渲染进度流）
+> - 运行：`python -m server` → 浏览器输入课题 → 看实时进度
+> - 关键：同步 generator（async run_in_executor 有坑，会丢事件）
+
 ---
 
 ## 〇、心智模型：从"黑盒等待"到"透明过程"

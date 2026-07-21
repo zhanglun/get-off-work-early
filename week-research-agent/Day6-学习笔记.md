@@ -4,6 +4,12 @@
 > 技术栈：GLM-4-Flash + LLM as a Judge + Python
 > 核心升级：**benchmark 课题集 + LLM 互评 + 数据驱动改进**
 
+> 📂 **关联代码**
+> - 目录：`evaluation/`（评估套件包）
+> - 核心文件：`evaluation/test_cases.py`（10 个 benchmark 课题，4 档难度）、`judge.py`（LLM as a Judge，4 维度打分）、`metrics.py`（硬指标+软指标聚合）、`runner.py`（批量执行）、`report.py`（终端报告 + Markdown）、`__main__.py`（CLI）
+> - 运行：`python -m evaluation`、`python -m evaluation --quick`、`python -m evaluation --cases case_001`
+> - 结果：`eval_results/`（运行时生成，gitignore，含 `eval_report.md`）
+
 ---
 
 ## 〇、一个心智模型：从"感觉驱动"到"数据驱动"

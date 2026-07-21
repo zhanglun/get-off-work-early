@@ -4,6 +4,12 @@
 > 技术栈：智谱 GLM-4-Flash + DuckDuckGo + Python logging + 装饰器
 > 核心升级：**日志系统 + 结构化输出 + 重试/超时**
 
+> 📂 **关联代码**
+> - 目录：`day4/`（已重构为复用 `common/`）
+> - 核心文件：`day4/logger.py`（→ 现 `common/logger.py`，日志 + JSONL）、`day4/tools.py`（→ 现 `common/tools.py`，`@retry_with_timeout` 装饰器）、`day4/schemas.py`（`RESPONSE_FORMAT` 结构化输出）、`day4/agent.py`（三项升级整合）
+> - 运行：`python day4/agent.py`
+> - 演进：logger/tools/schemas 后续提到 `common/`，被 Day 5+ 复用
+
 ---
 
 ## 〇、一个心智模型：从"能用"到"稳得住"

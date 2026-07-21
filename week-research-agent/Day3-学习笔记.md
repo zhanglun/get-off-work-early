@@ -4,6 +4,12 @@
 > 技术栈：智谱 GLM-4-Flash + DuckDuckGo 搜索 + Python
 > 核心升级：**State 管理 + 真实联网搜索 + max_steps 防死循环**
 
+> 📂 **关联代码**
+> - 目录：`day3/`
+> - 核心文件：`day3/state.py`（AgentState + ToolCallRecord）、`day3/agent.py`（带 State 的 Loop）、`day3/tools.py`（真实联网 search_web）、`day3/verify.py`（5 场景验证）
+> - 运行：`python day3/agent.py`、`python day3/verify.py`
+> - 复用：`day3/state.py` 后来提到 `common/state.py`，被 Day 4/5/8/9 继承
+
 ---
 
 ## 〇、一个心智模型：从"裸奔"到"有记忆"

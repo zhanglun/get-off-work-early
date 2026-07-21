@@ -4,6 +4,13 @@
 > 技术栈：FastAPI + Uvicorn + 原生 HTML/JS
 > 核心升级：**把命令行工具变成 Web 服务**
 
+> 📂 **关联代码**
+> - 目录：`server/`（FastAPI Web 服务）
+> - 核心文件：`server/main.py`（FastAPI 应用 + 4 个接口：`/`、`/api/health`、`/api/research`、`/api/research/stream`）、`server/schemas.py`（HTTP Pydantic schema）、`server/static/index.html`（Web UI，原生 HTML/JS）、`server/__main__.py`（入口）
+> - 运行：`python -m server` → 浏览器访问 `http://localhost:8000`
+> - API 文档：`http://localhost:8000/docs`（Swagger 自动生成）
+> - 关键：业务逻辑零改动，复用 Day 5 的 `run_research_agent`
+
 ---
 
 ## 〇、一个心智模型：从"工具"到"产品"

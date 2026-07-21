@@ -4,6 +4,11 @@
 > 技术栈：智谱 GLM-4-Flash + Python + 智谱官方 SDK（OpenAI 兼容）
 > 核心理念：**先学原理，再学框架。不依赖 LangChain，手写 Agent Loop。**
 
+> 📂 **关联代码**
+> - 目录：`day1/`、`day2/`
+> - 核心文件：`day1/agent.py`（最小 Agent）、`day2/agent.py`（多工具 Loop）、`day2/schemas.py`（Tool Schema）、`day2/tools.py`（工具实现）
+> - 运行：`python day1/agent.py`、`python day2/agent.py`
+
 ---
 
 ## 〇、一个心智模型：Agent 到底是什么
