@@ -293,7 +293,157 @@ def tool(func):
 
 ---
 
-## 六、关键概念速查表
+## 六、Agent 模式：ReAct 与 Function Calling（重要澄清）
+
+### 6.1 ReAct 是什么
+
+> **ReAct = Reasoning（推理）+ Acting（行动）的交替执行。** Agent 先"想"（Thought），再"做"（Action），看结果（Observation）再"想"，循环往复。
+
+ReAct 是 2022 年 Yao 等人提出的，原始流程：
+
+```
+Thought: 用户问 LangChain 是什么，我需要搜索
+Action: search("LangChain")
+Observation: LangChain 是一个 AI 框架...
+Thought: 搜到了，但需要更多细节
+Action: fetch_url("...")
+Observation: ...
+Thought: 信息够了，可以回答了
+Action: Finish("LangChain 是...")
+```
+
+**三个关键词的循环**：Thought → Action → Observation → Thought → ... 这就是 ReAct 名字的由来（Re(asoning) + Act(ing)）。
+
+### 6.2 你的实现是 ReAct 吗
+
+**严格说：不是经典 ReAct，是它的现代演进版——Function Calling Agent。**
+
+看你的代码：
+
+```python
+# 你的 researcher.py（Day 3-5）
+while message.tool_calls:        # ← LLM 直接返回 tool_calls
+    result = TOOL_REGISTRY[fn_name](**args)
+```
+
+**你的 Agent 没有显式的 Thought 步骤**——LLM 直接返回 `tool_calls`（结构化 JSON），而不是用自然语言"思考"。
+
+### 6.3 两种模式的对比
+
+#### 经典 ReAct（2022，基于 prompt 文本解析）
+
+```
+LLM 输出（纯文本，要解析）：
+  Thought: 我需要搜索 LangChain
+  Action: search
+  Action Input: LangChain
+
+代码要解析这段文本，提取 Action 和 Input
+```
+
+```python
+# 经典 ReAct 伪代码
+response = llm(prompt)
+# response 是文本："Thought: ...\nAction: search\nAction Input: LangChain"
+thought, action, action_input = parse_react_text(response)  # ← 要自己解析！
+result = TOOL_REGISTRY[action](action_input)
+```
+
+#### Function Calling Agent（2023+，你的实现）
+
+```
+LLM 输出（结构化 JSON，直接用）：
+  {"tool_calls": [{"name": "search", "args": {"query": "LangChain"}}]}
+
+代码直接用，不用解析文本
+```
+
+```python
+# 你的实现
+for tool_call in response.choices[0].message.tool_calls:  # ← 结构化
+    result = TOOL_REGISTRY[tool_call.function.name](**args)
+```
+
+### 6.4 核心区别
+
+| 维度 | 经典 ReAct | 你的实现（Function Calling） |
+|------|-----------|---------------------------|
+| **思考方式** | 自然语言 Thought（显式） | LLM 内部推理（隐式） |
+| **工具调用** | 文本解析 `Action: xxx` | 结构化 `tool_calls` JSON |
+| **解析难度** | 高（要正则解析文本） | 零（API 直接返回结构） |
+| **可靠性** | 低（LLM 可能格式错） | 高（API 保证格式） |
+| **时代** | 2022（LLM 不支持 function calling） | 2023+（原生 function calling） |
+
+**为什么有这个区别**：2022 年 LLM 不支持 function calling，ReAct 用 prompt 让 LLM 输出文本，开发者解析。2023 年后 OpenAI/智谱原生支持 function calling，**LLM 内部做 Reasoning，直接返回结构化 tool_calls**。
+
+### 6.5 ReAct 死了吗？没有，它演进了
+
+**Function Calling Agent 是 ReAct 的现代化版本**：
+
+```
+ReAct（2022）：      Thought（显式文本）→ Action（要解析）→ Observation
+                     三个步骤都在 prompt 里
+
+Function Calling：   Reasoning（LLM 内部）→ tool_calls（结构化）→ Observation
+                     Reasoning 隐式发生，Action 结构化返回
+```
+
+**ReAct 的思想没变**（推理+行动循环），**实现方式从"prompt 解析"进化到"原生 function calling"**。
+
+### 6.6 LangChain 里的命名印证
+
+| LangChain Agent 类型 | 对应什么 |
+|---------------------|---------|
+| `create_react_agent` | 经典 ReAct（文本解析，老式） |
+| `create_tool_calling_agent` | Function Calling（你的实现，现代） |
+| `create_json_agent` | JSON 格式的 ReAct |
+| `create_structured_chat_agent` | 结构化输出的 ReAct |
+
+**我们的 `agent.py` 用 `create_tool_calling_agent`（不是 `create_react_agent`）**——现代版"ReAct 思想 + function calling 实现"。
+
+### 6.7 Thought 去哪了
+
+**你的 Agent 其实有 Thought，只是看不到。**
+
+调用 `client.chat.completions.create(tools=...)` 时，LLM 内部做的事：
+
+```
+LLM 收到：messages + tools 清单
+LLM 内部推理（你看不到的 Thought）：
+  "用户问 LangChain 是什么，我有 search_web 工具，应该先搜。"
+LLM 输出（你看到的）：
+  tool_calls: [{"name": "search_web", "args": {"query": "LangChain"}}]
+```
+
+**Thought 发生在 LLM 内部，输出时被"压缩"成 tool_calls。**
+
+**新趋势（2024-2025）**：有些模型（Claude 3.5、DeepSeek-R1、o1/o3）支持**显式 reasoning**——把 Thought 也返回，让开发者能看到推理过程。这就是 ChatGPT o1 的"思考过程"展示。
+
+### 6.8 ReAct 家族谱
+
+```
+ReAct（2022，原始论文）
+  ├─ 经典 ReAct（prompt + 文本解析）      ← LangChain 的 create_react_agent
+  ├─ Function Calling Agent（原生 API）   ← 你的实现 / create_tool_calling_agent
+  └─ 推理模型 Agent（显式 Thought）       ← o1/o3/DeepSeek-R1（最新）
+
+共同核心：Reasoning + Acting 循环
+区别：Thought 怎么表达、Action 怎么调用
+```
+
+### 6.9 面试场景
+
+如果被问"你的 Agent 是 ReAct 模式吗"：
+
+> **"是 ReAct 思想的现代实现——Function Calling Agent。**
+> 经典 ReAct 用 prompt 让 LLM 输出 Thought/Action 文本，开发者解析。我的实现用原生 function calling，LLM 内部做 Reasoning，直接返回结构化 tool_calls，更可靠。
+> **核心思想一样**（推理+行动循环），**实现方式更现代**（function calling 替代文本解析）。"
+
+这个回答展示你**既懂历史（ReAct 论文），又懂现代（function calling），还懂区别**。
+
+---
+
+## 七、关键概念速查表
 
 | 术语 | 含义 | 对应你的手写 |
 |------|------|------------|
@@ -306,10 +456,15 @@ def tool(func):
 | **max_iterations** | 最大循环次数 | 你的 max_steps |
 | **Message** | 对话消息（Human/AI/System/Tool） | 你的 role/content dict |
 | **LangGraph** | 工作流编排（图） | 你的 run_research_agent 编排 |
+| **ReAct** | Reasoning+Acting 交替循环（2022 论文） | 你的 Loop 的思想源头 |
+| **Thought/Action/Observation** | ReAct 的三要素 | 你的隐式推理+tool_calls+result |
+| **Function Calling Agent** | ReAct 的现代版（原生 API） | 你的实现方式 |
+| **create_react_agent** | 经典 ReAct（文本解析） | 你没用（老式） |
+| **create_tool_calling_agent** | Function Calling（现代） | 你的实现 |
 
 ---
 
-## 七、当前进度 & 下一步
+## 八、当前进度 & 下一步
 
 ```
 ✅ 手写版 Agent（Day 1-10 + RAG）           ← 你懂原理
