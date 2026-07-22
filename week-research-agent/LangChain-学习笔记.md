@@ -591,6 +591,161 @@ Day 8 Workflow（Plan-and-Solve 大框架）
 
 这个回答展示你**懂范式、懂手段、懂层次关系、还有代码实证**。
 
+### 6.16 Reflection：第四种范式，独立的一层
+
+> 来源：Datawhale hello-agents 第四章 §4.4。前面 6.10–6.15 讲了 ReAct / Plan-and-Solve / Function Calling 三者的关系，读完 Reflection 后发现**它在另一个层级**，需要单开一节厘清。
+
+#### 6.16.1 Reflection 是什么
+
+一句话：**做完之后回头审视自己的产出，发现问题并修正，循环往复直到满意。**
+
+核心是一个三步循环（原文 §4.4.1）：
+
+```
+执行(生成初稿) → 反思(评审员挑刺) → 优化(根据反馈改稿)
+     ↑                                      |
+     └──────────────────────────────────────┘
+              迭代直到"没问题"或达上限
+```
+
+形式化（原文公式）：
+- 反思模型生成反馈：`F_i = π_reflect(Task, O_i)`
+- 优化模型生成新版：`O_{i+1} = π_refine(Task, O_i, F_i)`
+
+关键点：第二步"反思"**不靠外部工具的反馈**（那是 ReAct 的 Observation），而是**用一个 LLM 扮演"评审员"**，从事实性 / 逻辑性 / 效率 / 遗漏等维度挑自己产出的毛病，生成**结构化反馈**，再让"执行者"根据反馈改一版。
+
+贴切的类比：**人写完初稿会校对，解完数学题会验算**——Reflection 就是把这个习惯装到 Agent 上。
+
+#### 6.16.2 和 ReAct、Plan-and-Solve 的关系：正交，不在同一层
+
+这是最容易搞混的地方。原文把三者并列介绍，但从机制看：**ReAct 和 Plan-and-Solve 在同一层，Reflection 在另一层。**
+
+| 范式 | 回答的问题 | 一句话 | 我们的实践 |
+|------|-----------|--------|-----------|
+| **ReAct** | 怎么执行？ | 边想边做，走一步看一步 | Day 3-5 researcher 的 while 循环 |
+| **Plan-and-Solve** | 怎么执行？ | 先画图纸，再按图施工 | Day 8 Planner→Executor→Synthesizer |
+| **Reflection** | 怎么做得**更好**？ | 做完复盘，找毛病，重做 | ❌ 还没正式做（见 6.16.3） |
+
+- ReAct vs Plan-and-Solve：**二选一**（都解决"怎么执行任务"，只是策略不同）
+- Reflection vs 前两者：**正交可叠加**（不关心你怎么做的，只关心"做完之后怎么改进"）
+
+**关系是包裹，不是替代**：
+
+```
+Reflection 可以包裹任意一种执行范式：
+
+    ┌─── Reflection 闭环（执行→反思→优化→…）─────────┐
+    │                                                  │
+    │   执行器可以是 ReAct，也可以是 Plan-and-Solve    │
+    │                                                  │
+    └──────────────────────────────────────────────────┘
+```
+
+生活类比：
+- **ReAct = 即兴演奏**（弹到哪算哪，边弹边听观众反应）
+- **Plan-and-Solve = 先写谱再演奏**（规划好整首曲子）
+- **Reflection = 演奏完听录音，找哪段不好，再练一遍**
+
+不管你是即兴还是照谱，都可以"录下来复盘"——这就是 Reflection 是独立一层的原因。
+
+#### 6.16.3 项目现状：装了"反思的眼睛"，没接"反思的手臂"
+
+对着代码盘点，我们**半涉及** Reflection：
+
+**✅ 已经有的（Reflection 的"反思"步骤雏形）**
+
+Day 6 的 LLM as a Judge（`evaluation/judge.py:52`）正是原文说的"评审员角色"：
+
+```python
+# judge.py:52 —— 用一个 LLM 扮演"研究报告评审员"
+JUDGE_PROMPT_TEMPLATE = """你是一个严格的研究报告评审员。请对下面这份研究报告打分。
+# 从 relevance / accuracy / completeness / conciseness 四个维度评估
+```
+
+四个维度（相关性 / 准确性 / 完整性 / 简洁性）和原文列举的反思维度高度重合。这就是 Reflection 闭环里的"反思"那一步。
+
+**❌ 缺的（Reflection 的"闭环"）**
+
+我们的流程是**单向的、一次性的**——`reporter.py:76-107` 调一次 LLM、解析 JSON、存档、结束，没有"把反馈喂回去重写"的回路：
+
+```
+现在：  findings → reporter 生成报告 → judge 打分 → 结束（分数存档，没人改）
+
+应该：  findings → reporter 生成报告 → judge 给"具体反馈"
+                 ↑                        ↓
+                 └── reporter 根据反馈重写 ←── 直到 judge 说"无需改进"或达上限
+```
+
+**一句话总结现状**：
+- **反思的"眼睛"装上了**（Judge 能发现问题、给反馈）
+- **反思的"手臂"没接上**（发现问题后，没有把反馈喂回去让 reporter 重写）
+
+这就是"评估"和"反思"的微妙差别：
+- **评估**（已做）= 打分，告诉你"这个报告 7 分"
+- **反思**（未做）= 打分 + 给反馈 + 让你改 + 再打分，直到满意
+
+#### 6.16.4 如果要补上 Reflection 闭环（草图）
+
+技术上很简单，因为地基都在——给 `run_report` 外面套个循环，把 judge 的反馈喂回去：
+
+```python
+# 伪代码：给 reporter 加 Reflection 闭环
+def run_report_with_reflection(state, client, logger, max_rounds=2):
+    for round_i in range(max_rounds):
+        run_report(state, ...)                  # 执行：生成/改写报告
+        feedback = judge_with_feedback(state.report, ...)  # 反思：评审员给"可操作反馈"
+        if feedback.is_good_enough:
+            break                               # 评审满意，退出闭环
+        # 把反馈喂回去：下一轮 reporter 会看到"上一版 + 反馈"，据此改进
+        state.findings += f"\n\n[评审反馈] {feedback.suggestions}"
+    return state
+```
+
+核心改动两点：
+1. 把 `judge` 从"只打分"升级成"打分 + 给可操作反馈"
+2. 把 reporter 的 prompt 加上"这是上一版报告和评审反馈，请改进"（类似原文的 `REFINE_PROMPT_TEMPLATE`）
+
+> 🔑 **这个闭环一旦接上，我们的 Agent 就集齐了三种范式的实践**：ReAct（执行层）+ Plan-and-Solve（Workflow 层）+ Reflection（改进层）。面试时可以完整讲"我手写了业界三种经典范式，并理解它们在不同层级"。
+
+#### 6.16.5 更新后的四者关系图
+
+把 6.14 的图补上 Reflection 这一层：
+
+```
+┌─────────────────────────────────────────────────────────┐
+│              改进层（怎么做得更好）                       │
+│                                                         │
+│   Reflection：执行 → 反思 → 优化 → 迭代                  │
+│   独立的一层，可以包裹下面任意执行范式                     │
+│                                                         │
+│   Day 6 Judge 有雏形，闭环未接（见 6.16.3）              │
+└──────────────────────┬──────────────────────────────────┘
+                       │ 包裹 ↓
+┌──────────────────────┴──────────────────────────────────┐
+│              推理范式层（怎么思考）                       │
+│                                                         │
+│   ReAct              Plan-and-Solve                     │
+│   边想边做            先规划全盘                          │
+│                                                         │
+│   Day 3-5            Day 8 Workflow                     │
+└──────────────────────┬──────────────────────────────────┘
+                       │ 都用 ↓
+┌──────────────────────┴──────────────────────────────────┐
+│              实现手段层（怎么调工具）                     │
+│                                                         │
+│   Function Calling（原生 API，结构化）                   │
+└─────────────────────────────────────────────────────────┘
+```
+
+#### 6.16.6 关联代码
+
+| 概念 | 文件 | 说明 |
+|------|------|------|
+| LLM as a Judge（反思雏形） | `evaluation/judge.py` | 评审员 prompt + 四维度打分，Reflection 的"反思"步骤 |
+| 评估批跑（用到了 Judge） | `evaluation/runner.py` | 跑 10 个 case，调 judge 打分 |
+| Reporter（待加闭环） | `research_agent/reporter.py:32` | `run_report` 当前是单向一次性的，Reflection 闭环要套在这里 |
+| 报告 prompt | `research_agent/prompts.py` | `REPORTER_USER_TEMPLATE` 要加"上一版 + 反馈"的 refine 版本 |
+
 ---
 
 ## 七、关键概念速查表
@@ -614,6 +769,10 @@ Day 8 Workflow（Plan-and-Solve 大框架）
 | **Plan-and-Solve** | 先规划全盘再逐个执行（推理范式） | 你的 Day 8 Workflow（Planner→Executor→Synthesizer） |
 | **create_plan_and_execute_agent** | LangChain 的 Plan-and-Solve 实现 | 你的 workflow/ 的框架版 |
 | **推理范式 vs 实现手段** | ReAct/PS 是范式，Function Calling 是手段，正交可组合 | 你的项目是三者组合 |
+| **Reflection** | 做完→反思→优化，迭代改进（改进层，正交于推理范式） | Day 6 Judge 是反思雏形，闭环未接（见 §6.16） |
+| **Reflexion** | Reflection 的学术框架（Shinn, 2023） | 原理参考，未用框架 |
+| **LLM as a Judge** | 用 LLM 当评审员给另一个 LLM 的输出打分 | Day 6 `evaluation/judge.py`，Reflection 的"反思"步骤 |
+| **评估 vs 反思** | 评估=打分一次；反思=打分+反馈+重写，闭环 | Day 6 只做到评估，没做到反思 |
 
 ---
 
@@ -622,6 +781,8 @@ Day 8 Workflow（Plan-and-Solve 大框架）
 ```
 ✅ 手写版 Agent（Day 1-10 + RAG）           ← 你懂原理
 ✅ LangChain 对比学习（工具 + LLM + Loop）   ← 你看透框架封装
+✅ 范式认知（ReAct / Plan-and-Solve / Reflection 三层关系，§6.16）
+⬜ Reflection 闭环（把 Judge 的反馈喂回 reporter 重写，§6.16.4 有草图）
 ⬜ LangChain 进阶（Memory / Streaming）
 ⬜ LangGraph（用图重写两步法工作流）
 ⬜ 多 Agent 协作（LangGraph 多节点）
