@@ -335,6 +335,32 @@ Synthesizer：综合成覆盖框架/场景/技术/挑战的总报告
 | 进阶不是推翻重来 | Day 1-7 的代码是 Day 8 的地基，不是被丢弃的脚手架 |
 | 复用是最大的回报 | Workflow 直接复用 Day 5 Agent，0 行重复代码 |
 
+### 6.4 重要澄清：Agent 和 Workflow 不是"二选一"
+
+学完 Workflow 后，容易产生一个误解："用了 Workflow 就不用 Agent 了"或"Workflow 是 Agent 的升级版"。**这是错的。**
+
+正确的理解是**不同抽象层级**：
+
+```
+              Agent（决策层 / 脑）
+              决定"调哪个 Workflow""要不要换方案"
+                     │
+                     ▼
+              Workflow（执行层 / 手）
+              封装"固定步骤"（如 plan→execute→synthesize）
+```
+
+- **Workflow 是 Agent 的"执行模块"**——封装一组可复用、可预测的固定步骤
+- **Agent 是 Workflow 的"决策者"**——根据目标和观察结果，决定什么时候调用哪个 Workflow
+
+**一个成熟的 AI 系统**会把复杂任务拆成多个 Workflow，再由 Agent 在运行时**动态编排**这些 Workflow：
+- Workflow 提供稳定可靠的执行能力
+- Agent 提供自主决策和动态规划能力
+
+**我们的项目现状**：`run_workflow_agent` 内部是固定的 plan→execute→synthesize 流程（Workflow），它的 Executor 调用的 `run_research_agent` 是单课题 Agent。**未来进化方向**是让一个上层 Agent 根据观察结果，动态决定调"研究 Workflow""对比 Workflow""翻译 Workflow"等。
+
+> 📖 详见 `Agent-架构认知.md` 第九章「Agent vs Workflow：决策层 vs 执行层」
+
 ---
 
 ## 七、踩坑记录

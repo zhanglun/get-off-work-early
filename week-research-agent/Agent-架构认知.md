@@ -390,7 +390,98 @@ async def research(req, user_id):
 
 ---
 
-## 九、messages 结构：LLM 对话的行业标准
+## 九、Agent vs Workflow：决策层 vs 执行层（核心架构认知）
+
+### 9.1 最容易混淆的一对概念
+
+学 Day 8 Workflow 时，很容易把 Agent 和 Workflow 理解成"二选一"的替代关系（"用 Workflow 就不用 Agent 了"）。**这是错的。**
+
+正确的理解是**不同抽象层级**：Workflow 是 Agent 的"手"，Agent 是 Workflow 的"脑"。
+
+### 9.2 分层模型
+
+```
+                 用户目标
+                     │
+                     ▼
+              Agent（决策层 / 脑）
+      ┌──────────────┴──────────────┐
+      │                             │
+  决定下一步                    判断是否结束
+  （调哪个 Workflow）
+      │
+      ▼
+ Workflow（执行层 / 手）
+      │
+      ├── 步骤 1（如：生成代码）
+      ├── 步骤 2（如：编译）
+      ├── 步骤 3（如：运行测试）
+      └── 步骤 4（如：输出结果）
+```
+
+- **Workflow**：封装一组**可复用、可预测**的执行步骤（固定流水线）
+- **Agent**：根据当前目标和环境，**决定什么时候调用哪个 Workflow**，是否重试、是否换方案、是否继续探索
+
+### 9.3 为什么是互补，不是二选一
+
+| 层 | 职责 | 特点 |
+|----|------|------|
+| **Agent（决策层）** | 决定"调哪个 Workflow""要不要换方案" | 自主决策、动态规划、灵活 |
+| **Workflow（执行层）** | 封装"固定步骤"（如 plan→execute→synthesize） | 稳定、可靠、可预测 |
+
+两者互补：
+- **Workflow 提供稳定可靠的执行能力**
+- **Agent 提供自主决策和动态规划能力**
+
+> 🔑 **一个成熟的 AI 系统，会把复杂任务拆成多个 Workflow，再由 Agent 在运行时根据观察结果动态编排这些 Workflow**——既稳定又灵活。
+
+### 9.4 用业界产品验证这个模型
+
+**Cursor（AI 编程工具）**：
+
+```
+Agent（决策层）：
+  "用户要加登录功能"
+  → 调"代码分析 Workflow"（读文件→分析依赖→输出结构）
+  → 观察结果
+  → 调"代码生成 Workflow"（生成→格式化→写文件）
+  → 观察结果（测试失败）
+  → 调"调试 Workflow"（读错误→定位→修复→测试）
+  → 观察结果（测试通过）
+  → "任务完成"
+
+Workflow（执行层，各自封装固定步骤）：
+  代码分析 Workflow = 固定流水线
+  代码生成 Workflow = 固定流水线
+  调试 Workflow = 固定流水线
+```
+
+**Agent 在 Workflow 之间动态跳转**，Workflow 内部是固定步骤。
+
+### 9.5 对我们项目的启示
+
+按这个模型，我们的项目现状和进化方向：
+
+```
+现状：
+  run_workflow_agent（叫"Workflow"，但内部是固定流程）
+    └─ 调 run_research_agent（单课题 Agent）
+
+进化方向（成熟形态）：
+  Agent（决策层）
+    ├─ 调"研究 Workflow"（现在的 run_workflow_agent）
+    ├─ 调"对比 Workflow"（可加）
+    ├─ 调"翻译 Workflow"（可加）
+    └─ 根据观察结果动态决定下一个 Workflow
+```
+
+### 9.6 核心认知（一句话）
+
+> **Agent 和 Workflow 不是"二选一"，是"不同层级"。** Workflow 是 Agent 的执行模块（封装固定步骤），Agent 是 Workflow 的决策者（动态编排）。成熟系统 = Agent 编排多个 Workflow。
+
+---
+
+## 十、messages 结构：LLM 对话的行业标准
 
 ### 9.1 这是事实标准（de facto standard）
 
@@ -478,7 +569,7 @@ messages = [
 
 ---
 
-## 十、生产环境 Memory 怎么存、怎么加载
+## 十一、生产环境 Memory 怎么存、怎么加载
 
 ### 10.1 我们的 Day 8 现状（Level 0）
 
@@ -592,7 +683,7 @@ Level 4：+ 摘要压缩             → 处理超长对话（ChatGPT 级）
 
 ---
 
-## 十一、关键认知总结（一句话系列）
+## 十二、关键认知总结（一句话系列）
 
 | 认知 | 一句话 |
 |------|--------|
@@ -607,10 +698,11 @@ Level 4：+ 摘要压缩             → 处理超长对话（ChatGPT 级）
 | **messages 结构** | OpenAI 定义的全行业标准，换厂商不用改代码 |
 | **LLM 记忆的真相** | LLM 无记忆，"记忆"= 每次把历史 messages 重新喂给它 |
 | **Memory 的难点** | 不在"存"，在"加载策略"（最近N条/摘要/向量检索） |
+| **Agent vs Workflow** | 不是二选一，是不同层级：Agent 决策，Workflow 执行，成熟系统=Agent 编排多个 Workflow |
 
 ---
 
-## 十二、这些认知从哪来
+## 十三、这些认知从哪来
 
 所有认知都来自亲手实现的 Research Agent（Day 1-8），不是纸上谈兵：
 
@@ -624,5 +716,6 @@ Level 4：+ 摘要压缩             → 处理超长对话（ChatGPT 级）
 | 外部依赖不可靠 | Day 3/5/7 多次踩 DuckDuckGo 超时 |
 | messages 是记忆载体 | Day 8 Session Memory 拼接 history 到 messages |
 | Memory 的加载策略 | Day 8 思考"历史长了怎么办"引出 Redis/向量库 |
+| Agent vs Workflow 分层 | Day 8 Workflow 复用 Day 5 Agent + 讨论"两者关系"后的认知升级 |
 
 > 🔑 **这些认知之所以深刻，是因为有代码实证。** 没有亲手写过，看再多文章也只是"知道"，不是"理解"。
