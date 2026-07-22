@@ -301,7 +301,7 @@ def tool(func):
 
 ---
 
-## 六、Agent 模式：ReAct 与 Function Calling（重要澄清）
+## 六、Agent 推理范式：ReAct / Plan-and-Solve / Function Calling（重要澄清）
 
 ### 6.1 ReAct 是什么
 
@@ -449,6 +449,148 @@ ReAct（2022，原始论文）
 
 这个回答展示你**既懂历史（ReAct 论文），又懂现代（function calling），还懂区别**。
 
+### 6.10 关键澄清：这三个词不在同一个层次
+
+讨论 Plan-and-Solve 前，先理清层次——**这三个词经常被混为一谈，但它们属于不同层次**：
+
+```
+层次 1：推理范式（Agent 怎么思考+行动）
+  ├─ ReAct（边想边做，走一步看一步）
+  └─ Plan-and-Solve（先规划全盘，再执行）
+
+层次 2：实现手段（怎么调工具）
+  └─ Function Calling（LLM 原生 API，结构化 tool_calls）
+
+这两个层次是正交的（可以组合）：
+  ReAct + Function Calling          ← 你的 Day 3-5
+  Plan-and-Solve + Function Calling ← 你的 Day 8 Workflow
+```
+
+**Function Calling 不是 ReAct 的"替代品"或 Plan-and-Solve 的"竞争者"——它是横切的实现手段，和这两个范式正交。**
+
+### 6.11 Plan-and-Solve：先想好再走
+
+#### 定义
+
+> **Plan-and-Solve = 先制定完整计划（Plan），再逐个执行（Solve）。** Agent 在行动前先全局规划，而不是走一步看一步。
+
+#### 执行流程对比
+
+**ReAct**（走一步看一步）：
+```
+Thought: 我先搜一下框架
+Action: search_web("AI Agent framework")
+Observation: LangChain, AutoGen...
+Thought: 看到框架了，再搜应用
+Action: search_web("AI Agent applications")
+Observation: ...
+Thought: 够了，回答
+```
+
+**Plan-and-Solve**（先规划全盘）：
+```
+===== Plan 阶段 =====
+Planner: 拆成 4 个子课题：
+  1. 主流框架对比
+  2. 典型应用场景
+  3. 核心技术原理
+  4. 面临的挑战
+
+===== Solve 阶段 =====
+执行子课题 1 → 搜索框架
+执行子课题 2 → 搜索应用
+执行子课题 3 → 搜索技术
+执行子课题 4 → 搜索挑战
+
+===== 综合 =====
+Synthesizer → 总报告
+```
+
+### 6.12 ReAct vs Plan-and-Solve 核心区别
+
+| 维度 | ReAct | Plan-and-Solve |
+|------|-------|----------------|
+| **何时规划** | 边走边规划（每步重新决策） | 先规划全盘，再执行 |
+| **规划粒度** | 一步（下一步干什么） | 全局（整个任务拆成几块） |
+| **适应性** | 高（每步看结果调整） | 低（计划定了中途难改） |
+| **适合任务** | 探索性、不确定的 | 复杂、可拆解的 |
+| **风险** | 可能发散（走偏） | 计划错了全盘错 |
+| **类比** | 探险家（走一步看一步） | 建筑师（先画图纸再施工） |
+
+### 6.13 你的代码就是最好的对照
+
+你同时实现了这两种范式——这是最精彩的发现：
+
+**Day 3-5（ReAct）**：
+```python
+# researcher.py 的 while 循环 = ReAct
+while message.tool_calls:       # 每步重新决策
+    result = search_web(query)  # Action
+    # Observation 传回 LLM → 决定下一步（Thought）
+```
+
+**Day 8 Workflow（Plan-and-Solve）**：
+```python
+# workflow/agent.py = Plan-and-Solve
+subtopics = plan(topic)         # Plan：先拆解全盘
+for sub in subtopics:
+    run_research_agent(sub)     # Solve：逐个执行
+synthesize(sub_reports)         # 综合
+```
+
+**两者在你项目里的配合**：
+```
+Day 8 Workflow（Plan-and-Solve 大框架）
+  ├─ Planner：拆成 4 个子课题           ← Plan 阶段
+  ├─ Executor：逐个执行                  ← Solve 阶段
+  │   └─ 每个子课题调 run_research_agent
+  │       └─ 里面是 ReAct 循环           ← 子任务内部走一步看一步
+  └─ Synthesizer：综合                   ← 最终汇总
+```
+
+**你的项目天然就是"Plan-and-Solve 外壳 + ReAct 内核"的组合**：
+- 大框架用 Plan-and-Solve（先拆解）
+- 每个子任务用 ReAct（边搜边看）
+
+这不是巧合，而是业界常见模式——LangChain 的 `create_plan_and_execute_agent` 就是这个结构。
+
+### 6.14 三者关系的完整图
+
+```
+┌─────────────────────────────────────────────┐
+│             推理范式（怎么思考）              │
+│                                             │
+│   ReAct              Plan-and-Solve         │
+│   边想边做            先规划全盘             │
+│   走一步看一步        先画图纸再施工         │
+│                                             │
+│   你的 Day 3-5       你的 Day 8 Workflow    │
+└──────────────────┬──────────────────────────┘
+                   │
+                   │ 都可以搭配 ↓
+                   ▼
+┌─────────────────────────────────────────────┐
+│          实现手段（怎么调工具）              │
+│                                             │
+│   Function Calling（原生 API，结构化）       │
+│   你的两种范式都用它实现                      │
+└─────────────────────────────────────────────┘
+```
+
+### 6.15 更新后的面试话术
+
+如果被问"你的 Agent 用什么模式"：
+
+> **"我的 Agent 是'Plan-and-Solve 外壳 + ReAct 内核 + Function Calling 手段'的组合。**
+>
+> - 单课题研究用 ReAct（Day 3-5）：LLM 边搜边看，每步根据结果决定下一步
+> - 大课题研究用 Plan-and-Solve（Day 8 Workflow）：Planner 先拆成子课题，Executor 逐个执行
+> - 两者都用 Function Calling 实现工具调用（不是文本解析的经典 ReAct）
+>
+> **这三个词在不同层次**：ReAct/Plan-and-Solve 是推理范式，Function Calling 是实现手段，它们正交可组合。"
+
+这个回答展示你**懂范式、懂手段、懂层次关系、还有代码实证**。
+
 ---
 
 ## 七、关键概念速查表
@@ -469,6 +611,9 @@ ReAct（2022，原始论文）
 | **Function Calling Agent** | ReAct 的现代版（原生 API） | 你的实现方式 |
 | **create_react_agent** | 经典 ReAct（文本解析） | 你没用（老式） |
 | **create_tool_calling_agent** | Function Calling（现代） | 你的实现 |
+| **Plan-and-Solve** | 先规划全盘再逐个执行（推理范式） | 你的 Day 8 Workflow（Planner→Executor→Synthesizer） |
+| **create_plan_and_execute_agent** | LangChain 的 Plan-and-Solve 实现 | 你的 workflow/ 的框架版 |
+| **推理范式 vs 实现手段** | ReAct/PS 是范式，Function Calling 是手段，正交可组合 | 你的项目是三者组合 |
 
 ---
 
