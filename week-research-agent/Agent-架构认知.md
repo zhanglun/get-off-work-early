@@ -396,7 +396,7 @@ async def research(req, user_id):
 
 学 Day 8 Workflow 时，很容易把 Agent 和 Workflow 理解成"二选一"的替代关系（"用 Workflow 就不用 Agent 了"）。**这是错的。**
 
-正确的理解是**不同抽象层级**：Workflow 是 Agent 的"手"，Agent 是 Workflow 的"脑"。
+更准确地说，它们通常处于不同抽象层级：**Workflow**封装可预测的步骤；**上层 Agent**可以根据目标和观察结果选择、组合或重试这些 Workflow。"Workflow 是手、Agent 是脑"是帮助理解的类比，不代表所有系统都必须采用这一层级。
 
 ### 9.2 分层模型
 
@@ -420,13 +420,13 @@ async def research(req, user_id):
 ```
 
 - **Workflow**：封装一组**可复用、可预测**的执行步骤（固定流水线）
-- **Agent**：根据当前目标和环境，**决定什么时候调用哪个 Workflow**，是否重试、是否换方案、是否继续探索
+- **上层 Agent**：根据当前目标和环境，**决定什么时候调用哪个 Workflow**，是否重试、是否换方案、是否继续探索
 
 ### 9.3 为什么是互补，不是二选一
 
 | 层 | 职责 | 特点 |
 |----|------|------|
-| **Agent（决策层）** | 决定"调哪个 Workflow""要不要换方案" | 自主决策、动态规划、灵活 |
+| **上层 Agent（决策层）** | 决定"调哪个 Workflow""要不要换方案" | 自主决策、动态规划、灵活 |
 | **Workflow（执行层）** | 封装"固定步骤"（如 plan→execute→synthesize） | 稳定、可靠、可预测 |
 
 两者互补：
@@ -458,14 +458,20 @@ Workflow（执行层，各自封装固定步骤）：
 
 **Agent 在 Workflow 之间动态跳转**，Workflow 内部是固定步骤。
 
-### 9.5 对我们项目的启示
+### 9.5 对我们项目的现状与启示
 
 按这个模型，我们的项目现状和进化方向：
 
 ```
-现状：
-  run_workflow_agent（叫"Workflow"，但内部是固定流程）
-    └─ 调 run_research_agent（单课题 Agent）
+现状（已实现）：
+  run_workflow_agent（固定 Workflow 编排）
+    ├─ Planner：LLM 拆解子课题
+    ├─ Executor：串行调用多个 run_research_agent
+    │   └─ Research Agent：自主决定搜索 / 抓取 / 停止
+    └─ Synthesizer：LLM 汇总子报告
+
+  注：use_workflow 是调用方传入的开关；当前没有上层 Agent
+      根据运行结果动态选择不同 Workflow。
 
 进化方向（成熟形态）：
   Agent（决策层）
@@ -477,7 +483,7 @@ Workflow（执行层，各自封装固定步骤）：
 
 ### 9.6 核心认知（一句话）
 
-> **Agent 和 Workflow 不是"二选一"，是"不同层级"。** Workflow 是 Agent 的执行模块（封装固定步骤），Agent 是 Workflow 的决策者（动态编排）。成熟系统 = Agent 编排多个 Workflow。
+> **Agent 和 Workflow 不是"二选一"，可以组合在不同层级。** 当前项目是固定 Workflow 复用多个 Research Agent；成熟形态可再由上层 Agent 动态编排多个 Workflow。
 
 ---
 

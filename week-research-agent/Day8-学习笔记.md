@@ -122,7 +122,7 @@ async def research(req, user_id):
 
 ## 二、Workflow：解决"干不了大事"
 
-### 2.1 现状：单线程浅研究
+### 2.1 现状：单课题研究的覆盖有限
 
 现在的 Agent 把任何课题都当"一个 topic"处理：
 
@@ -148,7 +148,7 @@ Agent：搜 "AI Agent" → 5 条摘要 → 浅报告
 | **Executor** | 对每个子任务执行（复用 Day 5 Agent） | 干活的人 |
 | **Synthesizer** | 把多份子结果综合成总报告 | 总编 |
 
-### 2.3 关键洞察：Executor 复用 Day 5
+### 2.3 当前实现：固定 Workflow 复用 Day 5 Agent
 
 ```python
 def execute(subtopics):
@@ -161,11 +161,26 @@ def execute(subtopics):
 
 **Day 1-7 写的 `run_research_agent`，成了 Workflow 的一个"积木"。** 这就是"代码资产积累"的回报——7 天的努力不是白费的，它是进阶的地基。
 
+需要准确区分当前实现与未来形态：
+
+```text
+当前代码（固定编排）：
+run_workflow_agent
+  → Planner 拆题
+  → Executor 串行调用多个 run_research_agent
+  → Synthesizer 汇总
+
+未来形态（动态编排）：
+上层 Agent 根据目标与观察结果，决定调用研究 / 对比 / 翻译等不同 Workflow。
+```
+
+当前 `run_workflow_agent` 的步骤与顺序是写死的；`use_workflow` 由调用方传入，也没有自动判断课题是否需要 Workflow。因此，它是**包含多个 Agent 执行单元的固定 Workflow**，而不是负责选择多个 Workflow 的上层 Agent。
+
 ---
 
 ## 三、Memory + Workflow 结合
 
-真正好用的 Agent 是两者结合：
+真正好用的系统可以把两者结合。下图描述的是**目标形态**，当前 HTTP 服务尚未把 Workflow 接入请求路由：
 
 ```
 用户："像上次研究 LangChain 那样，研究一下 AutoGen"
@@ -271,7 +286,7 @@ Day 8+ 不会重写 Day 1-7 的代码
 **改动**：
 - `run_research_agent` 新增 `history` 参数——Agent 可"带着记忆"研究
 - `researcher` 把历史 messages 拼进对话，让 LLM 理解上下文指代
-- `server` 新增 `SESSIONS` 会话存储 + `get_or_create_session`
+- `server` 使用 SQLite 会话存储 + `get_or_create_session`
 - `/api/research` 接收 `session_id`，存取历史对话
 - Web UI 生成/传递 session_id（localStorage）+ 历史对话展示区
 
