@@ -3,10 +3,19 @@
 > 用途：加速版第 1 周 D3-D4。目标：能对话，不是会写代码。**只看概念，不写 ROS 代码。**
 > ⚠️ 2026-08-03 更新：移除过时/失效资源——ROS 文档从 rolling（开发版）换成 **Jazzy（当前 LTS，支持到 2029-05）**；删除两篇 CSDN 文章，替换为已验证的非 CSDN 资源。
 
-## ROS 2 概念（D3）
+## ROS 2 概念（D3，中文优先）
 
-- ⭐✅ [ROS 2 Documentation / Tutorials（Jazzy LTS）](https://docs.ros.org/en/jazzy/Tutorials.html) —— 当前稳定 LTS 版官方文档。只读概念部分：Nodes（节点）、Topics（话题）、Messages（消息）、Bags。**看前 4-5 节即可**，不碰后面的代码 tutorial。
-  > 注：docs.ros.org 对脚本有反爬验证（显示 "not a bot"），浏览器直接打开正常。
+> ⚠️ 2026-08-03 更新：ROS 概念部分从英文官方文档换成**中文资源**（此前全是 docs.ros.org 英文链接，对"只看概念"不友好）。
+> 版本说明：中文资源为 Humble 版翻译，概念部分与当前 LTS 的 Jazzy **内容一致**（节点/话题/服务/消息不涉及版本特性），放心看。
+
+- ⭐✅ [【ROS2】Concept（Basic）详解（博客园）](https://www.cnblogs.com/yjbjingcha/p/19096147) —— 官方 Concepts 文档的中文翻译整理，一篇通读：节点 / 发现 / 接口（话题·服务·动作）/ 消息。**D3 主资源，读这一篇即可**。
+- ⭐✅ [ROS 2 官方文档中文翻译（robook，人工校对）](https://ros2docs.robook.org/humble/Concepts/Basic/About-Nodes.html) —— 官方文档的**人工校对中文版**（非机翻），权威对照：节点、话题、服务、接口四个概念页各读一遍即可。
+- ○ [鱼香 ROS《概念》页](http://dev.ros2.fishros.com/doc/Concepts.html) —— 官方概念的中文版，但有机翻痕迹（页面有"待校准"标记），备选。
+- ○ [古月居 B站《ROS2入门21讲》7-9 讲](https://www.bilibili.com/video/BV16B4y1Q7jQ/) —— 视频：第 7 讲节点、第 8 讲话题、第 9 讲服务。不想读文字就看视频（未逐一验证，打开确认）。
+- （可选对照）[ROS 2 官方英文文档（Jazzy）](https://docs.ros.org/en/jazzy/Tutorials.html) —— 英文 OK 时对照用，不强制。
+
+### ROS bag（D4 用）
+
 - ⭐✅ [ROS 2 bag 官方文档（Jazzy）](https://docs.ros.org/en/jazzy/Tutorials/Intermediate/Rosbag/Recording-and-Playing-Back-Data.html) —— 先读概念；想动手可以装 ROS 2（Linux 下 `sudo apt install ros-jazzy-ros2bag`）或先找现成 bag 看格式。
 - ○ 公开 ROS bag 示例：搜 "ROS bag download sample"，GitHub 上有大量真实 bag（如 `rosbag2_examples`）；也可以找自动驾驶数据集（如 nuScenes 有 ROS bag 版）。D4 目标是"看到一个真实 bag 里面长什么样"。
 
