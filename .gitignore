@@ -32,3 +32,5 @@ data/
 .vscode/
 .idea/
 .DS_Store
+# Local Pi runtime state
+.atl/
