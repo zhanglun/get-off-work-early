@@ -39,7 +39,7 @@
 | 公司 | 官网 | 一句话 |
 | --- | --- | --- |
 | 宇树 | <https://www.unitree.com/> | 硬件+数据采集方案，IPO 已过会 |
-| 智元 | <https://www.agibot.com.cn/（agibot.com> 英文） | 出货全球第一，开放数据集 |
+| 智元 | [中文官网](https://www.agibot.com.cn/) / [英文官网](https://www.agibot.com/) | 出货全球第一，开放数据集 |
 | Figure | <https://www.figure.ai/> | 弃 OpenAI，自研 Helix VLA |
 | 特斯拉 Optimus | <https://www.tesla.com/optimus> | 复用 FSD 视觉，量产临近 |
 | 银河通用 | <https://www.galaxybot.com/> | 合成仿真为主，真机采集为辅 |
