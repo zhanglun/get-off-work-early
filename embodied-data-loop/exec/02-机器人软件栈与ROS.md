@@ -17,7 +17,10 @@
 ### ROS bag（D4 用）
 
 - ⭐✅ [ROS 2 bag 官方文档（Jazzy）](https://docs.ros.org/en/jazzy/Tutorials/Intermediate/Rosbag/Recording-and-Playing-Back-Data.html) —— 先读概念；想动手可以装 ROS 2（Linux 下 `sudo apt install ros-jazzy-ros2bag`）或先找现成 bag 看格式。
-- ○ 公开 ROS bag 示例：搜 "ROS bag download sample"，GitHub 上有大量真实 bag（如 `rosbag2_examples`）；也可以找自动驾驶数据集（如 nuScenes 有 ROS bag 版）。D4 目标是"看到一个真实 bag 里面长什么样"。
+- ⭐✅ 公开 ROS bag 示例（2026-08-06 已验证，原 `rosbag2_examples` 仓库已失效 404，勿用）：
+  - [Autoware sample_moriyama（经典自动驾驶教学 bag，多话题）](https://github.com/Autoware-AI/utilities/blob/master/autoware_launcher/documents/demos/rosbag.md) —— Google Drive 下载，含点云/图像/TF
+  - [DearBagPlayerDemoData（小车演示 bag，小、简单）](https://github.com/Magic-wei/DearBagPlayerDemoData)
+  - [ROBOMASTER 2025 LiDAR bag（Hugging Face 下载方便）](https://huggingface.co/datasets/BreCaspian/ROBOMASTER-2025-LiDAR-ROSBAG)
 
 ## 感知-规划-控制（D3）
 
