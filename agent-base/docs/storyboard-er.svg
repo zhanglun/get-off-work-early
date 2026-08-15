@@ -1,0 +1,142 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1480" height="1180" viewBox="0 0 1480 1180" font-family="PingFang SC, Microsoft YaHei, sans-serif">
+  <rect x="0" y="0" width="1480" height="1180" fill="#f8fafc"/>
+  <text x="50" y="52" font-size="24" font-weight="700" fill="#0f172a">Storyboard Agent — ER 图</text>
+  <text x="50" y="80" font-size="13" fill="#64748b">任务生命周期由任务中心维护（虚线=外部）；领域数据以 taskCenterId 关联；v1 沿用旧切分，Shot.seq 与 OldShot 对齐；打分=镜头级盲测</text>
+
+  <defs>
+    <marker id="erArrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#334155"/>
+    </marker>
+    <marker id="erCrow" markerWidth="14" markerHeight="14" refX="2" refY="7" orient="auto" markerUnits="strokeWidth">
+      <path d="M12,1 L2,7 L12,13 M12,1 L12,13" fill="none" stroke="#334155" stroke-width="1.5"/>
+    </marker>
+  </defs>
+
+  <!-- Task (task center, external) -->
+  <g data-graph-role="container">
+    <rect x="80" y="130" width="330" height="330" rx="10" fill="#f1f5f9" stroke="#475569" stroke-width="2" stroke-dasharray="8 4"/>
+    <rect x="80" y="130" width="330" height="46" rx="10" fill="#475569"/>
+    <text x="245" y="159" font-size="16" font-weight="700" fill="#ffffff" text-anchor="middle">TASK — 任务中心维护</text>
+
+    <text x="100" y="204" font-size="13" font-weight="600" fill="#0f172a" font-family="monospace">taskCenterId  PK</text>
+    <line x1="100" y1="216" x2="390" y2="216" stroke="#cbd5e1" stroke-width="1"/>
+    <text x="100" y="240" font-size="13" fill="#334155" font-family="monospace">scriptText    剧本原文</text>
+    <text x="100" y="264" font-size="13" fill="#334155" font-family="monospace">episodeNo     集数</text>
+    <text x="100" y="288" font-size="13" fill="#334155" font-family="monospace">config        Json{templateId,maxRounds,P}</text>
+    <text x="100" y="312" font-size="13" fill="#334155" font-family="monospace">status        queued→processing→done/failed</text>
+    <text x="100" y="336" font-size="13" fill="#334155" font-family="monospace">progress      {done,total}</text>
+    <text x="100" y="360" font-size="13" fill="#334155" font-family="monospace">error         String?</text>
+    <text x="100" y="384" font-size="13" fill="#334155" font-family="monospace">createdAt / updatedAt</text>
+    <text x="100" y="432" font-size="12" fill="#64748b" font-style="italic">※ 本服务不自持，通过 task-center/ 适配层读写</text>
+  </g>
+
+  <!-- Shot -->
+  <g data-graph-role="container">
+    <rect x="580" y="110" width="380" height="500" rx="10" fill="#ffffff" stroke="#a21caf" stroke-width="2.5"/>
+    <rect x="580" y="110" width="380" height="46" rx="10" fill="#a21caf"/>
+    <text x="770" y="139" font-size="16" font-weight="700" fill="#ffffff" text-anchor="middle">SHOT — 分镜（本库）</text>
+
+    <text x="600" y="184" font-size="13" font-weight="600" fill="#0f172a" font-family="monospace">id            PK  cuid</text>
+    <line x1="600" y1="196" x2="940" y2="196" stroke="#e9d5ff" stroke-width="1"/>
+    <text x="600" y="220" font-size="13" font-weight="600" fill="#7c3aed" font-family="monospace">taskCenterId  FK → TASK</text>
+    <text x="600" y="244" font-size="13" fill="#334155" font-family="monospace">seq           镜序（集内唯一）</text>
+    <text x="600" y="268" font-size="13" fill="#334155" font-family="monospace">sceneNo       场号</text>
+    <text x="600" y="292" font-size="13" fill="#334155" font-family="monospace">scriptExcerpt 该镜剧本内容</text>
+    <text x="600" y="316" font-size="13" fill="#334155" font-family="monospace">durationSec   时长（≤15）</text>
+    <text x="600" y="340" font-size="13" fill="#334155" font-family="monospace">status        pending|done|needs_review|failed</text>
+    <text x="600" y="364" font-size="13" fill="#334155" font-family="monospace">draft         Json 景别/运镜/构图/光线/情绪</text>
+    <text x="600" y="388" font-size="13" fill="#334155" font-family="monospace">finalPrompt   最终提示词（模板渲染后）</text>
+    <text x="600" y="412" font-size="13" fill="#334155" font-family="monospace">rationale     推理（为什么这样设计）</text>
+    <text x="600" y="436" font-size="13" fill="#334155" font-family="monospace">iterations    迭代轮次</text>
+    <text x="600" y="460" font-size="13" fill="#334155" font-family="monospace">tokensUsed    token 计量</text>
+    <text x="600" y="484" font-size="13" fill="#334155" font-family="monospace">createdAt / updatedAt</text>
+    <text x="600" y="540" font-size="12" fill="#64748b" font-style="italic">@@unique([taskCenterId, seq])</text>
+    <text x="600" y="560" font-size="12" fill="#64748b" font-style="italic">@@index([taskCenterId])</text>
+  </g>
+
+  <!-- ReviewLog -->
+  <g data-graph-role="container">
+    <rect x="1130" y="110" width="300" height="360" rx="10" fill="#ffffff" stroke="#15803d" stroke-width="2.5"/>
+    <rect x="1130" y="110" width="300" height="46" rx="10" fill="#15803d"/>
+    <text x="1280" y="139" font-size="16" font-weight="700" fill="#ffffff" text-anchor="middle">REVIEW_LOG（本库）</text>
+
+    <text x="1150" y="184" font-size="13" font-weight="600" fill="#0f172a" font-family="monospace">id        PK  cuid</text>
+    <line x1="1150" y1="196" x2="1410" y2="196" stroke="#bbf7d0" stroke-width="1"/>
+    <text x="1150" y="220" font-size="13" font-weight="600" fill="#15803d" font-family="monospace">shotId    FK → SHOT</text>
+    <text x="1150" y="244" font-size="13" fill="#334155" font-family="monospace">round     审查轮次</text>
+    <text x="1150" y="268" font-size="13" fill="#334155" font-family="monospace">passed    是否通过</text>
+    <text x="1150" y="292" font-size="13" fill="#334155" font-family="monospace">findings  Json[{rule,severity,</text>
+    <text x="1150" y="312" font-size="13" fill="#334155" font-family="monospace">          issue,suggestion}]</text>
+    <text x="1150" y="336" font-size="13" fill="#334155" font-family="monospace">changes   Refiner 修改说明</text>
+    <text x="1150" y="360" font-size="13" fill="#334155" font-family="monospace">createdAt</text>
+    <text x="1150" y="410" font-size="12" fill="#64748b" font-style="italic">@@index([shotId])</text>
+  </g>
+
+  <!-- CharacterCard -->
+  <g data-graph-role="container">
+    <rect x="1130" y="540" width="300" height="240" rx="10" fill="#ffffff" stroke="#d97706" stroke-width="2.5"/>
+    <rect x="1130" y="540" width="300" height="46" rx="10" fill="#d97706"/>
+    <text x="1280" y="569" font-size="16" font-weight="700" fill="#ffffff" text-anchor="middle">CHARACTER_CARD（本库）</text>
+
+    <text x="1150" y="614" font-size="13" font-weight="600" fill="#0f172a" font-family="monospace">id      PK  cuid</text>
+    <line x1="1150" y1="626" x2="1410" y2="626" stroke="#fde68a" stroke-width="1"/>
+    <text x="1150" y="650" font-size="13" font-weight="600" fill="#b45309" font-family="monospace">taskCenterId FK → TASK</text>
+    <text x="1150" y="674" font-size="13" fill="#334155" font-family="monospace">name    角色名</text>
+    <text x="1150" y="698" font-size="13" fill="#334155" font-family="monospace">canonical 固定描述串</text>
+    <text x="1150" y="722" font-size="13" fill="#334155" font-family="monospace">        （全剧一致性锚点）</text>
+    <text x="1150" y="746" font-size="13" fill="#334155" font-family="monospace">createdAt</text>
+  </g>
+
+  <!-- relations -->
+  <path d="M410 280 L580 280" fill="none" stroke="#334155" stroke-width="2" marker-start="url(#erCrow)" marker-end="url(#erArrow)"/>
+  <text x="495" y="270" font-size="12" fill="#334155" text-anchor="middle">1 : N（一任务多镜）</text>
+
+  <path d="M960 200 L1130 200" fill="none" stroke="#334155" stroke-width="2" marker-start="url(#erCrow)" marker-end="url(#erArrow)"/>
+  <text x="1045" y="190" font-size="12" fill="#334155" text-anchor="middle">1 : N（一镜多轮审查）</text>
+
+  <path d="M410 640 L410 900 L1130 900" fill="none" stroke="#334155" stroke-width="2" marker-start="url(#erCrow)" marker-end="url(#erArrow)"/>
+  <text x="490" y="732" font-size="12" fill="#334155">1 : N（一任务多角色卡，走 y=900 通道）</text>
+
+
+  <!-- OldShot -->
+  <g data-graph-role="container">
+    <rect x="580" y="680" width="380" height="200" rx="10" fill="#ffffff" stroke="#0891b2" stroke-width="2.5"/>
+    <rect x="580" y="680" width="380" height="46" rx="10" fill="#0891b2"/>
+    <text x="770" y="709" font-size="16" font-weight="700" fill="#ffffff" text-anchor="middle">OLD_SHOT — 旧系统基线（本库）</text>
+    <text x="600" y="754" font-size="13" font-weight="600" fill="#0f172a" font-family="monospace">id           PK  cuid</text>
+    <line x1="600" y1="766" x2="940" y2="766" stroke="#bae6fd" stroke-width="1"/>
+    <text x="600" y="790" font-size="13" font-weight="600" fill="#0891b2" font-family="monospace">taskCenterId FK → TASK</text>
+    <text x="600" y="814" font-size="13" fill="#334155" font-family="monospace">seq          旧镜序（= SHOT.seq 对齐）</text>
+    <text x="600" y="838" font-size="13" fill="#334155" font-family="monospace">legacyPrompt 旧系统提示词（盲测基线）</text>
+    <text x="600" y="862" font-size="13" fill="#334155" font-family="monospace">raw          旧接口原始返回 Json</text>
+  </g>
+
+  <!-- Score -->
+  <g data-graph-role="container">
+    <rect x="80" y="950" width="500" height="200" rx="10" fill="#ffffff" stroke="#7c3aed" stroke-width="2.5"/>
+    <rect x="80" y="950" width="500" height="46" rx="10" fill="#7c3aed"/>
+    <text x="330" y="979" font-size="16" font-weight="700" fill="#ffffff" text-anchor="middle">SCORE — 镜头级盲测打分（本库）</text>
+    <text x="100" y="1024" font-size="13" font-weight="600" fill="#0f172a" font-family="monospace">id        PK  cuid</text>
+    <line x1="100" y1="1036" x2="560" y2="1036" stroke="#ddd6fe" stroke-width="1"/>
+    <text x="100" y="1060" font-size="13" font-weight="600" fill="#7c3aed" font-family="monospace">shotId    FK → SHOT</text>
+    <text x="100" y="1084" font-size="13" fill="#334155" font-family="monospace">rater     打分者标识</text>
+    <text x="100" y="1108" font-size="13" fill="#334155" font-family="monospace">winner    new|old（按 sideOrder 归因）</text>
+    <text x="100" y="1132" font-size="13" fill="#334155" font-family="monospace">scoreNew / scoreOld  1-5 双分</text>
+    <text x="100" y="1156" font-size="13" fill="#334155" font-family="monospace">sideOrder 盲测渲染顺序（事后归因）</text>
+  </g>
+
+  <!-- relation: SHOT 1:N SCORE -->
+  <path d="M560 610 L560 660 L480 660 L480 950" fill="none" stroke="#334155" stroke-width="2" data-graph-role="decoration" marker-end="url(#erArrow)"/>
+  <text x="330" y="700" font-size="12" fill="#334155">1 : N（一镜多打分）</text>
+
+  <!-- legend -->
+  <g data-graph-role="legend">
+    <rect x="80" y="560" width="330" height="180" rx="8" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5"/>
+    <text x="100" y="590" font-size="13" font-weight="700" fill="#0f172a">说明</text>
+    <text x="100" y="616" font-size="12" fill="#334155">实线框 = 本服务 PostgreSQL（Prisma）</text>
+    <text x="100" y="640" font-size="12" fill="#334155">虚线框 = 任务中心维护，本服务不自持</text>
+    <text x="100" y="664" font-size="12" fill="#334155">叉骨端 = 「多」一侧；箭头端 = 外键方向</text>
+    <text x="100" y="692" font-size="12" fill="#64748b" font-style="italic">待确认：任务中心可否存大文本（剧本）；</text>
+    <text x="100" y="710" font-size="12" fill="#64748b" font-style="italic">不可则本库加 input 缓存表（不提前建）</text>
+  </g>
+</svg>

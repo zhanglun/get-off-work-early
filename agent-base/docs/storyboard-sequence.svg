@@ -1,0 +1,147 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="1620" viewBox="0 0 1500 1620" font-family="PingFang SC, Microsoft YaHei, sans-serif">
+  <defs>
+    <marker id="seqArrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#334155"/>
+    </marker>
+    <marker id="seqArrowRet" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#0891b2"/>
+    </marker>
+    <marker id="seqArrowPurple" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#7c3aed"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1500" height="1620" fill="#f8fafc"/>
+
+  <text x="50" y="52" font-size="24" font-weight="700" fill="#0f172a">Storyboard Agent — 任务时序图</text>
+  <text x="50" y="80" font-size="13" fill="#64748b">异步任务全流程：提交 → 任务中心建档 → 入队 → 旧切分导入 → 每镜 Shot Loop → 状态回写 → 盲测打分</text>
+
+  <!-- participants -->
+  <g data-graph-role="decoration">
+    <rect x="50" y="110" width="170" height="52" rx="8" fill="#eff6ff" stroke="#1d4ed8" stroke-width="2"/>
+    <text x="135" y="141" font-size="14" font-weight="600" fill="#0f172a" text-anchor="middle">前端 / 验证页</text>
+
+    <rect x="290" y="110" width="170" height="52" rx="8" fill="#f0fdf4" stroke="#15803d" stroke-width="2"/>
+    <text x="375" y="141" font-size="14" font-weight="600" fill="#0f172a" text-anchor="middle">API (NestJS)</text>
+
+    <rect x="530" y="110" width="180" height="52" rx="8" fill="#f1f5f9" stroke="#475569" stroke-width="2" stroke-dasharray="6 3"/>
+    <text x="620" y="134" font-size="14" font-weight="600" fill="#0f172a" text-anchor="middle">任务中心</text>
+    <text x="620" y="152" font-size="11" fill="#64748b" text-anchor="middle">公司模块</text>
+
+    <rect x="780" y="110" width="160" height="52" rx="8" fill="#fdf4ff" stroke="#a21caf" stroke-width="2"/>
+    <text x="860" y="134" font-size="14" font-weight="600" fill="#0f172a" text-anchor="middle">Worker</text>
+    <text x="860" y="152" font-size="11" fill="#64748b" text-anchor="middle">BullMQ 消费</text>
+
+    <rect x="1010" y="110" width="150" height="52" rx="8" fill="#ffffff" stroke="#475569" stroke-width="2"/>
+    <text x="1085" y="141" font-size="14" font-weight="600" fill="#0f172a" text-anchor="middle">LLM</text>
+
+    <rect x="1230" y="110" width="170" height="52" rx="8" fill="#ffffff" stroke="#475569" stroke-width="2"/>
+    <text x="1315" y="134" font-size="14" font-weight="600" fill="#0f172a" text-anchor="middle">PostgreSQL</text>
+    <text x="1315" y="152" font-size="11" fill="#64748b" text-anchor="middle">领域数据</text>
+
+    <!-- lifelines -->
+    <line x1="135" y1="162" x2="135" y2="1585" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="6 4"/>
+    <line x1="375" y1="162" x2="375" y2="1585" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="6 4"/>
+    <line x1="620" y1="162" x2="620" y2="1585" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="6 4"/>
+    <line x1="860" y1="162" x2="860" y2="1585" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="6 4"/>
+    <line x1="1085" y1="162" x2="1085" y2="1585" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="6 4"/>
+    <line x1="1315" y1="162" x2="1315" y2="1585" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="6 4"/>
+  </g>
+
+  <!-- ===== Phase 1: submit ===== -->
+  <rect x="60" y="185" width="1380" height="230" rx="8" fill="#eff6ff" fill-opacity="0.4" stroke="#bfdbfe" stroke-width="1.5" data-graph-role="container"/>
+  <text x="76" y="210" font-size="13" font-weight="700" fill="#1d4ed8">① 提交阶段（同步，秒级）</text>
+
+  <line x1="135" y1="240" x2="372" y2="240" stroke="#334155" stroke-width="2" marker-end="url(#seqArrow)"/>
+  <text x="255" y="232" font-size="12" fill="#334155" text-anchor="middle">POST /tasks {scriptText, config}</text>
+
+  <line x1="375" y1="275" x2="617" y2="275" stroke="#7c3aed" stroke-width="2" marker-end="url(#seqArrowPurple)"/>
+  <text x="497" y="267" font-size="12" fill="#7c3aed" text-anchor="middle">建档：createTask(scriptText, config)</text>
+
+  <line x1="620" y1="310" x2="377" y2="310" stroke="#0891b2" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#seqArrowRet)"/>
+  <text x="497" y="302" font-size="12" fill="#0891b2" text-anchor="middle">taskId（任务中心 ID）</text>
+
+  <line x1="375" y1="345" x2="858" y2="345" stroke="#334155" stroke-width="2" marker-end="url(#seqArrow)"/>
+  <text x="616" y="337" font-size="12" fill="#334155" text-anchor="middle">BullMQ 入队（job: {taskCenterId}）</text>
+
+  <line x1="375" y1="385" x2="137" y2="385" stroke="#0891b2" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#seqArrowRet)"/>
+  <text x="256" y="377" font-size="12" fill="#0891b2" text-anchor="middle">201 {taskId, status: queued}</text>
+
+  <!-- ===== Phase 2: worker ===== -->
+  <rect x="60" y="432" width="1380" height="700" rx="8" fill="#fdf4ff" fill-opacity="0.35" stroke="#f5d0fe" stroke-width="1.5" data-graph-role="container"/>
+  <text x="76" y="457" font-size="13" font-weight="700" fill="#a21caf">② 执行阶段（异步，分钟级）— Worker 消费</text>
+
+  <line x1="860" y1="490" x2="622" y2="490" stroke="#7c3aed" stroke-width="2" marker-end="url(#seqArrowPurple)"/>
+  <text x="740" y="482" font-size="12" fill="#7c3aed" text-anchor="middle">getTaskInput(taskCenterId)</text>
+  <line x1="620" y1="518" x2="858" y2="518" stroke="#0891b2" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#seqArrowRet)"/>
+  <text x="740" y="510" font-size="12" fill="#0891b2" text-anchor="middle">{scriptText, config}</text>
+
+  <line x1="860" y1="553" x2="622" y2="553" stroke="#7c3aed" stroke-width="2" marker-end="url(#seqArrowPurple)"/>
+  <text x="740" y="545" font-size="12" fill="#7c3aed" text-anchor="middle">updateStatus(processing)</text>
+
+  <!-- parser -->
+  <line x1="860" y1="598" x2="1082" y2="598" stroke="#334155" stroke-width="2" marker-end="url(#seqArrow)"/>
+  <text x="972" y="590" font-size="12" fill="#334155" text-anchor="middle">LegacyImporter：调旧接口拿分镜列表+旧提示词 → 落 OldShot</text>
+
+  <rect x="890" y="625" width="440" height="120" rx="8" fill="#ffffff" stroke="#a21caf" stroke-width="2" data-graph-role="container"/>
+  <text x="1110" y="650" font-size="13" font-weight="700" fill="#a21caf" text-anchor="middle">Shot Loop（每镜独立，并发 P=4）</text>
+  <line x1="860" y1="668" x2="1082" y2="668" stroke="#334155" stroke-width="2" marker-end="url(#seqArrow)"/>
+  <text x="972" y="660" font-size="12" fill="#334155" text-anchor="middle">① Director：镜头决策+初版提示词</text>
+  <line x1="860" y1="700" x2="1082" y2="700" stroke="#334155" stroke-width="2" marker-end="url(#seqArrow)"/>
+  <text x="972" y="692" font-size="12" fill="#334155" text-anchor="middle">② Reviewer：按规则出 findings</text>
+  <line x1="1085" y1="725" x2="862" y2="725" stroke="#0891b2" stroke-width="1.5" stroke-dasharray="6 4" marker-end="url(#seqArrowRet)"/>
+  <text x="972" y="718" font-size="12" fill="#0891b2" text-anchor="middle">passed ? 结束 : ↓</text>
+  <line x1="860" y1="736" x2="1082" y2="736" stroke="#334155" stroke-width="2" marker-end="url(#seqArrow)"/>
+  <text x="972" y="730" font-size="12" fill="#334155" text-anchor="middle" dy="-4">③ Refiner：逐条修改（≤3 轮）→ 回到 ②</text>
+
+  <line x1="860" y1="790" x2="1312" y2="790" stroke="#334155" stroke-width="2" marker-end="url(#seqArrow)"/>
+  <text x="1086" y="782" font-size="12" fill="#334155" text-anchor="middle">落库：shot + review_log + token 计量</text>
+
+  <line x1="860" y1="830" x2="622" y2="830" stroke="#7c3aed" stroke-width="2" marker-end="url(#seqArrowPurple)"/>
+  <text x="740" y="822" font-size="12" fill="#7c3aed" text-anchor="middle">reportProgress({done, total})（每镜节流回写）</text>
+
+  <line x1="860" y1="880" x2="622" y2="880" stroke="#7c3aed" stroke-width="2" marker-end="url(#seqArrowPurple)"/>
+  <text x="740" y="872" font-size="12" fill="#7c3aed" text-anchor="middle">updateStatus(done | failed)</text>
+
+  <!-- error note -->
+  <rect x="890" y="920" width="500" height="70" rx="8" fill="#fef2f2" stroke="#dc2626" stroke-width="1.5" data-graph-role="container"/>
+  <text x="905" y="946" font-size="12" font-weight="600" fill="#b91c1c">失败处理</text>
+  <text x="905" y="966" font-size="12" fill="#64748b">单镜失败 → 该镜标 failed 不拖累全集；仍有 3 轮未过 → needs_review（保留最后版）</text>
+  <text x="905" y="982" font-size="12" fill="#64748b">旧接口导入失败 → 重试 2 次 → 仍败 → 任务中心标 failed（旧接口稳定，罕见）</text>
+
+  <!-- ===== Phase 3: poll ===== -->
+  <rect x="60" y="1150" width="1380" height="220" rx="8" fill="#f0fdf4" fill-opacity="0.45" stroke="#bbf7d0" stroke-width="1.5" data-graph-role="container"/>
+  <text x="76" y="1175" font-size="13" font-weight="700" fill="#15803d">③ 查询阶段（前端轮询）</text>
+
+  <line x1="135" y1="1205" x2="372" y2="1205" stroke="#334155" stroke-width="2" marker-end="url(#seqArrow)"/>
+  <text x="255" y="1197" font-size="12" fill="#334155" text-anchor="middle">GET /tasks/:id</text>
+  <line x1="375" y1="1233" x2="617" y2="1233" stroke="#7c3aed" stroke-width="2" marker-end="url(#seqArrowPurple)"/>
+  <text x="497" y="1225" font-size="12" fill="#7c3aed" text-anchor="middle">查状态/进度（透传）</text>
+  <line x1="620" y1="1261" x2="377" y2="1261" stroke="#0891b2" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#seqArrowRet)"/>
+  <text x="497" y="1253" font-size="12" fill="#0891b2" text-anchor="middle">{status, progress}</text>
+  <line x1="375" y1="1295" x2="137" y2="1295" stroke="#0891b2" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#seqArrowRet)"/>
+  <text x="256" y="1287" font-size="12" fill="#0891b2" text-anchor="middle">+ 本服务聚合：needsReview 数等</text>
+
+  <line x1="135" y1="1340" x2="372" y2="1340" stroke="#334155" stroke-width="2" marker-end="url(#seqArrow)"/>
+  <text x="255" y="1332" font-size="12" fill="#334155" text-anchor="middle">GET /tasks/:id/shots（done 后）</text>
+  <line x1="375" y1="1340" x2="1312" y2="1340" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#seqArrow)"/>
+  <text x="843" y="1332" font-size="12" fill="#64748b" text-anchor="middle">读领域数据</text>
+  <line x1="1315" y1="1345" x2="377" y2="1345" stroke="#0891b2" stroke-width="1.5" stroke-dasharray="6 4" marker-end="url(#seqArrowRet)"/>
+  <line x1="375" y1="1350" x2="137" y2="1350" stroke="#0891b2" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#seqArrowRet)"/>
+  <text x="256" y="1342" font-size="12" fill="#0891b2" text-anchor="middle" dy="26">分镜表：finalPrompt + rationale + review_log</text>
+
+  <!-- legacy compare -->
+  <rect x="60" y="1390" width="1380" height="150" rx="8" fill="#f1f5f9" fill-opacity="0.5" stroke="#e2e8f0" stroke-width="1.5" data-graph-role="container"/>
+  <text x="76" y="1415" font-size="13" font-weight="700" fill="#475569">④ 盲测打分链路（客户内测，逐镜新旧并排随机侧序）</text>
+  <line x1="135" y1="1445" x2="372" y2="1445" stroke="#334155" stroke-width="2" marker-end="url(#seqArrow)"/>
+  <text x="255" y="1437" font-size="12" fill="#334155" text-anchor="middle">GET /tasks/:id/pairs</text>
+  <line x1="375" y1="1475" x2="1312" y2="1475" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#seqArrow)" data-graph-role="decoration"/>
+  <text x="843" y="1467" font-size="12" fill="#64748b" text-anchor="middle">读 Shot + OldShot（服务端随机侧序，随任务缓存保证稳定）</text>
+  <line x1="1315" y1="1505" x2="377" y2="1505" stroke="#0891b2" stroke-width="1.5" stroke-dasharray="6 4" marker-end="url(#seqArrowRet)"/>
+  <line x1="375" y1="1530" x2="137" y2="1530" stroke="#0891b2" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#seqArrowRet)"/>
+  <text x="256" y="1522" font-size="12" fill="#0891b2" text-anchor="middle">逐镜一对（sideA/sideB 盲测呈现）</text>
+  <line x1="135" y1="1555" x2="372" y2="1555" stroke="#334155" stroke-width="2" marker-end="url(#seqArrow)"/>
+  <text x="255" y="1547" font-size="12" fill="#334155" text-anchor="middle">POST /scores {shotId, rater, winner, scoreA, scoreB, sideOrder}</text>
+  <line x1="375" y1="1555" x2="1312" y2="1555" stroke="#334155" stroke-width="2" marker-end="url(#seqArrow)"/>
+  <text x="843" y="1547" font-size="12" fill="#334155" text-anchor="middle">按 sideOrder 归因落 Score 表</text>
+</svg>
