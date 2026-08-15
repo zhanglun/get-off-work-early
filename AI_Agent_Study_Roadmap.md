@@ -137,6 +137,67 @@ agent-learning/ ├── 01-mini-agent/ ├── 02-tool-calling/ ├──
 
 ------------------------------------------------------------------------
 
+# 实际进度对账（2026-08 校正）
+
+> 依据：`week-research-agent/` 代码 + Day1-10 笔记 + git 提交记录。
+> 实际路线偏离了原计划：没有按 10 个 Lesson 逐个推进，而是走了一条「7 天
+> 冲刺 + Day8-10 第二阶段打磨」的路线，覆盖了原计划大部分内容。
+
+| Lesson | 计划内容 | 状态 | 实际产出 |
+|--------|---------|------|----------|
+| 01 Agent 基础 | 最小 Agent Loop | ✅ 完成 | `day1/` + Lesson01-02 笔记 |
+| 02 Tool Calling | Registry / Schema / 全链路 | ✅ 完成 | `day2/` + `common/` |
+| 03 State & Workflow | State / max_steps / Retry / 日志 / 真实搜索 | ✅ 完成 | `day3/`、`day4/`、`research_agent/`（真实搜索 + 读全文） |
+| 04 RAG | Chunk / Embedding / 检索 | ✅ 完成 | `rag/`（loader/embedder/store/chain）+ RAG 笔记 |
+| 05 Memory | Session / Long-term / Retrieval | ◐ 大部分完成 | Session Memory（Day8）+ SQLite 持久化（Day10，`server/storage.py`）；缺跨会话 Long-term Memory |
+| 06 Workflow | Planner / Executor / Task Queue | ✅ 基本完成 | `workflow/`（Planner + Executor + Synthesizer）；无显式状态机 |
+| 07 MCP | Client / Server / Resource | ❌ 未开始 | —— |
+| 08 LangGraph | StateGraph / Checkpoint / HITL | ◐ 未完成 | `langchain_version/` 是 LangChain 非 LangGraph |
+| 09 Evaluation | Benchmark / 成功率 / Token 成本 | ✅ 完成 | `evaluation/`（metrics/judge）+ Day10 Token 成本统计 |
+| 10 Deployment | FastAPI / Docker / Redis / PG | ◐ 部分完成 | `server/`（FastAPI + SSE 流式 + Web UI + SQLite）；缺 Docker/Redis/PostgreSQL |
+
+## 超出原计划的产出
+
+-   Day9：SSE 流式输出（观察者模式 + 线程/Queue 桥接）
+-   Day5：两步法 + System Prompt + fetch_url 深度阅读
+-   Day10：Token 成本量化（state.add_usage）
+
+## 剩余缺口（按求职作品集优先级）
+
+1.  **MCP**（完全空白，2026 年岗位 JD 高频词）
+2.  **LangGraph**（StateGraph / Checkpoint / Human-in-the-Loop）
+3.  **Long-term Memory**（跨会话记忆 + 检索）
+4.  **容器化部署**（Docker；Redis/PG 可选——知识层已有 interview-handbook 第 07/08/12 章覆盖，缺项目落地）
+
+## 并行路线提醒
+
+Agent 路线最后提交 2026-07-22，此后重心转向：
+
+-   `embodied-data-loop/`（具身智能转型，进行中，至 2026-08-07）
+-   `ai-platform-interview-handbook/`（面试手册，13 章 ~2.9 万行，至 2026-07-14）
+
+恢复 Agent 路线时，从 MCP（缺口 1）开始。
+
+## 学习进度（会话接续用）
+
+> 每次学习结束及时更新本节。
+
+**当前状态**：⏸ 暂停中（未开始 MCP）
+
+**下一步**：Day 11 - MCP（已定三步计划，待开工）
+
+1.  **11a 手写最小 MCP Server**：不用 SDK，stdio + JSON-RPC 2.0，实现 initialize / tools/list / tools/call，把现有 add / read_file 包成 server，理解协议本质
+2.  **11b 官方 SDK 重写 + 连真实生态**：mcp Python SDK（FastMCP 风格），连接 1-2 个社区 server（filesystem / fetch）验证 client 发现与调用
+3.  **11c MCP Client 接入现有 Agent**：写 mcp_client.py，把 tools/list 结果动态转成现有 Agent 的 Tool Schema，Research Agent 不改主循环即可热加载外部工具（对照 Day2 写死的 TOOLS_SCHEMA）
+
+**产出目标**：`week-research-agent/mcp/`（server.py + client.py + 接入 demo）+ Day11-学习笔记.md
+
+**待确认**：学习模式未定——用户自己写、AI 陪跑（答疑/改 bug/复核），还是 AI 搭骨架、用户逐行读懂
+
+**接续约定**：见仓库根 [`README.md`](README.md)（先问线路、结束即更新、单一事实源）
+
+------------------------------------------------------------------------
+
 # 最终成果
 
 完成一个从零实现 Agent 的开源项目，包含： - 完整源码 - 文档 - 架构设计 -

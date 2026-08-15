@@ -34,3 +34,6 @@ data/
 .DS_Store
 # Local Pi runtime state
 .atl/
+
+# 临时动手环境（104MB venv，不入库）
+embodied-data-loop/lab/
