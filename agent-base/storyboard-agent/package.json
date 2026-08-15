@@ -1,0 +1,35 @@
+{
+  "name": "storyboard-agent",
+  "version": "0.1.0",
+  "main": "dist/main.js",
+  "scripts": {
+    "test": "tsx --test test/*.spec.ts",
+    "dev": "tsx watch src/main.ts",
+    "build": "tsc",
+    "migrate": "prisma migrate dev"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^22.20.1",
+    "prisma": "^7.9.1",
+    "tsx": "^4.23.12",
+    "typescript": "^7.0.2"
+  },
+  "dependencies": {
+    "@nestjs/common": "^11.2.0",
+    "@nestjs/config": "^4.0.4",
+    "@nestjs/core": "^11.2.1",
+    "@nestjs/platform-express": "^11.2.0",
+    "bullmq": "^6.1.1",
+    "ioredis": "^6.0.0",
+    "p-limit": "^6.2.0",
+    "zod": "^4.4.3"
+  },
+  "allowScripts": {
+    "@prisma/engines@7.9.1": true,
+    "esbuild@0.28.2": true,
+    "msgpackr-extract@3.0.4": true,
+    "prisma@7.9.1": true
+  }
+}

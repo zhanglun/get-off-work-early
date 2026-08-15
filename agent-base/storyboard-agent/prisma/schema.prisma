@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 注：任务生命周期（创建/状态/进度）由公司任务中心维护，本服务不自持 Task 表。
+// 领域数据以任务中心任务 ID（taskCenterId）为外键关联。
+// v1 沿用旧切分：分镜列表+旧提示词从旧系统导入（OldShot），Shot.seq 与旧镜序对齐。
+
+model Shot {
+  id            String      @id @default(cuid())
+  taskCenterId  String
+  seq           Int
+  sceneNo       Int
+  scriptExcerpt String
+  durationSec   Int
+  status        String      @default("pending") // pending | done | needs_review | failed
+  draft         Json?
+  finalPrompt   String?
+  rationale     String?
+  iterations    Int         @default(0)
+  tokensUsed    Int         @default(0)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  reviews       ReviewLog[]
+  scores        Score[]
+
+  @@unique([taskCenterId, seq])
+  @@index([taskCenterId])
+}
+
+model OldShot {
+  id           String   @id @default(cuid())
+  taskCenterId String
+  seq          Int
+  legacyPrompt String
+  raw          Json
+  createdAt    DateTime @default(now())
+
+  @@unique([taskCenterId, seq])
+  @@index([taskCenterId])
+}
+
+model ReviewLog {
+  id        String   @id @default(cuid())
+  shotId    String
+  round     Int
+  passed    Boolean
+  findings  Json
+  changes   String?
+  createdAt DateTime @default(now())
+
+  @@index([shotId])
+}
+
+model Score {
+  id        String   @id @default(cuid())
+  shotId    String
+  rater     String
+  winner    String // new | old（提交时按 sideOrder 归因）
+  scoreNew  Int
+  scoreOld  Int
+  sideOrder String // left:new | left:old（盲测渲染顺序）
+  createdAt DateTime @default(now())
+
+  @@index([shotId])
+}
+
+model CharacterCard {
+  id           String   @id @default(cuid())
+  taskCenterId String
+  name         String
+  canonical    String
+  createdAt    DateTime @default(now())
+
+  @@index([taskCenterId])
+}

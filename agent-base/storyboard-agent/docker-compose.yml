@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: storyboard-pg
+    environment:
+      POSTGRES_USER: storyboard
+      POSTGRES_PASSWORD: storyboard
+      POSTGRES_DB: storyboard
+    ports:
+      - '5433:5432'
+    volumes:
+      - storyboard_pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    container_name: storyboard-redis
+    ports:
+      - '6380:6379'
+
+volumes:
+  storyboard_pgdata:
