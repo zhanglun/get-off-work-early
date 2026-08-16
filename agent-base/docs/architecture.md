@@ -75,11 +75,19 @@ model Score {                      // 镜头级盲测打分
   id         String  @id @default(cuid())
   shotId     String
   rater      String            // 打分者标识（昵称/编号）
-  winner     String            // 选优：new | old（盲测提交时按 sideOrder 归因）
+  winner     String            // 选优：new | old | tie（服务端按落库侧序归因）
   scoreNew   Int               // 新版分 1-5
   scoreOld   Int               // 旧版分 1-5
-  sideOrder  String            // 盲测渲染顺序（left/right 各是谁），事后归因用
+  sideOrder  String            // 盲测渲染顺序（服务端落库值，事后审计用）
   createdAt  DateTime @default(now())
+  // @@unique([shotId, rater])  一人一镜一票，重复提交 409
+}
+
+model BlindTestOrder {             // 盲测侧序随任务持久化：首次拉 pairs 随机定序落库，重启不丢，并发首拉 upsert 兑底
+  id           String  @id @default(cuid())
+  taskCenterId String  @unique
+  sideOrder    String            // left:new | left:old
+  createdAt    DateTime @default(now())
 }
 
 model ReviewLog {
@@ -119,14 +127,16 @@ GET /tasks/:id/shots
   res:  [{ seq, sceneNo, status, durationSec, draft, finalPrompt,
            rationale, iterations, reviews: ReviewLog[] }]
 
-POST /scores                  # 盲测打分提交（验证页调用）
-  req:  { shotId, rater, winner: "A"|"B", scoreA, scoreB, sideOrder: "left:new"|"left:old" }
-  res:  { ok: true }            // 服务端按 sideOrder 归因存储 scoreNew/scoreOld
+POST /scores                  # 盲测打分提交（验证页调用）— v1.1 冻结
+  req:  { shotId, rater, winner: "A"|"B"|"tie", scoreA, scoreB }
+  res:  { ok: true }            // sideOrder 服务端自查归因；shot 不存在 404；同人同镜重复 409
+                                 // v1.0 的客户端回传 sideOrder 已移除（pairs 从未返回过它，且不可信）
 
 GET /tasks/:id/scores          # 内测报表（后台/导出用，替代看板）
-  res:  [{ shotSeq, rater, winnerNew, scoreNew, scoreOld, createdAt }]
+  res:  { perShot: [{ shotSeq, votes, newWinRate, tieRate, avgScoreNew, avgScoreOld }],
+           overall: { votes, newWinRate, tieRate } }   // 平局进分母不进分子：赢不含水分
 
-GET /tasks/:id/pairs           # 盲测对比页数据：逐镜新旧一对（服务端随机侧序，sideOrder 随任务缓存，保证同一打分者看到稳定顺序）
+GET /tasks/:id/pairs           # 盲测对比页数据：逐镜新旧一对（服务端随机侧序，落库持久化，同任务所有人一致且重启不丢）
   res:  [{ shotId, seq, scriptExcerpt, sideA: {prompt}, sideB: {prompt} }]
 
 POST /legacy/import           # worker 内部调用：调旧接口拿分镜+旧提示词，落 OldShot（重试2次）
@@ -179,7 +189,7 @@ storyboard-agent/
 └── README.md           # 启动步骤 · 分工地图 · TODO 清单
 ```
 
-「链路跑通」的验收动作：`docker-compose up` → `POST /tasks`（samples 剧本）→ 轮询到 done → `GET /tasks/:id/shots` 拿到 5 镜的 finalPrompt + rationale + reviewLog。**用 mock LLM 也能跑通全链路**（LLM service 可注入 fake），真实端点通了换 env 即可——这是周一无真实端点时的保险。
+「链路跑通」的验收动作：`docker compose up -d` → `npm run db:deploy`（迁移 SQL 已入库，勿再手写建表）→ `POST /tasks`（samples 剧本）→ 轮询到 done → `GET /tasks/:id/shots` 拿到 5 镜的 finalPrompt + rationale + reviewLog。**用 mock LLM 也能跑通全链路**（LLM service 可注入 fake），真实端点通了换 env 即可——这是周一无真实端点时的保险。**验收时看日志确认无「降级内存」——否则跑的不是目标模式**（ADR-5 教训）。
 
 ## 8. 分工地图（4 人，按模块切，2026-08-15 grilling 确认）
 

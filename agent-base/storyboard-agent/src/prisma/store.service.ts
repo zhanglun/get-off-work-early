@@ -62,6 +62,7 @@ export class StoreService implements OnModuleInit, OnModuleDestroy {
   private reviews = new Map<string, ReviewLogRow>();
   private scores = new Map<string, ScoreRow>();
   private characters = new Map<string, CharacterRow>();
+  private sideOrders = new Map<string, 'left:new' | 'left:old'>(); // mem 模式的 BlindTestOrder 等价物
   private ids = 0;
   private nid = () => `m${(++this.ids).toString(36)}${Math.random().toString(36).slice(2, 6)}`;
 
@@ -86,6 +87,13 @@ export class StoreService implements OnModuleInit, OnModuleDestroy {
   }
 
   // ===== Shot =====
+  async getShot(shotId: string): Promise<ShotRow | null> {
+    if (this.prisma) {
+      return this.prisma.shot.findUnique({ where: { id: shotId } });
+    }
+    return this.shots.get(shotId) ?? null;
+  }
+
   async upsertShot(row: Omit<ShotRow, 'id'> & { id?: string }): Promise<ShotRow> {
     if (this.prisma) {
       return this.prisma.shot.upsert({
@@ -169,19 +177,47 @@ export class StoreService implements OnModuleInit, OnModuleDestroy {
   }
 
   // ===== Score =====
-  async addScore(row: Omit<ScoreRow, 'id'>): Promise<ScoreRow> {
+  // 一人一镜一票：唯一约束(shotId, rater) 兑底，重复提交返回 duplicate 而非报错
+  async addScore(row: Omit<ScoreRow, 'id'>): Promise<{ ok: true; row: ScoreRow } | { ok: false; reason: 'duplicate' }> {
     if (this.prisma) {
-      return this.prisma.score.create({ data: row as never });
+      try {
+        const created = await this.prisma.score.create({ data: row as never });
+        return { ok: true, row: created };
+      } catch (e: any) {
+        if (e?.code === 'P2002') return { ok: false, reason: 'duplicate' };
+        throw e;
+      }
     }
+    const dup = [...this.scores.values()].some((s) => s.shotId === row.shotId && s.rater === row.rater);
+    if (dup) return { ok: false, reason: 'duplicate' };
     const created = { ...row, id: this.nid() };
     this.scores.set(created.id, created);
-    return created;
+    return { ok: true, row: created };
   }
   async listScores(shotIds: string[]): Promise<ScoreRow[]> {
     if (this.prisma) {
       return this.prisma.score.findMany({ where: { shotId: { in: shotIds } } });
     }
     return [...this.scores.values()].filter((s) => shotIds.includes(s.shotId));
+  }
+
+  // ===== BlindTestOrder（侧序随任务持久化，重启不丢）=====
+  // upsert：首次访问随机定序并落库；并发首拉由 @@unique(taskCenterId) 兑底，后来者拿到已存值
+  async getOrInitSideOrder(taskCenterId: string): Promise<'left:new' | 'left:old'> {
+    const draw = () => (Math.random() < 0.5 ? 'left:new' : 'left:old') as 'left:new' | 'left:old';
+    if (this.prisma) {
+      const row = await this.prisma.blindTestOrder.upsert({
+        where: { taskCenterId },
+        create: { taskCenterId, sideOrder: draw() },
+        update: {},
+      });
+      return row.sideOrder;
+    }
+    const existing = this.sideOrders.get(taskCenterId);
+    if (existing) return existing;
+    const order = draw();
+    this.sideOrders.set(taskCenterId, order);
+    return order;
   }
 
   // ===== CharacterCard =====

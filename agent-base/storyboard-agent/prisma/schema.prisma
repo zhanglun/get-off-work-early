@@ -53,6 +53,7 @@ model ReviewLog {
   findings  Json
   changes   String?
   createdAt DateTime @default(now())
+  shot      Shot     @relation(fields: [shotId], references: [id])
 
   @@index([shotId])
 }
@@ -61,13 +62,23 @@ model Score {
   id        String   @id @default(cuid())
   shotId    String
   rater     String
-  winner    String // new | old（提交时按 sideOrder 归因）
+  winner    String // new | old | tie（提交时服务端按落库侧序归因）
   scoreNew  Int
   scoreOld  Int
-  sideOrder String // left:new | left:old（盲测渲染顺序）
+  sideOrder String // left:new | left:old（服务端落库的盲测渲染顺序，事后审计用）
   createdAt DateTime @default(now())
 
+  @@unique([shotId, rater]) // 盲测防重复：一人一镜一票
   @@index([shotId])
+  shot Shot @relation(fields: [shotId], references: [id])
+}
+
+// 盲测侧序随任务持久化：服务重启不丢，同任务所有打分者顺序一致（公平性前提）
+model BlindTestOrder {
+  id           String   @id @default(cuid())
+  taskCenterId String   @unique
+  sideOrder    String // left:new | left:old
+  createdAt    DateTime @default(now())
 }
 
 model CharacterCard {

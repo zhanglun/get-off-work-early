@@ -61,12 +61,17 @@ export interface LoopConfig {
 export const DefaultLoopConfig: LoopConfig = { maxRounds: 3, concurrency: 4 };
 
 // ===== 提交打分 =====
+// 契约 v1.1（冻结版）：
+// - winner 支持 tie（盲测里「差不多」是高频真实反馈，逼二选一会污染数据）
+// - 无 sideOrder 字段：pairs 接口从未返回过它，客户端填不了；且客户端可控会污染归因。
+//   服务端按落库侧序（BlindTestOrder 表）自查归因，一人一镜一票（重复提交 409）。
 export const ScoreSubmitSchema = z.object({
   shotId: z.string(),
   rater: z.string().min(1),
-  winner: z.enum(['A', 'B']),
+  winner: z.enum(['A', 'B', 'tie']),
   scoreA: z.number().int().min(1).max(5),
   scoreB: z.number().int().min(1).max(5),
-  sideOrder: z.enum(['left:new', 'left:old']),
 });
 export type ScoreSubmit = z.infer<typeof ScoreSubmitSchema>;
+export type SideOrder = 'left:new' | 'left:old';
+export type WinnerResolved = 'new' | 'old' | 'tie';
