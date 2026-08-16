@@ -76,6 +76,8 @@ POST /tasks(剧本+配置) → 任务中心建档 → BullMQ 入队
 
 ## 6. 风险与依赖（周一消除）
 
+> 详细风险与开放问题见 [architecture.md §9](./architecture.md)（团队入口只列阻塞项）
+
 1. LLM 端点+key（阻塞周五真跑——第一优先级）
 2. 旧接口文档（LegacyImporter 的 zod 契约按真实字段定）
 3. 客户可达部署环境

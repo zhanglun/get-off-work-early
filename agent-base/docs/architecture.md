@@ -1,8 +1,8 @@
 # Storyboard Agent 架构设计 v1
 
-> 状态：待评审（grilling 三轮共识 → 本文档为设计落实）
+> 状态：v1.1 已冻结（2026-08-16 盲测契约修复同步：BlindTestOrder/tie/409，见 team-review.md v1.1 变更）
 > 配图：[storyboard-arch.svg](./storyboard-arch.svg)（架构）· [storyboard-sequence.svg](./storyboard-sequence.svg)（时序）· [storyboard-er.svg](./storyboard-er.svg)（ER）
-> 日期：2026-08-15
+> 日期：2026-08-15（v1.1 更新 2026-08-16）
 
 ## 1. 背景与目标
 
@@ -173,7 +173,7 @@ storyboard-agent/
 ├── src/
 │   ├── main.ts / app.module.ts
 │   ├── tasks/          tasks.controller.ts · tasks.service.ts · dto/     # 接口三层
-│   ├── processor/      shot.processor.ts                                  # BullMQ worker
+│   ├── processor/      episode.processor.ts                                # BullMQ worker
 │   ├── core/           legacy-importer.ts · character-extractor.ts · shot-loop.ts
 │   │                   director.ts · reviewer.ts · refiner.ts · context-builder.ts
 │   │                   types.ts · parser.ts(占位·demo后启用)              # 纯逻辑可单测
@@ -193,13 +193,7 @@ storyboard-agent/
 
 ## 8. 分工地图（4 人，按模块切，2026-08-15 grilling 确认）
 
-| 模块 | 负责 | 周二进场拿到什么 | 不碰什么 |
-|---|---|---|---|
-| 架子 + core loop 结构维护 | 你（周一） | 全部代码 + README 分工地图 | — |
-| 盲测打分页（前端） | 队友 A | §5 DTO 契约（pairs/scores，周一冻结）+ mock 数据 | 后端代码 |
-| prompt 调优 + 穿帮规则 | 队友 B | prompts/ 三个外置文件 + 原团队 prompt + 真实剧本 | TS 代码 |
-| 模板配置 + 部署联调 | 队友 C | 模板配置位接口 + 部署环境（周一路径确认） | core loop |
-| 测试 + 数据准备 + 内测报表 | 队友 D | samples/ + 内测剧本管理 + scores 查询出报表 | 前后端代码 |
+分工表与并行策略见 [team-review.md §4](./team-review.md)（团队入口，单一事实源）。本处只保留协作规则：
 
 **协作规则**：loop 结构改动归你（架构不漂移）；队友 B 只改 prompts/*.md；队友 A 只依赖 DTO——契约变更需同步通知并过你 review。
 
@@ -210,9 +204,9 @@ storyboard-agent/
 2. **任务中心接口文档未拿到**：当前假设它负责任务建档/状态/进度而非执行调度；接口形态（回调 or 拉取、大文本是否可存）待确认——适配层隔离，接口文档到了只改 task-center/ 模块
 3. **双数据源一致性**：任务状态在任务中心、分镜数据在本库，以 taskCenterId 关联——需保证「任务中心已 done 但本库写入中」等中间态对前端不可见（状态聚合以任务中心为准）
 4. **原团队样例**：prompt 调优和审查规则聚焦依赖它（不阻塞架子，阻塞效果）
-5. **成本**：一集几十镜 × 4 角色 × 3 轮 ≈ 数百次 LLM 调用/集。tokenUsed 逐镜统计，周五验证页可见——先量化再优化
+5. **成本**：一集几十镜 × 3 角色（Director/Reviewer/Refiner）× 3 轮 ≈ 数百次 LLM 调用/集。tokenUsed 逐镜统计，周五验证页可见——先量化再优化
 6. **旧切分质量**：沿用旧系统切分——若旧切分本身不合理（该分没分/节奏乱），单镜优化无法弥补；盲测聚焦提示词质量，切分质量 demo 后随 Parser 恢复再解决
 
 ## 10. 决策记录（grilling 三轮结论索引）
 
-详见 [`../学习进度.md`](../学习进度.md)「共识文档」节：智能化范围/接口/异步/LLM/无人工审核/痛点=穿帮/单镜≤15s/DB+Redis 现成/NestJS/Prisma/旧侧实时/架子标准=链路跑通/周五=测试版+验证页。
+详见 [`../学习进度.md`](../学习进度.md)「已锁定决策（grilling 三会话累计）」节：智能化范围/接口/异步/LLM/无人工审核/痛点=穿帮/单镜≤15s/DB+Redis 现成/NestJS/Prisma/旧侧实时/架子标准=链路跑通/周五=测试版+验证页。
