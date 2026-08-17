@@ -1,0 +1,238 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1800 1280" width="1800" height="1280">
+<defs>
+  <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse"><path d="M 30 0 L 0 0 0 30" fill="none" stroke="#112240" stroke-width="0.5"/></pattern>
+  <marker id="arrow-cyan" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0, 9 3.5, 0 7" fill="#00b4d8"/></marker>
+  <marker id="arrow-green" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0, 9 3.5, 0 7" fill="#06d6a0"/></marker>
+  <marker id="arrow-orange" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0, 9 3.5, 0 7" fill="#f77f00"/></marker>
+  <marker id="arrow-purple" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0, 9 3.5, 0 7" fill="#b388ff"/></marker>
+</defs>
+<style>text { font-family: 'Courier New', 'Microsoft YaHei', 'PingFang SC', monospace; } .title { fill:#ffffff;font-size:27px;font-weight:700;letter-spacing:.04em } .subtitle { fill:#90e0ef;font-size:14px } .section { fill:#00b4d8;font-size:14px;font-weight:700;letter-spacing:.08em } .node-title { fill:#caf0f8;font-size:15px;font-weight:700 } .node-body { fill:#90e0ef;font-size:11px } .small { fill:#48cae4;font-size:10px } .edge-label { fill:#caf0f8;font-size:10px } .legend { fill:#90e0ef;font-size:10px } </style>
+<rect width="1800" height="1280" fill="#0a1628" data-graph-role="background"/>
+<rect width="1800" height="1280" fill="url(#grid)" opacity="0.72" data-graph-role="background"/>
+<text x="60" y="54" class="title">WEEK-RESEARCH-AGENT · LangGraph 目标架构</text>
+<text x="60" y="80" class="subtitle">迁移设计图（尚未落地）· 复用现有工具、RAG、记忆与 HTTP 层，用 StateGraph 显式编排状态、循环与路由</text>
+<line x1="60" y1="98" x2="1740" y2="98" stroke="#00b4d8" stroke-width="1" opacity=".7"/>
+<rect x="45" y="125" width="340" height="330" rx="3" fill="#0d1f3c" fill-opacity=".62" stroke="#00b4d8" stroke-width="1" stroke-dasharray="7,4" data-graph-role="container"/>
+<text x="63" y="151" class="section">01 保持不变的交付层</text>
+<text x="63" y="169" class="small">保留现有 server/ 作为接入入口</text>
+<rect x="430" y="125" width="870" height="560" rx="3" fill="#0d1f3c" fill-opacity=".62" stroke="#00b4d8" stroke-width="1" stroke-dasharray="7,4" data-graph-role="container"/>
+<text x="448" y="151" class="section">02 LangGraph 单课题研究图</text>
+<text x="448" y="169" class="small">langgraph_version/ · StateGraph 节点 + 条件边 + ToolNode</text>
+<rect x="1345" y="125" width="410" height="560" rx="3" fill="#0d1f3c" fill-opacity=".62" stroke="#00b4d8" stroke-width="1" stroke-dasharray="7,4" data-graph-role="container"/>
+<text x="1363" y="151" class="section">03 复用能力</text>
+<text x="1363" y="169" class="small">现有模块作为适配器复用，不推倒重写</text>
+<rect x="45" y="730" width="890" height="250" rx="3" fill="#0d1f3c" fill-opacity=".62" stroke="#00b4d8" stroke-width="1" stroke-dasharray="7,4" data-graph-role="container"/>
+<text x="63" y="756" class="section">04 状态持久化与可观测性</text>
+<text x="63" y="774" class="small">区分对话记忆与图执行检查点</text>
+<rect x="980" y="730" width="775" height="250" rx="3" fill="#0d1f3c" fill-opacity=".62" stroke="#00b4d8" stroke-width="1" stroke-dasharray="7,4" data-graph-role="container"/>
+<text x="998" y="756" class="section">05 LangGraph 大课题工作流图</text>
+<text x="998" y="774" class="small">Planner 经 Send 扇出 → 子图研究 × N → Synthesizer 汇总</text>
+<g id="ui2" data-graph-role="node">
+<rect x="75" y="180" width="125" height="105" rx="3" fill="#10345a" stroke="#00b4d8" stroke-width="1.4"/>
+<text x="89" y="203" class="node-title">浏览器界面</text>
+<text x="89" y="223" class="node-body">static/index.html</text>
+<text x="89" y="238" class="node-body">topic + session_id</text>
+<text x="89" y="253" class="node-body">SSE 进度</text>
+</g>
+<g id="api2" data-graph-role="node">
+<rect x="235" y="165" width="125" height="135" rx="3" fill="#10345a" stroke="#00b4d8" stroke-width="1.4"/>
+<text x="249" y="188" class="node-title">FastAPI 适配器</text>
+<text x="249" y="208" class="node-body">server/main.py</text>
+<text x="249" y="223" class="node-body">调用 / 流式执行图</text>
+<text x="249" y="238" class="node-body">HTTP 响应</text>
+<text x="249" y="253" class="node-body">SSE 桥接</text>
+</g>
+<g id="contract2" data-graph-role="node">
+<rect x="75" y="335" width="285" height="75" rx="3" fill="#0d1f3c" stroke="#00b4d8" stroke-width="1.4"/>
+<text x="89" y="358" class="node-title">API 契约</text>
+<text x="89" y="378" class="node-body">server/schemas.py 对调用方保持稳定</text>
+</g>
+<g id="input" data-graph-role="node">
+<rect x="465" y="205" width="175" height="105" rx="3" fill="#10345a" stroke="#00b4d8" stroke-width="1.4"/>
+<text x="479" y="228" class="node-title">图输入</text>
+<text x="479" y="248" class="node-body">topic + 历史消息</text>
+<text x="479" y="263" class="node-body">max_tool_rounds</text>
+<text x="479" y="278" class="node-body">运行时配置</text>
+</g>
+<g id="stategraph" data-graph-role="node">
+<rect x="685" y="165" width="205" height="145" rx="3" fill="#1a273d" stroke="#00b4d8" stroke-width="1.4"/>
+<text x="699" y="188" class="node-title">图状态</text>
+<text x="699" y="208" class="node-body">TypedDict / MessagesState</text>
+<text x="699" y="223" class="node-body">messages：add_messages</text>
+<text x="699" y="238" class="node-body">findings / report</text>
+<text x="699" y="253" class="node-body">工具追踪 / Token</text>
+<text x="699" y="268" class="node-body">通过 reducer 更新状态</text>
+</g>
+<g id="modelnode" data-graph-role="node">
+<rect x="940" y="165" width="190" height="145" rx="3" fill="#123f49" stroke="#06d6a0" stroke-width="1.4"/>
+<text x="954" y="188" class="node-title">researcher_model</text>
+<text x="954" y="208" class="node-body">节点：LLM + bind_tools</text>
+<text x="954" y="223" class="node-body">决定 tool_calls</text>
+<text x="954" y="238" class="node-body">返回 AIMessage</text>
+<text x="954" y="253" class="node-body">累加模型调用次数</text>
+</g>
+<g id="router" data-graph-role="node">
+<rect x="1170" y="190" width="100" height="95" rx="3" fill="#3b260d" stroke="#f77f00" stroke-width="1.4"/>
+<text x="1184" y="213" class="node-title">路由器</text>
+<text x="1184" y="233" class="node-body">条件</text>
+<text x="1184" y="248" class="node-body">边</text>
+<text x="1184" y="263" class="node-body">是否调用工具？</text>
+</g>
+<g id="toolnode" data-graph-role="node">
+<rect x="695" y="390" width="195" height="145" rx="3" fill="#123f49" stroke="#06d6a0" stroke-width="1.4"/>
+<text x="709" y="413" class="node-title">ToolNode</text>
+<text x="709" y="433" class="node-body">预置执行器</text>
+<text x="709" y="448" class="node-body">执行 @tool 适配器</text>
+<text x="709" y="463" class="node-body">ToolMessage 结果</text>
+<text x="709" y="478" class="node-body">返回模型节点</text>
+</g>
+<g id="findingsnode" data-graph-role="node">
+<rect x="940" y="390" width="190" height="145" rx="3" fill="#123f49" stroke="#06d6a0" stroke-width="1.4"/>
+<text x="954" y="413" class="node-title">collect_findings</text>
+<text x="954" y="433" class="node-body">节点：工具追踪 →</text>
+<text x="954" y="448" class="node-body">干净的研究上下文</text>
+<text x="954" y="463" class="node-body">保留部分数据</text>
+</g>
+<g id="reportnode" data-graph-role="node">
+<rect x="1170" y="390" width="100" height="145" rx="3" fill="#123f49" stroke="#06d6a0" stroke-width="1.4"/>
+<text x="1184" y="413" class="node-title">reporter</text>
+<text x="1184" y="433" class="node-body">节点</text>
+<text x="1184" y="448" class="node-body">JSON</text>
+<text x="1184" y="463" class="node-body">报告</text>
+</g>
+<g id="guard" data-graph-role="node">
+<rect x="465" y="570" width="805" height="70" rx="3" fill="#241849" stroke="#b388ff" stroke-width="1.4"/>
+<text x="479" y="593" class="node-title">安全与运行时护栏</text>
+<text x="479" y="613" class="node-body">业务：max_tool_rounds ｜ 框架：recursion_limit ｜ 重试/超时保留在复用工具内 ｜ 部分结果兜底</text>
+</g>
+<g id="llmadapt" data-graph-role="node">
+<rect x="1380" y="165" width="160" height="110" rx="3" fill="#241849" stroke="#b388ff" stroke-width="1.4"/>
+<text x="1394" y="188" class="node-title">LLM 适配器</text>
+<text x="1394" y="208" class="node-body">ChatZhipuAI 或</text>
+<text x="1394" y="223" class="node-body">兼容的 ChatModel</text>
+<text x="1394" y="238" class="node-body">Config + .env</text>
+</g>
+<g id="tooladapt" data-graph-role="node">
+<rect x="1575" y="165" width="150" height="110" rx="3" fill="#3b260d" stroke="#f77f00" stroke-width="1.4"/>
+<text x="1589" y="188" class="node-title">工具适配器</text>
+<text x="1589" y="208" class="node-body">@tool 包装器</text>
+<text x="1589" y="223" class="node-body">搜索 / 抓取</text>
+<text x="1589" y="238" class="node-body">query_docs</text>
+</g>
+<g id="ragreuse" data-graph-role="node">
+<rect x="1380" y="330" width="160" height="135" rx="3" fill="#1a273d" stroke="#00b4d8" stroke-width="1.4"/>
+<text x="1394" y="353" class="node-title">RAG 复用</text>
+<text x="1394" y="373" class="node-body">加载 / 向量化</text>
+<text x="1394" y="388" class="node-body">Chroma 向量库</text>
+<text x="1394" y="403" class="node-body">knowledge/*.txt</text>
+<text x="1394" y="418" class="node-body">query_docs 工具</text>
+</g>
+<g id="promptreuse" data-graph-role="node">
+<rect x="1575" y="330" width="150" height="135" rx="3" fill="#1a273d" stroke="#00b4d8" stroke-width="1.4"/>
+<text x="1589" y="353" class="node-title">提示词与 Schema</text>
+<text x="1589" y="373" class="node-body">researcher 提示词</text>
+<text x="1589" y="388" class="node-body">报告模板</text>
+<text x="1589" y="403" class="node-body">Pydantic/Zod 类校验</text>
+<text x="1589" y="418" class="node-body">校验</text>
+</g>
+<g id="corelegacy" data-graph-role="node">
+<rect x="1380" y="510" width="345" height="90" rx="3" fill="#0d1f3c" stroke="#00b4d8" stroke-width="1.4"/>
+<text x="1394" y="533" class="node-title">保留现有手写 Agent</text>
+<text x="1394" y="553" class="node-body">research_agent/ 保留为回归、评估与迁移对照基线</text>
+</g>
+<g id="session" data-graph-role="node">
+<rect x="75" y="790" width="220" height="130" rx="3" fill="#1a273d" stroke="#00b4d8" stroke-width="1.4"/>
+<text x="89" y="813" class="node-title">对话记忆</text>
+<text x="89" y="833" class="node-body">现有 SQLite storage.py</text>
+<text x="89" y="848" class="node-body">session_id → 用户/助手消息</text>
+<text x="89" y="863" class="node-body">图输入时加载历史</text>
+<text x="89" y="878" class="node-body">图结束时写入摘要</text>
+</g>
+<g id="checkpointer" data-graph-role="node">
+<rect x="350" y="790" width="220" height="130" rx="3" fill="#1a273d" stroke="#00b4d8" stroke-width="1.4"/>
+<text x="364" y="813" class="node-title">图检查点</text>
+<text x="364" y="833" class="node-body">新增：SQLite/Postgres saver</text>
+<text x="364" y="848" class="node-body">thread_id → 状态快照</text>
+<text x="364" y="863" class="node-body">暂停 / 恢复 / 回放</text>
+<text x="364" y="878" class="node-body">不等同于对话记忆</text>
+</g>
+<g id="trace" data-graph-role="node">
+<rect x="625" y="790" width="260" height="130" rx="3" fill="#1a273d" stroke="#00b4d8" stroke-width="1.4"/>
+<text x="639" y="813" class="node-title">流式输出与追踪</text>
+<text x="639" y="833" class="node-body">graph.stream(stream_mode=updates)</text>
+<text x="639" y="848" class="node-body">节点更新 → Queue → SSE</text>
+<text x="639" y="863" class="node-body">日志 / Token 用量 / 工具追踪</text>
+<text x="639" y="878" class="node-body">后续可选 LangSmith</text>
+</g>
+<g id="planner" data-graph-role="node">
+<rect x="1015" y="790" width="175" height="130" rx="3" fill="#123f49" stroke="#06d6a0" stroke-width="1.4"/>
+<text x="1029" y="813" class="node-title">planner 节点</text>
+<text x="1029" y="833" class="node-body">topic → 子课题</text>
+<text x="1029" y="848" class="node-body">结构化计划</text>
+<text x="1029" y="863" class="node-body">兜底：单课题</text>
+</g>
+<g id="send" data-graph-role="node">
+<rect x="1235" y="815" width="130" height="80" rx="3" fill="#3b260d" stroke="#f77f00" stroke-width="1.4"/>
+<text x="1249" y="838" class="node-title">Send 扇出</text>
+<text x="1249" y="858" class="node-body">动态边</text>
+<text x="1249" y="873" class="node-body">每个子课题 /</text>
+<text x="1249" y="888" class="node-body">一份状态</text>
+</g>
+<g id="subgraph" data-graph-role="node">
+<rect x="1410" y="775" width="155" height="160" rx="3" fill="#123f49" stroke="#06d6a0" stroke-width="1.4"/>
+<text x="1424" y="798" class="node-title">研究子图</text>
+<text x="1424" y="818" class="node-body">START → model</text>
+<text x="1424" y="833" class="node-body">↔ ToolNode</text>
+<text x="1424" y="848" class="node-body">→ reporter</text>
+<text x="1424" y="863" class="node-body">每个子课题运行一次</text>
+</g>
+<g id="synth" data-graph-role="node">
+<rect x="1610" y="790" width="110" height="130" rx="3" fill="#123f49" stroke="#06d6a0" stroke-width="1.4"/>
+<text x="1624" y="813" class="node-title">synthesizer</text>
+<text x="1624" y="833" class="node-body">归并</text>
+<text x="1624" y="848" class="node-body">子报告</text>
+<text x="1624" y="863" class="node-body">最终 JSON</text>
+</g>
+<path d="M 200 232 H 235" fill="none" stroke="#00b4d8" stroke-width="1.7" marker-end="url(#arrow-cyan)" data-graph-role="edge"/>
+<text x="193" y="220" class="edge-label">HTTP / SSE</text>
+<path d="M 360 232 H 430 V 257 H 465" fill="none" stroke="#00b4d8" stroke-width="1.7" marker-end="url(#arrow-cyan)" data-graph-role="edge"/>
+<text x="372" y="220" class="edge-label">topic + session_id</text>
+<path d="M 640 257 H 685" fill="none" stroke="#00b4d8" stroke-width="1.7" marker-end="url(#arrow-cyan)" data-graph-role="edge"/>
+<text x="645" y="245" class="edge-label">初始状态</text>
+<path d="M 890 237 H 940" fill="none" stroke="#00b4d8" stroke-width="1.7" marker-end="url(#arrow-cyan)" data-graph-role="edge"/>
+<text x="890" y="225" class="edge-label">消息</text>
+<path d="M 1130 237 H 1170" fill="none" stroke="#f77f00" stroke-width="1.7" stroke-dasharray="3,2" marker-end="url(#arrow-orange)" data-graph-role="edge"/>
+<text x="1128" y="225" class="edge-label">是否有 tool_calls？</text>
+<path d="M 1170 237 V 360 H 792 V 390" fill="none" stroke="#f77f00" stroke-width="1.7" stroke-dasharray="3,2" marker-end="url(#arrow-orange)" data-graph-role="edge"/>
+<text x="1000" y="350" class="edge-label">是</text>
+<path d="M 695 462 H 650 V 335 H 940 V 310" fill="none" stroke="#b388ff" stroke-width="1.7" marker-end="url(#arrow-purple)" data-graph-role="edge"/>
+<text x="760" y="325" class="edge-label">ToolMessage → model</text>
+<path d="M 1270 237 V 370 H 1035 V 390" fill="none" stroke="#f77f00" stroke-width="1.7" stroke-dasharray="3,2" marker-end="url(#arrow-orange)" data-graph-role="edge"/>
+<text x="1120" y="360" class="edge-label">否</text>
+<path d="M 1130 462 H 1170" fill="none" stroke="#00b4d8" stroke-width="1.7" marker-end="url(#arrow-cyan)" data-graph-role="edge"/>
+<text x="1120" y="450" class="edge-label">研究素材</text>
+<path d="M 465 310 V 570" fill="none" stroke="#f77f00" stroke-width="1.7" stroke-dasharray="3,2" marker-end="url(#arrow-orange)" data-graph-role="edge"/>
+<text x="475" y="440" class="edge-label">限制</text>
+<path d="M 1540 397 H 1575" fill="none" stroke="#06d6a0" stroke-width="1.7" marker-end="url(#arrow-green)" data-graph-role="edge"/>
+<text x="1534" y="386" class="edge-label">上下文</text>
+<path d="M 1650 275 V 300 H 1460 V 330" fill="none" stroke="#06d6a0" stroke-width="1.7" marker-end="url(#arrow-green)" data-graph-role="edge"/>
+<text x="1475" y="290" class="edge-label">query_docs</text>
+<path d="M 295 855 H 350" fill="none" stroke="#06d6a0" stroke-width="1.7" stroke-dasharray="5,3" marker-end="url(#arrow-green)" data-graph-role="edge"/>
+<text x="297" y="845" class="edge-label">checkpoint state</text>
+<path d="M 1190 855 H 1235" fill="none" stroke="#00b4d8" stroke-width="1.7" marker-end="url(#arrow-cyan)" data-graph-role="edge"/>
+<text x="1192" y="845" class="edge-label">子课题</text>
+<path d="M 1365 855 H 1410" fill="none" stroke="#f77f00" stroke-width="1.7" stroke-dasharray="3,2" marker-end="url(#arrow-orange)" data-graph-role="edge"/>
+<text x="1368" y="845" class="edge-label">Send × N</text>
+<path d="M 1565 855 H 1610" fill="none" stroke="#00b4d8" stroke-width="1.7" marker-end="url(#arrow-cyan)" data-graph-role="edge"/>
+<text x="1566" y="845" class="edge-label">子报告</text>
+<g data-graph-role="legend"><rect x="60" y="1080" width="460" height="74" fill="#0d1f3c" stroke="#00b4d8" stroke-width="1"/>
+<text x="74" y="1099" class="section">连线图例</text>
+<line x1="74" y1="1119" x2="108" y2="1119" stroke="#00b4d8" stroke-width="2" marker-end="url(#arrow-cyan)"/><text x="117" y="1123" class="legend">主数据 / 请求</text>
+<line x1="252" y1="1119" x2="286" y2="1119" stroke="#06d6a0" stroke-width="2" marker-end="url(#arrow-green)"/><text x="295" y="1123" class="legend">记忆读取 / 写入</text>
+<line x1="74" y1="1141" x2="108" y2="1141" stroke="#f77f00" stroke-width="1.5" stroke-dasharray="3,2" marker-end="url(#arrow-orange)"/><text x="117" y="1145" class="legend">控制 / 触发</text>
+<line x1="252" y1="1141" x2="286" y2="1141" stroke="#b388ff" stroke-width="2" marker-end="url(#arrow-purple)"/><text x="295" y="1145" class="legend">LLM-工具反馈循环</text></g>
+<rect x="1380" y="1194" width="360" height="56" fill="#0d1f3c" stroke="#00b4d8" stroke-width="1" data-graph-role="decoration"/>
+<line x1="1380" y1="1214" x2="1740" y2="1214" stroke="#00b4d8" stroke-width=".7"/>
+<text x="1560" y="1210" text-anchor="middle" class="small">WEEK-RESEARCH-AGENT / 目标</text>
+<text x="1560" y="1237" text-anchor="middle" class="node-title">LangGraph 迁移架构图</text>
+</svg>
