@@ -14,6 +14,7 @@ sentence-transformers>=2.7.0    # 本地 Embedding 模型（免费离线）
 langchain>=0.3.0                # LangChain 核心
 langchain-community>=0.3.0      # 社区集成（工具等）
 langchain-zhipuai>=0.1.0        # 智谱 GLM 集成
+langgraph>=1.0.0                 # Day 13：StateGraph / ToolNode / 条件路由
 
 # Day 7 部署用
 fastapi>=0.110.0        # Web 框架
