@@ -12,10 +12,10 @@ Workflow - RAG - Memory - MCP - Evaluation - Deployment
 
 # 学习原则
 
-1.  先学原理，再学框架。
-2.  每个阶段都有一个可运行项目。
-3.  每完成一个阶段提交 Git。
-4.  作品集比 Demo 更重要。
+1. 先学原理，再学框架。
+2. 每个阶段都有一个可运行项目。
+3. 每完成一个阶段提交 Git。
+4. 作品集比 Demo 更重要。
 
 ------------------------------------------------------------------------
 
@@ -117,13 +117,13 @@ agent-learning/ ├── 01-mini-agent/ ├── 02-tool-calling/ ├──
 
 # 每个项目都要回答的问题
 
--   为什么这样设计？
--   State 放在哪里？
--   为什么需要 Tool？
--   如何避免无限循环？
--   如何做 Retry？
--   如何控制成本？
--   如何做 Evaluation？
+- 为什么这样设计？
+- State 放在哪里？
+- 为什么需要 Tool？
+- 如何避免无限循环？
+- 如何做 Retry？
+- 如何控制成本？
+- 如何做 Evaluation？
 
 ------------------------------------------------------------------------
 
@@ -144,7 +144,7 @@ agent-learning/ ├── 01-mini-agent/ ├── 02-tool-calling/ ├──
 > 冲刺 + Day8-10 第二阶段打磨」的路线，覆盖了原计划大部分内容。
 
 | Lesson | 计划内容 | 状态 | 实际产出 |
-|--------|---------|------|----------|
+| -------- | --------- | ------ | ---------- |
 | 01 Agent 基础 | 最小 Agent Loop | ✅ 完成 | `day1/` + Lesson01-02 笔记 |
 | 02 Tool Calling | Registry / Schema / 全链路 | ✅ 完成 | `day2/` + `common/` |
 | 03 State & Workflow | State / max_steps / Retry / 日志 / 真实搜索 | ✅ 完成 | `day3/`、`day4/`、`research_agent/`（真实搜索 + 读全文） |
@@ -152,29 +152,31 @@ agent-learning/ ├── 01-mini-agent/ ├── 02-tool-calling/ ├──
 | 05 Memory | Session / Long-term / Retrieval | ◐ 大部分完成 | Session Memory（Day8）+ SQLite 持久化（Day10，`server/storage.py`）；缺跨会话 Long-term Memory |
 | 06 Workflow | Planner / Executor / Task Queue | ✅ 基本完成 | `workflow/`（Planner + Executor + Synthesizer）；无显式状态机 |
 | 07 MCP | Client / Server / Resource | ❌ 未开始 | —— |
-| 08 LangGraph | StateGraph / Checkpoint / HITL | ◐ 未完成 | `langchain_version/` 是 LangChain 非 LangGraph |
+| 08 LangGraph | StateGraph / Checkpoint / HITL | ◐ 学习中 | `langgraph_version/lesson01_minimal_graph.py`：最小 StateGraph + ToolNode + 条件路由已跑通；Checkpoint / HITL 未开始 |
 | 09 Evaluation | Benchmark / 成功率 / Token 成本 | ✅ 完成 | `evaluation/`（metrics/judge）+ Day10 Token 成本统计 |
 | 10 Deployment | FastAPI / Docker / Redis / PG | ◐ 部分完成 | `server/`（FastAPI + SSE 流式 + Web UI + SQLite）；缺 Docker/Redis/PostgreSQL |
 
 ## 超出原计划的产出
 
--   Day9：SSE 流式输出（观察者模式 + 线程/Queue 桥接）
--   Day5：两步法 + System Prompt + fetch_url 深度阅读
--   Day10：Token 成本量化（state.add_usage）
+- Day9：SSE 流式输出（观察者模式 + 线程/Queue 桥接）
+- Day5：两步法 + System Prompt + fetch_url 深度阅读
+- Day10：Token 成本量化（state.add_usage）
+- LangGraph Lesson 01：最小工具循环图（`StateGraph` / `ToolNode` / 条件路由），配套 `LangGraph-学习笔记.md`
+- Mastra 框架预研：独立 `mastra-playground/` TypeScript 沙盒、本地 `@mastra/core@1.59.0` API 阅读与构建验证
 
 ## 剩余缺口（按求职作品集优先级）
 
-1.  **MCP**（完全空白，2026 年岗位 JD 高频词）
-2.  **LangGraph**（StateGraph / Checkpoint / Human-in-the-Loop）
-3.  **Long-term Memory**（跨会话记忆 + 检索）
-4.  **容器化部署**（Docker；Redis/PG 可选——知识层已有 interview-handbook 第 07/08/12 章覆盖，缺项目落地）
+1. **MCP**（完全空白，2026 年岗位 JD 高频词）
+2. **LangGraph**（StateGraph / Checkpoint / Human-in-the-Loop）
+3. **Long-term Memory**（跨会话记忆 + 检索）
+4. **容器化部署**（Docker；Redis/PG 可选——知识层已有 interview-handbook 第 07/08/12 章覆盖，缺项目落地）
 
 ## 并行路线提醒
 
 Agent 路线最后提交 2026-07-22，此后重心转向：
 
--   `embodied-data-loop/`（具身智能转型，进行中，至 2026-08-07）
--   `ai-platform-interview-handbook/`（面试手册，13 章 ~2.9 万行，至 2026-07-14）
+- `embodied-data-loop/`（具身智能转型，进行中，至 2026-08-07）
+- `ai-platform-interview-handbook/`（面试手册，13 章 ~2.9 万行，至 2026-07-14）
 
 恢复 Agent 路线时，从 MCP（缺口 1）开始。
 
@@ -182,13 +184,13 @@ Agent 路线最后提交 2026-07-22，此后重心转向：
 
 > 每次学习结束及时更新本节。
 
-**当前状态**：⏸ 暂停中（未开始 MCP）
+**当前状态**：▶ 学习中——LangGraph Lesson 01 已完成；Mastra Lesson 01/02 已完成：`calculatorAgent` 注册 `addTool` / `multiplyTool`，Lesson 02 用 `toolChoice: auto` 对四类问题断言有序 tool-call 序列与拒绝调用。TypeScript 检查与 Mastra build 已通过；真实调用确认 provider 收到 `tool_choice: auto`，但智谱 `glm-4.7-flash` 对三条工具用例返回 429（访问量过大），仅“天气问题不调用工具”用例成功。
 
-**下一步**：Day 11 - MCP（已定三步计划，待开工）
+**下一步**：待 provider 恢复后重跑 `pnpm run lesson:02` 收集完整选择结果；随后进入 Mastra Lesson 03（Workflow：固定“拆 → 执行 → 汇总”对照 Python `workflow/`）。LangGraph 后续继续 Lesson 02（真实三工具）。MCP 三步计划保留为作品集优先级缺口。
 
-1.  **11a 手写最小 MCP Server**：不用 SDK，stdio + JSON-RPC 2.0，实现 initialize / tools/list / tools/call，把现有 add / read_file 包成 server，理解协议本质
-2.  **11b 官方 SDK 重写 + 连真实生态**：mcp Python SDK（FastMCP 风格），连接 1-2 个社区 server（filesystem / fetch）验证 client 发现与调用
-3.  **11c MCP Client 接入现有 Agent**：写 mcp_client.py，把 tools/list 结果动态转成现有 Agent 的 Tool Schema，Research Agent 不改主循环即可热加载外部工具（对照 Day2 写死的 TOOLS_SCHEMA）
+1. **11a 手写最小 MCP Server**：不用 SDK，stdio + JSON-RPC 2.0，实现 initialize / tools/list / tools/call，把现有 add / read_file 包成 server，理解协议本质
+2. **11b 官方 SDK 重写 + 连真实生态**：mcp Python SDK（FastMCP 风格），连接 1-2 个社区 server（filesystem / fetch）验证 client 发现与调用
+3. **11c MCP Client 接入现有 Agent**：写 mcp_client.py，把 tools/list 结果动态转成现有 Agent 的 Tool Schema，Research Agent 不改主循环即可热加载外部工具（对照 Day2 写死的 TOOLS_SCHEMA）
 
 **产出目标**：`week-research-agent/mcp/`（server.py + client.py + 接入 demo）+ Day11-学习笔记.md
 

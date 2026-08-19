@@ -5,15 +5,15 @@
 
 ## 接续约定（AI 会话必读）
 
-1.  **先问线路**：用户说「继续学习」时，AI 先问选择哪条线路（参照下表），确认后再开工，**不要默认进入某条线**。
-2.  **结束即更新**：每次学习结束，及时更新对应线路的进度文件（状态、完成内容、下一步、日期），并同步刷新本文件的「线路总览」表。
-3.  **单一事实源**：各线路的详细进度只在各自进度文件里维护；本文件只放一行摘要 + 链接。接续约定的正文以本文件为准，各线路文件里只留指向本文件的引用。
+1. **先问线路**：用户说「继续学习」时，AI 先问选择哪条线路（参照下表），确认后再开工，**不要默认进入某条线**。
+2. **结束即更新**：每次学习结束，及时更新对应线路的进度文件（状态、完成内容、下一步、日期），并同步刷新本文件的「线路总览」表。
+3. **单一事实源**：各线路的详细进度只在各自进度文件里维护；本文件只放一行摘要 + 链接。接续约定的正文以本文件为准，各线路文件里只留指向本文件的引用。
 
 ## 线路总览
 
 | 线路 | 当前状态 | 下一步 | 进度文件 | 最后活动 |
-|------|---------|--------|----------|----------|
-| 🤖 AI Agent | ⏸ 暂停 | Day 11 - MCP（三步计划已定） | [`AI_Agent_Study_Roadmap.md`](AI_Agent_Study_Roadmap.md) →「学习进度（会话接续用）」 | 2026-07-22 |
+| ------ | --------- | -------- | ---------- | ---------- |
+| 🤖 AI Agent | ▶ 学习中 | Mastra Lesson 01（最小 Agent + Tool）；LangGraph Lesson 02（真实工具） | [`AI_Agent_Study_Roadmap.md`](AI_Agent_Study_Roadmap.md) →「学习进度（会话接续用）」 | 2026-08-18 |
 | 🦾 具身智能 | ⏸ 暂停 | 第 2 周 - 真实数据（遥操作 + Open X-Embodiment + RLDS） | [`embodied-data-loop/学习进度.md`](embodied-data-loop/学习进度.md) | 2026-08-07 |
 | 🧱 Agent 底座 | ▶ 当前主线 | 周一架子已提前达成；接真实端点/旧接口/任务中心；决策：先 workflow 后 agent（[workflow-vs-agent.md](agent-base/docs/workflow-vs-agent.md)） | [`agent-base/学习进度.md`](agent-base/学习进度.md) | 2026-08-16 |
 | 📘 面试手册 | ⏸ 暂停 | 无独立进度文件（13 章已完成，约 2.9 万行） | [`ai-platform-interview-handbook/README.md`](ai-platform-interview-handbook/README.md) | 2026-07-14 |
@@ -33,11 +33,11 @@ get-off-work-early/
 
 ## 线路详情速览
 
-- **Agent 线路**：已完成约 7/10 Lesson（含超出计划的 SSE 流式、SQLite 持久化、Token 成本统计）。剩余缺口按优先级：MCP > LangGraph > Long-term Memory > 容器化部署。恢复时从 MCP 开始。
+- **Agent 线路**：手写 Research Agent 已完成核心能力（含 SSE、SQLite 持久化、Token 成本统计）；LangGraph Lesson 01 已跑通最小 StateGraph 工具循环；另建 `mastra-playground/` 独立 TypeScript 沙盒并完成框架概念与本地 API 阅读。MCP、Long-term Memory、容器化部署仍是作品集缺口。
 - **具身线路**：第 1 周核心目标完成（具身智能全景 / 数据闭环 / ROS 概念 / 产业玩家）。背景：正在面试纽鼐机器人（杭州），此线为面试驱动。
 - **Agent 底座**：目标短剧场景 agent 能力（当前 workload：分镜提示词 agent）。架子已提前达成（2026-08-16），文档包 5 件 + 决策文档 [workflow-vs-agent.md](agent-base/docs/workflow-vs-agent.md)（先 workflow 后 agent）；周一接真实端点/旧接口/任务中心。详见其进度文件。
 - **面试手册**：内容层已完整（含 Redis / PostgreSQL / Docker & K8s 章节），若 Agent 线路做容器化部署可复用其知识层。
 
 ---
 
-> 最后更新：2026-08-16
+> 最后更新：2026-08-18

@@ -1,0 +1,26 @@
+{
+  "name": "mastra-playground",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "dev": "mastra dev",
+    "build": "mastra build",
+    "start": "mastra start",
+    "check": "tsc --noEmit",
+    "lesson:01": "node --env-file=.env src/lesson01-minimal-agent.ts",
+    "lesson:02": "node --env-file=.env src/lesson02-tool-selection.ts"
+  },
+  "dependencies": {
+    "@mastra/core": "1.59.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "latest",
+    "mastra": "1.25.0",
+    "typescript": "^6.0.3"
+  }
+}
