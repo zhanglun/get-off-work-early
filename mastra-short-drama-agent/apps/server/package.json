@@ -1,0 +1,38 @@
+{
+  "name": "server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "dev": "tsx watch src/api.ts",
+    "check": "tsc --noEmit",
+    "test": "tsx --test test/*.spec.ts",
+    "db:generate": "DATABASE_URL=${DATABASE_URL:-postgresql://short_drama:short_drama@localhost:5434/short_drama} prisma generate --schema prisma/schema.prisma",
+    "db:validate": "DATABASE_URL=${DATABASE_URL:-postgresql://short_drama:short_drama@localhost:5434/short_drama} prisma validate --schema prisma/schema.prisma",
+    "db:migrate": "DATABASE_URL=${DATABASE_URL:-postgresql://short_drama:short_drama@localhost:5434/short_drama} prisma migrate dev --schema prisma/schema.prisma",
+    "db:deploy": "DATABASE_URL=${DATABASE_URL:-postgresql://short_drama:short_drama@localhost:5434/short_drama} prisma migrate deploy --schema prisma/schema.prisma"
+  },
+  "dependencies": {
+    "@mastra/core": "1.63.2",
+    "@mastra/memory": "1.28.1",
+    "@mastra/pg": "1.22.2",
+    "@nestjs/common": "^11.0.0",
+    "@nestjs/core": "^11.0.0",
+    "@nestjs/platform-express": "^11.0.0",
+    "@prisma/client": "6.19.3",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.1",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "latest",
+    "@types/express": "^5.0.0",
+    "mastra": "1.27.2",
+    "prisma": "6.19.3",
+    "tsx": "^4.23.12",
+    "typescript": "^6.0.3"
+  }
+}
