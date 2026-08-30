@@ -1,0 +1,412 @@
+topic: 开发 Agent 首 Token 输出速度优化
+schema_version: '2.0'
+principles:
+  - 指标、变量、优化、结果和证据分层，避免字段语义混杂
+  - 严格区分模型首 token、客户端首 chunk、首个可见内容和首个有意义内容
+  - 记录首响应关键路径，判断优化是减少工作、重排依赖、并行执行还是隐藏延迟
+  - 同时记录质量、成本、失败率和稳定性，避免只优化延迟
+  - 对 measured、estimated、claimed 和 unknown 进行区分
+field_groups:
+  subject:
+    description: 研究对象及其归类
+    fields:
+      - name: subject_id
+        description: 研究记录的稳定标识
+        detail_level: 简要
+        required: true
+      - name: subject_name
+        description: 研究对象名称
+        detail_level: 简要
+        required: true
+      - name: category
+        description: measurement、context、tools、model-routing、caching、inference-serving、transport-frontend 或 evaluation
+        detail_level: 简要
+        required: true
+      - name: description
+        description: 研究对象解决的问题和适用边界
+        detail_level: 详细
+        required: true
+      - name: source
+        description: 主要资料、论文、文档或代码仓库链接
+        detail_level: 详细
+        required: true
+      - name: publication_or_update_date
+        description: 来源的发表或最近更新时间
+        detail_level: 简要
+        required: false
+      - name: evidence_type
+        description: measured、estimated、claimed、simulated 或 unknown
+        detail_level: 简要
+        required: true
+  workload:
+    description: Coding Agent 的任务和输入特征
+    fields:
+      - name: task_type
+        description: 代码问答、代码检索、代码生成、代码修改、调试、测试或重构
+        detail_level: 简要
+        required: true
+      - name: task_complexity
+        description: 任务复杂度等级及判定标准
+        detail_level: 详细
+        required: true
+      - name: requires_tool_call
+        description: 首次响应或任务完成是否必须调用工具
+        detail_level: 简要
+        required: true
+      - name: tool_types
+        description: 文件读取、代码搜索、Shell、测试、Git 或其他工具类型
+        detail_level: 简要
+        required: true
+      - name: expected_tool_count
+        description: 任务预期工具调用次数
+        detail_level: 简要
+        required: false
+      - name: actual_tool_count
+        description: 实际工具调用次数及串并行关系
+        detail_level: 详细
+        required: false
+      - name: conversation_turn
+        description: 当前对话轮次
+        detail_level: 简要
+        required: false
+      - name: repository_size
+        description: 文件数、代码行数或可索引仓库规模
+        detail_level: 详细
+        required: false
+      - name: input_token_count
+        description: 请求输入总 token 数
+        detail_level: 简要
+        required: true
+      - name: system_prompt_token_count
+        description: System Prompt token 数
+        detail_level: 简要
+        required: true
+      - name: history_token_count
+        description: 对话历史 token 数
+        detail_level: 简要
+        required: true
+      - name: code_context_token_count
+        description: 代码和检索上下文 token 数
+        detail_level: 简要
+        required: true
+      - name: tool_schema_token_count
+        description: 工具定义和 Schema token 数
+        detail_level: 简要
+        required: true
+  system:
+    description: Agent、模型和运行环境配置
+    fields:
+      - name: agent_framework
+        description: Agent 框架、编排方式和版本
+        detail_level: 详细
+        required: true
+      - name: agent_pattern
+        description: ReAct、Plan-and-Execute、Graph、单循环或自定义模式
+        detail_level: 简要
+        required: true
+      - name: model_name
+        description: 使用的模型名称和版本
+        detail_level: 简要
+        required: true
+      - name: model_provider
+        description: 模型提供商或自部署服务
+        detail_level: 简要
+        required: true
+      - name: model_region
+        description: 客户端、Agent 服务和模型服务所在区域
+        detail_level: 简要
+        required: false
+      - name: inference_backend
+        description: 推理后端、服务框架和关键版本
+        detail_level: 详细
+        required: false
+      - name: hardware
+        description: GPU、CPU、内存和网络配置，自部署场景使用
+        detail_level: 详细
+        required: false
+      - name: concurrency
+        description: 实验期间并发请求数和服务负载
+        detail_level: 简要
+        required: true
+      - name: cold_or_warm
+        description: 冷启动、热启动或缓存预热状态
+        detail_level: 简要
+        required: true
+      - name: connection_reused
+        description: 是否复用 HTTP/TCP/TLS 连接
+        detail_level: 简要
+        required: false
+      - name: streaming_protocol
+        description: SSE、WebSocket、HTTP Streaming 或非流式
+        detail_level: 简要
+        required: true
+      - name: prompt_cache_status
+        description: hit、miss、partial、unknown 及缓存边界
+        detail_level: 详细
+        required: false
+  critical_path:
+    description: 首 token 之前的依赖链和阻塞阶段
+    fields:
+      - name: stages
+        description: 按时间顺序记录请求阶段及开始/结束时间
+        detail_level: 详细
+        required: true
+      - name: blocking_stages
+        description: 首 token 前必须完成的阶段
+        detail_level: 详细
+        required: true
+      - name: blocking_stage_count
+        description: 首响应关键路径中的阻塞阶段数量
+        detail_level: 简要
+        required: true
+      - name: critical_path_duration_ms
+        description: 阻塞阶段关键路径累计耗时
+        detail_level: 简要
+        required: true
+      - name: parallelized_stages
+        description: 被并行执行或与模型生成重叠的阶段
+        detail_level: 详细
+        required: false
+      - name: hidden_latency_stages
+        description: 通过状态消息、占位内容或异步交互隐藏的阶段
+        detail_level: 详细
+        required: false
+  latency:
+    description: 分层延迟指标，单位默认毫秒
+    fields:
+      - name: request_start_time
+        description: 客户端开始提交请求的时间戳
+        detail_level: 简要
+        required: true
+      - name: server_receive_time
+        description: Agent 服务收到完整请求的时间戳
+        detail_level: 简要
+        required: true
+      - name: model_request_start_time
+        description: Agent 发起模型请求的时间戳
+        detail_level: 简要
+        required: true
+      - name: model_first_token_time
+        description: 模型服务生成第一个 token 的时间戳
+        detail_level: 简要
+        required: true
+      - name: first_chunk_receive_time
+        description: 客户端收到第一个流式数据块的时间戳
+        detail_level: 简要
+        required: true
+      - name: first_visible_content_time
+        description: UI 显示第一个内容的时间戳
+        detail_level: 简要
+        required: true
+      - name: first_meaningful_content_time
+        description: 用户看到第一个有实际信息量内容的时间戳
+        detail_level: 详细
+        required: true
+      - name: queue_latency_ms
+        description: 服务端排队耗时
+        detail_level: 简要
+        required: false
+      - name: prompt_build_latency_ms
+        description: Prompt 构建耗时
+        detail_level: 简要
+        required: true
+      - name: retrieval_latency_ms
+        description: 代码索引或 RAG 检索耗时
+        detail_level: 简要
+        required: false
+      - name: tool_latency_ms
+        description: 工具调用耗时，记录是否阻塞首 token
+        detail_level: 详细
+        required: false
+      - name: prefill_latency_ms
+        description: 模型 Prefill 阶段耗时
+        detail_level: 简要
+        required: false
+      - name: model_ttft_ms
+        description: 模型请求开始到模型生成首 token 的时间
+        detail_level: 简要
+        required: true
+      - name: network_ttft_ms
+        description: 服务端产生首 token 到客户端收到首 chunk 的时间
+        detail_level: 简要
+        required: true
+      - name: render_latency_ms
+        description: 客户端收到首 chunk 到 UI 显示内容的时间
+        detail_level: 简要
+        required: true
+      - name: end_to_end_ttft_ms
+        description: 用户提交请求到 UI 显示首个内容的时间
+        detail_level: 简要
+        required: true
+      - name: meaningful_response_latency_ms
+        description: 用户提交请求到看到首个有意义内容的时间
+        detail_level: 简要
+        required: true
+      - name: total_response_time_ms
+        description: 请求开始到任务完成或最终响应结束的时间
+        detail_level: 简要
+        required: true
+      - name: output_tokens_per_second
+        description: 首 token 之后的平均输出速度
+        detail_level: 简要
+        required: false
+  optimization:
+    description: 优化方案、作用机制和工程代价
+    fields:
+      - name: optimization_name
+        description: 优化方案名称
+        detail_level: 简要
+        required: true
+      - name: layer
+        description: Agent 编排、上下文、模型 API、缓存、推理、网络或前端
+        detail_level: 简要
+        required: true
+      - name: mechanism
+        description: 优化的具体技术机制
+        detail_level: 详细
+        required: true
+      - name: changes_critical_path
+        description: 是否改变首 token 关键路径
+        detail_level: 简要
+        required: true
+      - name: reduces_work
+        description: 是否减少计算、输入 token、工具调用或模型调用
+        detail_level: 简要
+        required: true
+      - name: overlaps_work
+        description: 是否将阶段并行化或与模型生成重叠
+        detail_level: 简要
+        required: true
+      - name: hides_latency
+        description: 是否主要改善感知延迟而非真实端到端延迟
+        detail_level: 简要
+        required: true
+      - name: implementation_cost
+        description: 低、中、高，并说明维护成本
+        detail_level: 详细
+        required: true
+      - name: architecture_change_required
+        description: 是否需要改变 Agent 协议、状态机或服务架构
+        detail_level: 简要
+        required: true
+      - name: limitations
+        description: 适用限制、失败条件和安全约束
+        detail_level: 详细
+        required: true
+  outcome:
+    description: 优化效果、质量、成本和稳定性结果
+    fields:
+      - name: p50_ttft_ms
+        description: TTFT 第 50 百分位
+        detail_level: 简要
+        required: true
+      - name: p95_ttft_ms
+        description: TTFT 第 95 百分位
+        detail_level: 简要
+        required: true
+      - name: p99_ttft_ms
+        description: TTFT 第 99 百分位
+        detail_level: 简要
+        required: false
+      - name: ttft_improvement_percent
+        description: 相对基线的 TTFT 改善比例
+        detail_level: 简要
+        required: true
+      - name: total_latency_change_percent
+        description: 总响应时间相对基线的变化
+        detail_level: 简要
+        required: true
+      - name: task_success_rate
+        description: 任务成功率
+        detail_level: 简要
+        required: true
+      - name: answer_correctness
+        description: 回答或代码结果正确性
+        detail_level: 详细
+        required: true
+      - name: tool_selection_accuracy
+        description: 工具选择和参数正确率
+        detail_level: 简要
+        required: false
+      - name: coding_quality_metrics
+        description: 编译通过率、测试通过率、patch 可应用率等 Coding Agent 指标
+        detail_level: 详细
+        required: false
+      - name: token_cost_change_percent
+        description: Token 使用成本变化
+        detail_level: 简要
+        required: true
+      - name: infrastructure_cost_change_percent
+        description: API、GPU 或基础设施成本变化
+        detail_level: 简要
+        required: false
+      - name: failure_rate
+        description: 请求失败、工具失败或超时比例
+        detail_level: 简要
+        required: true
+      - name: stability_observations
+        description: 长尾、抖动、缓存失效和负载变化下的稳定性
+        detail_level: 详细
+        required: true
+  experiment:
+    description: 可复现实验设计与证据质量
+    fields:
+      - name: hypothesis
+        description: 实验要验证的因果假设
+        detail_level: 详细
+        required: true
+      - name: baseline_config
+        description: 基线 Agent、模型、Prompt、工具和运行环境配置
+        detail_level: 详细
+        required: true
+      - name: treatment_config
+        description: 优化后配置及与基线的唯一差异
+        detail_level: 详细
+        required: true
+      - name: independent_variables
+        description: 输入长度、工具数、并发、模型、缓存状态等自变量
+        detail_level: 详细
+        required: true
+      - name: control_variables
+        description: 需要保持一致的模型参数、任务、区域、网络和服务状态
+        detail_level: 详细
+        required: true
+      - name: repetitions
+        description: 每个实验条件的重复次数
+        detail_level: 简要
+        required: true
+      - name: warmup_requests
+        description: 正式测量前的预热请求数量
+        detail_level: 简要
+        required: true
+      - name: experiment_order_randomized
+        description: 是否随机化不同条件的运行顺序
+        detail_level: 简要
+        required: false
+      - name: percentile_metrics
+        description: 至少报告 P50、P95，必要时报告 P99
+        detail_level: 简要
+        required: true
+      - name: confidence_interval
+        description: 延迟和质量结果的置信区间
+        detail_level: 详细
+        required: false
+      - name: significance_test
+        description: 使用的统计显著性检验方法
+        detail_level: 简要
+        required: false
+      - name: reproducibility_notes
+        description: 代码、数据、配置、随机种子和复现实验说明
+        detail_level: 详细
+        required: true
+      - name: limitations
+        description: 实验外推边界、混杂因素和未观测变量
+        detail_level: 详细
+        required: true
+uncertain:
+  - 不同模型提供商的 Prompt Cache 命中条件、TTL 和 TTFT 收益
+  - 工具 Schema token 增量与 TTFT 之间的可迁移关系
+  - Eager Tool Calling 对 Coding Agent 任务成功率和安全性的影响
+  - Prefill-Decode 分离在不同并发和上下文长度下的长尾收益
+  - 首个有意义内容时间的可操作定义和标注一致性
+  - 小模型路由对代码修改正确率和测试通过率的影响

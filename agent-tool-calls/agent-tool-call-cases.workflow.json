@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Agent 工具调用：参数不一致的全链路处理",
+    "subtitle": "案例：查询 ORD-42；若未发货则取消。图上展示主链路与关键分支，卡片展开每一层的全部 Cases。",
+    "animation": "trace",
+    "visual_preset": "signal-flow",
+    "quality_profile": "showcase",
+    "views": [
+      { "id": "happy", "label": "成功主链路", "focus": ["user", "llm", "parse", "schema", "tool", "service", "result", "reply"], "note": "合法参数通过所有防线，工具执行成功并返回最终回复。" },
+      { "id": "shape", "label": "参数形状错误", "focus": ["llm", "parse", "shapeError", "schema", "repair", "result", "retry", "ask"], "note": "JSON、工具名、必填字段、类型和枚举错误在执行前被拦截。" },
+      { "id": "semantic", "label": "业务与权限错误", "focus": ["schema", "tool", "business", "auth", "state", "result", "reply"], "note": "Schema 合法不等于业务允许；工具与服务端继续做存在性、权限、状态和幂等校验。" },
+      { "id": "outage", "label": "外部故障恢复", "focus": ["service", "timeout", "retry", "breaker", "result", "ask", "trace"], "note": "临时故障可有限重试，永久错误或预算耗尽则降级、熔断或升级。" },
+      { "id": "roles", "label": "责任边界", "focus": ["llm", "parse", "schema", "tool", "service", "result", "trace"], "note": "模型负责提出与尝试修正；框架负责编排；工具和服务端负责最终安全边界。" }
+    ]
+  },
+  "lanes": [
+    { "id": "ui", "label": "用户与界面" },
+    { "id": "model", "label": "模型输出层" },
+    { "id": "runtime", "label": "Agent 编排层" },
+    { "id": "guard", "label": "Schema / 参数层" },
+    { "id": "developer", "label": "Tool 开发者实现" },
+    { "id": "service", "label": "服务端与外部系统" },
+    { "id": "recovery", "label": "反馈、恢复与审计", "variant": "exception" }
+  ],
+  "phases": [
+    { "id": "p1", "label": "① 意图", "fromCol": 0, "toCol": 0 },
+    { "id": "p2", "label": "② 生成调用", "fromCol": 1, "toCol": 2, "variant": "emphasis" },
+    { "id": "p3", "label": "③ 执行前防线", "fromCol": 2, "toCol": 3, "variant": "security" },
+    { "id": "p4", "label": "④ 业务执行", "fromCol": 4, "toCol": 5 },
+    { "id": "p5", "label": "⑤ 反馈与恢复", "fromCol": 5, "toCol": 5, "variant": "dashed" }
+  ],
+  "groups": [
+    { "id": "preflight", "label": "执行前：解析与 Schema 只负责拦截结构问题", "lane": "runtime", "fromCol": 2, "toCol": 3, "variant": "security" },
+    { "id": "businessBoundary", "label": "执行时：开发者和服务端负责业务与安全兜底", "lane": "developer", "fromCol": 3, "toCol": 5, "variant": "dashed" },
+    { "id": "recoveryLoop", "label": "错误统一变成 Tool Result，再交回编排层", "lane": "recovery", "fromCol": 3, "toCol": 5, "variant": "emphasis" }
+  ],
+  "mainPath": ["user", "llm", "parse", "schema", "tool", "service", "result", "reply"],
+  "nodes": [
+    { "id": "user", "lane": "ui", "col": 0, "type": "external", "label": "用户请求", "sublabel": "查 ORD-42；未发货则取消" },
+    { "id": "llm", "lane": "model", "col": 1, "type": "backend", "label": "LLM", "sublabel": "选择工具 + 生成参数", "tag": "非确定性" },
+    { "id": "parse", "lane": "runtime", "col": 2, "type": "backend", "label": "调用解析器", "sublabel": "tool name / JSON / envelope" },
+    { "id": "schema", "lane": "guard", "col": 3, "type": "security", "label": "Schema 校验", "sublabel": "required · type · enum" },
+    { "id": "repair", "lane": "guard", "col": 4, "type": "backend", "label": "低风险修复", "sublabel": "可选：\"30\" → 30" },
+    { "id": "tool", "lane": "developer", "col": 4, "type": "backend", "label": "Tool Executor", "sublabel": "业务校验 + try/catch", "tag": "开发者兜底" },
+    { "id": "service", "lane": "service", "col": 5, "type": "cloud", "label": "订单服务", "sublabel": "鉴权 · 事务 · 状态机" },
+    { "id": "result", "lane": "recovery", "col": 5, "type": "messagebus", "label": "Tool Result", "sublabel": "ok / error / retryable" },
+    { "id": "reply", "lane": "ui", "col": 5, "type": "frontend", "label": "最终回复", "sublabel": "成功、失败或下一步" },
+    { "id": "shapeError", "lane": "recovery", "col": 3, "type": "security", "label": "形状错误", "sublabel": "拒绝执行，返回具体错误" },
+    { "id": "unknown", "lane": "recovery", "col": 3, "type": "security", "label": "未知工具", "sublabel": "UNKNOWN_TOOL" },
+    { "id": "business", "lane": "recovery", "col": 4, "type": "security", "label": "业务拒绝", "sublabel": "不存在 / 无权限 / 状态非法" },
+    { "id": "auth", "lane": "developer", "col": 3, "type": "security", "label": "权限检查", "sublabel": "调用者与资源范围" },
+    { "id": "state", "lane": "developer", "col": 5, "type": "backend", "label": "状态与幂等", "sublabel": "未发货 / 已取消 / 已发货" },
+    { "id": "timeout", "lane": "service", "col": 4, "type": "messagebus", "label": "临时故障", "sublabel": "timeout / 5xx" },
+    { "id": "permanent", "lane": "service", "col": 4, "type": "external", "label": "永久错误", "sublabel": "业务规则拒绝" },
+    { "id": "retry", "lane": "recovery", "col": 4, "type": "messagebus", "label": "受限重试", "sublabel": "参数修正 / 指数退避" },
+    { "id": "ask", "lane": "recovery", "col": 3, "type": "frontend", "label": "询问 / 审批", "sublabel": "信息不足或高风险" },
+    { "id": "breaker", "lane": "recovery", "col": 5, "type": "security", "label": "熔断 / 降级", "sublabel": "停止继续调用" },
+    { "id": "trace", "lane": "recovery", "col": 5, "type": "database", "label": "Trace / Audit", "sublabel": "调用、校验、结果、审批" }
+  ],
+  "edges": [
+    { "id": "e1", "from": "user", "to": "llm", "label": "自然语言", "role": "main", "variant": "emphasis" },
+    { "id": "e2", "from": "llm", "to": "parse", "label": "Tool Call", "role": "main", "variant": "emphasis" },
+    { "id": "e3", "from": "parse", "to": "schema", "label": "解析成功", "role": "main", "variant": "default" },
+    { "id": "e4", "from": "parse", "to": "unknown", "label": "工具名不存在", "role": "error", "variant": "security", "fromSide": "bottom", "toSide": "top", "route": "drop" },
+    { "id": "e5", "from": "parse", "to": "shapeError", "label": "JSON / envelope 错", "role": "error", "variant": "security", "fromSide": "bottom", "toSide": "top", "route": "drop" },
+    { "id": "e6", "from": "schema", "to": "repair", "label": "可安全转换", "role": "branch", "variant": "dashed", "fromSide": "right", "toSide": "left", "route": "straight" },
+    { "id": "e7", "from": "schema", "to": "tool", "label": "校验通过", "role": "main", "variant": "emphasis", "fromSide": "right", "toSide": "left", "route": "straight" },
+    { "id": "e8", "from": "schema", "to": "shapeError", "label": "缺失 / 类型 / 枚举错", "role": "error", "variant": "security", "fromSide": "bottom", "toSide": "top", "route": "drop" },
+    { "id": "e9", "from": "repair", "to": "tool", "label": "规范化参数", "role": "branch", "variant": "dashed", "fromSide": "bottom", "toSide": "top", "route": "drop" },
+    { "id": "e10", "from": "tool", "to": "service", "label": "受控执行", "role": "main", "variant": "emphasis", "fromSide": "right", "toSide": "left", "route": "straight" },
+    { "id": "e11", "from": "tool", "to": "auth", "label": "先鉴权", "role": "branch", "variant": "security", "fromSide": "top", "toSide": "bottom", "route": "drop" },
+    { "id": "e12", "from": "auth", "to": "business", "label": "拒绝", "role": "error", "variant": "security", "fromSide": "right", "toSide": "left", "route": "straight" },
+    { "id": "e13", "from": "service", "to": "state", "label": "检查状态", "role": "branch", "variant": "dashed", "fromSide": "bottom", "toSide": "top", "route": "drop" },
+    { "id": "e14", "from": "service", "to": "timeout", "label": "timeout / 5xx", "role": "error", "variant": "dashed", "fromSide": "left", "toSide": "right", "route": "straight" },
+    { "id": "e15", "from": "service", "to": "permanent", "label": "业务拒绝", "role": "error", "variant": "security", "fromSide": "left", "toSide": "right", "route": "drop" },
+    { "id": "e16", "from": "service", "to": "result", "label": "成功结果", "role": "return", "variant": "emphasis", "fromSide": "bottom", "toSide": "top", "route": "drop" },
+    { "id": "e17", "from": "timeout", "to": "retry", "label": "retryable=true", "role": "branch", "variant": "dashed", "fromSide": "bottom", "toSide": "top", "route": "drop" },
+    { "id": "e18", "from": "permanent", "to": "result", "label": "retryable=false", "role": "error", "variant": "security", "fromSide": "bottom", "toSide": "top", "route": "drop" },
+    { "id": "e19", "from": "retry", "to": "llm", "label": "有限次重新生成", "role": "return", "variant": "dashed", "fromSide": "left", "toSide": "left", "route": "return-left" },
+    { "id": "e20", "from": "shapeError", "to": "result", "label": "结构化错误", "role": "error", "variant": "security", "fromSide": "right", "toSide": "left", "route": "straight" },
+    { "id": "e21", "from": "unknown", "to": "result", "label": "不可执行", "role": "error", "variant": "security", "fromSide": "right", "toSide": "left", "route": "straight" },
+    { "id": "e22", "from": "business", "to": "result", "label": "业务错误", "role": "error", "variant": "security", "fromSide": "right", "toSide": "left", "route": "straight" },
+    { "id": "e23", "from": "result", "to": "reply", "label": "模型解释结果", "role": "return", "variant": "default", "fromSide": "top", "toSide": "bottom", "route": "outside-right" },
+    { "id": "e24", "from": "result", "to": "ask", "label": "达到上限 / 高风险", "role": "branch", "variant": "security", "fromSide": "left", "toSide": "right", "route": "return-left" },
+    { "id": "e25", "from": "timeout", "to": "breaker", "label": "超过预算", "role": "error", "variant": "security", "fromSide": "bottom", "toSide": "top", "route": "drop" },
+    { "id": "e26", "from": "parse", "to": "trace", "label": "记录每一步", "role": "async", "variant": "dashed", "fromSide": "bottom", "toSide": "top", "route": "outside-right" },
+    { "id": "e27", "from": "result", "to": "trace", "label": "结果 + latency", "role": "async", "variant": "dashed", "fromSide": "bottom", "toSide": "top", "route": "drop" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "案例：一次理想调用", "items": ["用户：查询订单 ORD-42；如果未发货就取消。", "模型生成：cancel_order({ order_id: \"ORD-42\", reason: \"user_request\" })。", "工具 Schema：order_id 为必填字符串；reason 是枚举值。", "成功路径：解析 → Schema → 业务/权限 → 服务端事务 → Tool Result → 最终回复。"] },
+    { "dot": "amber", "title": "第 1 层｜模型输出：4 个 Cases", "items": ["A 正常：工具名、JSON、字段值都合理 → 进入框架。", "B JSON 损坏：截断、引号错误、字段包裹层错误 → 解析失败，不执行 Tool。", "C 未知工具：调用未注册名称 → UNKNOWN_TOOL，不执行 Tool。", "D 语义猜错：order_id 看似合法但资源不存在/状态错误 → 继续交给业务与服务端判断。", "结论：模型不会自动修正已经发出的调用；只有收到错误反馈后，才可能在下一轮尝试修正。"] },
+    { "dot": "violet", "title": "第 2 层｜框架解析与 Schema：5 个 Cases", "items": ["A 解析成功：提取 tool name 与 arguments。", "B 缺字段：缺少 order_id → required error。", "C 类型错误：order_id=42 或 timeout=\"30\" → type error；是否转换取决于实现。", "D 值域错误：reason=\"其他\" 不在 enum → enum error。", "E 可修复格式：低风险的 \"30\"→30 或日期规范化；必须由开发者明确允许，高风险字段不要静默修复。", "Schema 的职责是结构防线，不是业务授权；校验失败是否反馈给模型、是否自动重试，取决于 Agent 框架/编排代码。"] },
+    { "dot": "rose", "title": "第 3 层｜Tool 开发者：必须二次校验", "items": ["A 订单不存在 → ORDER_NOT_FOUND。", "B 无权限 → PERMISSION_DENIED；模型不能绕过服务端鉴权。", "C 状态不允许 → INVALID_STATE，例如订单已经发货。", "D 重复调用 → 幂等处理：不重复产生取消副作用。", "E 未预料异常 → 最外层 try/catch，转换成结构化错误，不要让 Agent 直接崩溃。", "这一层是生产环境的核心兜底：Schema 合法不代表业务允许。"] },
+    { "dot": "orange", "title": "第 4 层｜服务端与外部系统：4 个 Cases", "items": ["A 200 成功：事务提交，返回订单结果。", "B timeout / 5xx：标记 retryable=true，由编排层指数退避并限制次数。", "C 永久业务拒绝：retryable=false，不要盲目重复调用。", "D 鉴权、事务、一致性、限额、状态机必须在服务端再次强制执行；不能信任模型或客户端。"] },
+    { "dot": "slate", "title": "第 5 层｜恢复、反馈、终止：5 个 Cases", "items": ["A 结构化反馈：把 code、message、retryable、details 返回给模型。", "B 模型修正：根据错误重生成参数；这是被动恢复，不是确定性保证。", "C 有限重试：参数错误与临时故障使用不同策略，最多 2–3 次。", "D 信息不足/高风险：询问用户或进入人工审批。", "E 达到预算/连续失败：熔断、降级、终止并向用户解释。"] },
+    { "dot": "emerald", "title": "最终责任边界｜一句话记忆", "items": ["模型负责：提出意图与参数，依据反馈尝试修正。", "Agent 框架负责：解析调用、运行 Schema、传递错误、编排重试；这些不一定默认自动发生。", "Tool 负责：业务规则、资源、权限、状态、幂等、异常捕获。", "服务端负责：最终鉴权、事务一致性和不可绕过的安全边界。", "最安全原则：不要相信模型生成的参数；不要只相信 Schema；不要无限重试；不要把权限交给模型。"] }
+  ]
+}

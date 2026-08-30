@@ -1,0 +1,143 @@
+{
+ "schemaVersion": 1,
+ "ok": false,
+ "command": "visual-check",
+ "status": "fail",
+ "visualReview": "pending",
+ "artifact": {
+  "path": "/Users/zhanglun/Documents/mine/get-off-work-early/agent-tool-calls/agent-tools-failure-lifecycle.html",
+  "sha256": "fb6ceb859160a0d4d18287ddc781c9b0d89c611620d5e05429c3fd60764dfedc",
+  "bytes": 667134
+ },
+ "state": {
+  "detail": "read",
+  "motion": "still"
+ },
+ "chrome": {
+  "status": "available",
+  "executable": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+ },
+ "containment": {
+  "status": "fail",
+  "viewports": [
+   {
+    "width": 1440,
+    "height": 900,
+    "theme": "light",
+    "innerWidth": 1440,
+    "innerHeight": 900,
+    "scrollWidth": 1440,
+    "scrollHeight": 2304,
+    "overflowX": false,
+    "overflowY": true,
+    "ok": false,
+    "resolvedTheme": "light"
+   },
+   {
+    "width": 1600,
+    "height": 1000,
+    "theme": "light",
+    "innerWidth": 1600,
+    "innerHeight": 1000,
+    "scrollWidth": 1600,
+    "scrollHeight": 2349,
+    "overflowX": false,
+    "overflowY": true,
+    "ok": false,
+    "resolvedTheme": "light"
+   },
+   {
+    "width": 1920,
+    "height": 1080,
+    "theme": "light",
+    "innerWidth": 1920,
+    "innerHeight": 1080,
+    "scrollWidth": 1920,
+    "scrollHeight": 2349,
+    "overflowX": false,
+    "overflowY": true,
+    "ok": false,
+    "resolvedTheme": "light"
+   },
+   {
+    "width": 2048,
+    "height": 1320,
+    "theme": "light",
+    "innerWidth": 2048,
+    "innerHeight": 1320,
+    "scrollWidth": 2048,
+    "scrollHeight": 2386,
+    "overflowX": false,
+    "overflowY": true,
+    "ok": false,
+    "resolvedTheme": "light"
+   }
+  ]
+ },
+ "captures": {
+  "status": "pass",
+  "screenshots": [
+   {
+    "width": 1440,
+    "height": 900,
+    "theme": "light",
+    "innerWidth": 1440,
+    "innerHeight": 900,
+    "scrollWidth": 1440,
+    "scrollHeight": 2304,
+    "overflowX": false,
+    "overflowY": true,
+    "ok": false,
+    "resolvedTheme": "light",
+    "file": "agent-tools-failure-lifecycle.visual-check.1440x900.light.png"
+   },
+   {
+    "width": 1440,
+    "height": 900,
+    "theme": "dark",
+    "innerWidth": 1440,
+    "innerHeight": 900,
+    "scrollWidth": 1440,
+    "scrollHeight": 2304,
+    "overflowX": false,
+    "overflowY": true,
+    "ok": false,
+    "resolvedTheme": "dark",
+    "file": "agent-tools-failure-lifecycle.visual-check.1440x900.dark.png"
+   },
+   {
+    "width": 2048,
+    "height": 1320,
+    "theme": "light",
+    "innerWidth": 2048,
+    "innerHeight": 1320,
+    "scrollWidth": 2048,
+    "scrollHeight": 2386,
+    "overflowX": false,
+    "overflowY": true,
+    "ok": false,
+    "resolvedTheme": "light",
+    "file": "agent-tools-failure-lifecycle.visual-check.2048x1320.light.png"
+   },
+   {
+    "width": 2048,
+    "height": 1320,
+    "theme": "dark",
+    "innerWidth": 2048,
+    "innerHeight": 1320,
+    "scrollWidth": 2048,
+    "scrollHeight": 2386,
+    "overflowX": false,
+    "overflowY": true,
+    "ok": false,
+    "resolvedTheme": "dark",
+    "file": "agent-tools-failure-lifecycle.visual-check.2048x1320.dark.png"
+   }
+  ],
+  "contactSheet": "agent-tools-failure-lifecycle.visual-check.html"
+ },
+ "sidecars": {
+  "receipt": "agent-tools-failure-lifecycle.visual-check.json",
+  "contactSheet": "agent-tools-failure-lifecycle.visual-check.html"
+ }
+}

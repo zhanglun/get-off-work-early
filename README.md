@@ -30,6 +30,9 @@ get-off-work-early/
 ├── agent-base/                      # Agent 底座线路：NestJS storyboard-agent（架子已达成）
 ├── mastra-playground/               # Mastra 基础学习：最小 Agent + Tool
 ├── mastra-short-drama-agent/        # Mastra 主线：短剧制作协作 Agent
+├── agent-tool-calls/                # Agent 线路专题：工具调用失败全生命周期（文章 + 交互图）
+├── agent-activity-stream/           # Agent 线路专题：Codex 风格 Activity Stream（文章 + 三仓库实施计划）
+├── coding-agent-ttft/               # Agent 线路调研：Coding Agent 首 Token 延迟优化（outline + fields）
 └── ai-platform-interview-handbook/  # 面试手册：13 章推演文档
 ```
 

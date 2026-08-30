@@ -1,0 +1,128 @@
+topic: 开发 Agent 首 Token 输出速度优化
+slug: coding-agent-ttft
+description: >-
+  研究开发 Agent（Coding Agent）从用户提交请求到用户看到首个有效响应的
+  端到端首响应延迟优化，重点分析关键路径、上下文、工具调用、模型路由、缓存
+  和流式交互之间的关系。
+scope:
+  included:
+    - TTFT 与首个有效响应的定义、测量和延迟拆解
+    - Coding Agent 的请求关键路径与阻塞阶段分析
+    - Prompt、对话历史、代码上下文和工具 Schema 优化
+    - 工具调用的串行/并行、提前执行和异步解耦
+    - 模型选择、模型路由、Prompt Cache 和 Prefix/KV Cache
+    - 模型 API、推理服务、网络传输和客户端渲染对延迟的影响
+    - TTFT、任务成功率、质量、成本和稳定性的权衡
+  secondary:
+    - 自部署推理服务、Prefill、KV Cache、批处理和 GPU 配置
+    - SSE、WebSocket、HTTP Streaming 以及前端首屏反馈
+  excluded_from_core:
+    - 仅针对 Decode 吞吐的 GPU Kernel 优化
+    - 与 Agent 首响应无直接关系的通用安全体系设计
+    - 所有类型 Agent 的全面性能比较
+research_questions:
+  - Agent 首 token 延迟由哪些阶段构成，哪些阶段位于首响应关键路径？
+  - 输入 token 数、代码上下文、工具数量和工具 Schema 如何影响 TTFT？
+  - 哪些优化真正降低端到端 TTFT，哪些优化只是改善用户感知？
+  - 工具调用应在首次响应前完成，还是应与响应生成并行或异步执行？
+  - Prompt Cache、上下文裁剪、模型路由和并行工具调用的收益如何比较？
+  - 如何构建可复现、可比较并能体现 Coding Agent 特征的 TTFT Benchmark？
+items:
+  - id: ttft-measurement
+    name: TTFT 定义与测量
+    category: measurement
+    description: >-
+      定义模型首 token、首 chunk、首个可见内容、首个有意义内容和总响应时间，
+      建立端到端时间戳与延迟拆解方法。
+  - id: coding-agent-critical-path
+    name: Coding Agent 关键路径
+    category: agent-orchestration
+    description: >-
+      梳理 Prompt 构建、代码检索、模型调用、工具调用、结果合并和 UI 展示之间的
+      依赖关系，识别首 token 前的阻塞阶段。
+  - id: context-and-prompt
+    name: 上下文与 Prompt 优化
+    category: context
+    description: >-
+      研究 System Prompt、历史消息、代码上下文、RAG 结果、工具定义和 Schema
+      规模对 Prefill 与 TTFT 的影响，以及裁剪、压缩和稳定前缀策略。
+  - id: tool-orchestration
+    name: 工具调用编排
+    category: tools
+    description: >-
+      比较工具调用串行、并行、提前执行、流式工具调用和后台异步执行对首响应及
+      总任务完成时间的影响，并评估幂等性和错误处理约束。
+  - id: model-routing
+    name: 模型选择与路由
+    category: model-routing
+    description: >-
+      比较低延迟模型、推理模型和大小模型组合，研究任务分类、动态路由、Fallback
+      及 Agent 分阶段调用对 TTFT、质量和成本的影响。
+  - id: prompt-and-kv-cache
+    name: Prompt Cache 与 KV Cache
+    category: caching
+    description: >-
+      研究 Prompt Cache、Prefix Cache、KV Cache 的命中条件、缓存边界、TTL、预热、
+      动态上下文布局，以及缓存对 TTFT、成本和数据隔离的影响。
+  - id: inference-and-serving
+    name: 推理服务与 Prefill
+    category: inference-serving
+    description: >-
+      研究 Prefill/Decode、服务端排队、并发、批处理、Chunked Prefill、Prefill-Decode
+      分离、自部署推理框架和硬件配置对首 token 延迟及长尾的影响。
+  - id: streaming-and-perceived-latency
+    name: 流式传输与感知延迟
+    category: transport-frontend
+    description: >-
+      研究 SSE、WebSocket、连接复用、首 chunk、flush、前端渲染、状态提示和首个
+      有意义内容之间的差异，区分真实延迟降低与延迟隐藏。
+  - id: benchmark-and-tradeoffs
+    name: Benchmark 与优化权衡
+    category: evaluation
+    description: >-
+      建立冷/热启动、不同上下文、并发和任务复杂度下的 P50/P95/P99 Benchmark，
+      同时评估任务成功率、代码质量、成本、失败率和稳定性。
+execution:
+  batch_size: 4
+  items_per_agent: 2
+  output_dir: ./results
+  parallelization:
+    - agent: 1
+      items:
+        - ttft-measurement
+        - coding-agent-critical-path
+    - agent: 2
+      items:
+        - context-and-prompt
+        - tool-orchestration
+    - agent: 3
+      items:
+        - model-routing
+        - prompt-and-kv-cache
+    - agent: 4
+      items:
+        - inference-and-serving
+        - streaming-and-perceived-latency
+  synthesis_item: benchmark-and-tradeoffs
+  source_policy:
+    preferred:
+      - official model provider documentation
+      - peer-reviewed papers and arXiv papers
+      - inference framework documentation
+      - reproducible engineering benchmarks
+    require_exact_evidence: true
+    record_publication_date: true
+    distinguish_measured_from_claimed: true
+  time_range: 最近两年
+  as_of: 2026-08-28
+initial_sources:
+  - title: Prompt caching | OpenAI API
+    url: https://developers.openai.com/api/docs/guides/prompt-caching
+  - title: Prompt caching - Claude Platform Docs
+    url: https://platform.claude.com/docs/en/build-with-claude/prompt-caching
+  - title: An Evaluation of Prompt Caching for Long-Horizon Agentic Tasks
+    url: https://arxiv.org/html/2601.06007v2
+  - title: Berkeley Function Calling Leaderboard
+    url: https://gorilla.cs.berkeley.edu/leaderboard.html
+  - title: Prefill vs Decode: LLM Inference Phases Explained
+    url: https://redis.io/blog/prefill-vs-decode/
