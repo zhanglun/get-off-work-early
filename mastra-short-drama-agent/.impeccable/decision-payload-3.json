@@ -1,0 +1,41 @@
+{
+  "title": "选择构图 · 场记日志世界",
+  "question": "视觉世界已定「场记日志」。这是同一世界的三个构图（项目工作区首屏），选一个作为正式视觉稿的构图基准。",
+  "options": [
+    {
+      "id": "comp-a",
+      "label": "A · 对开登记",
+      "lineage": "场记日志 · 双页对开",
+      "thesis": "左页对话、中缝装订、右页登记——最接近一本翻开的日志。",
+      "palette": ["#f7f6f1", "#22242c", "#1f5f8b", "#b8860b"],
+      "materials": ["装订中缝", "圈码分镜", "金底流程 tab"],
+      "viewport": "对话与登记分居两页，tab 切换制作流程 / 资产结果。",
+      "risk": "两页结构对窄屏收起成本最高。",
+      "comp": ".impeccable/mocks/comp-a.png"
+    },
+    {
+      "id": "comp-b",
+      "label": "B · 通栏日志",
+      "lineage": "场记日志 · 单栏登记流",
+      "thesis": "对话、进度、镜头、穿帮全部按时间排进同一条登记流。",
+      "palette": ["#f7f6f1", "#22242c", "#1f5f8b", "#c0392b"],
+      "materials": ["时间栏", "日志行", "右侧索引边栏"],
+      "viewport": "一栏通到底，右侧窄索引列场次与资产。",
+      "risk": "镜头密集时单条流会变长，资产检索不如分区直观。",
+      "comp": ".impeccable/mocks/comp-b.png"
+    },
+    {
+      "id": "comp-c",
+      "label": "C · 编号边栏",
+      "lineage": "场记日志 · 页码边栏",
+      "thesis": "最左场/镜编号边栏承担导航，中间对话，右侧当前场次图版。",
+      "palette": ["#f7f6f1", "#22242c", "#1f5f8b", "#b8860b"],
+      "materials": ["红色页边线", "编号边栏", "粗墨框图版"],
+      "viewport": "编号栏（场2·镜05–12 金色高亮）+ 对话 + 图版三区。",
+      "risk": "三区并列在 1280 宽以下需要折行设计。",
+      "comp": ".impeccable/mocks/comp-c.png"
+    }
+  ],
+  "buildPath": { "value": "code" },
+  "steer": false
+}

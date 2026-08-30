@@ -1,0 +1,130 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240 760">
+  <rect width="1240" height="760" fill="#f7f6f1"/>
+  <defs>
+    <marker id="arrI" viewBox="0 0 10 7" refX="9" refY="3.5" markerWidth="9" markerHeight="6.5" orient="auto"><path d="M0,0 L10,3.5 L0,7 Z" fill="#565a66"/></marker>
+  </defs>
+  <text x="40" y="38" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="19" font-weight="700" fill="#22242c" letter-spacing="1">数据模型</text>
+  <text x="1200" y="36" font-family="SF Mono, Menlo, monospace" font-size="10.5" fill="#666b78" text-anchor="end" letter-spacing="1">PostgreSQL + Prisma · 1:N 关系</text>
+  <rect x="40" y="70" width="200" height="74" rx="2" fill="#e3edf4" stroke="#22242c" stroke-width="1.5"/>
+  <rect x="40" y="70" width="200" height="28" rx="2" fill="#f1efe8" stroke="#22242c" stroke-width="1.5"/>
+  <text x="140" y="89" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="13" font-weight="700" fill="#22242c" text-anchor="middle">User</text>
+  <text x="52" y="116" font-family="SF Mono, Menlo, monospace" font-size="10.5" fill="#565a66">id · demo 账号</text>
+  <text x="52" y="133" font-family="SF Mono, Menlo, monospace" font-size="10.5" fill="#565a66">会话 7 天 · HttpOnly</text>
+  <rect x="280" y="70" width="200" height="74" rx="2" fill="#ffffff" stroke="#22242c" stroke-width="2"/>
+  <rect x="280" y="70" width="200" height="28" rx="2" fill="#f1efe8" stroke="#22242c" stroke-width="2"/>
+  <text x="380" y="89" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="13" font-weight="700" fill="#22242c" text-anchor="middle">Project</text>
+  <text x="292" y="116" font-family="SF Mono, Menlo, monospace" font-size="10.5" fill="#565a66">id · name</text>
+  <text x="292" y="133" font-family="SF Mono, Menlo, monospace" font-size="10.5" fill="#565a66">updatedAt</text>
+  <rect x="520" y="70" width="200" height="74" rx="2" fill="#ffffff" stroke="#22242c" stroke-width="1.5"/>
+  <rect x="520" y="70" width="200" height="28" rx="2" fill="#f1efe8" stroke="#22242c" stroke-width="1.5"/>
+  <text x="620" y="89" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="13" font-weight="700" fill="#22242c" text-anchor="middle">Conversation</text>
+  <text x="532" y="116" font-family="SF Mono, Menlo, monospace" font-size="10.5" fill="#565a66">id · projectId</text>
+  <text x="532" y="133" font-family="SF Mono, Menlo, monospace" font-size="10.5" fill="#565a66">项目主对话 1:1</text>
+  <rect x="760" y="70" width="200" height="91" rx="2" fill="#ffffff" stroke="#22242c" stroke-width="1.5"/>
+  <rect x="760" y="70" width="200" height="28" rx="2" fill="#f1efe8" stroke="#22242c" stroke-width="1.5"/>
+  <text x="860" y="89" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="13" font-weight="700" fill="#22242c" text-anchor="middle">Message</text>
+  <text x="772" y="116" font-family="SF Mono, Menlo, monospace" font-size="10.5" fill="#565a66">id · convId</text>
+  <text x="772" y="133" font-family="SF Mono, Menlo, monospace" font-size="10.5" fill="#565a66">role · content</text>
+  <text x="772" y="150" font-family="SF Mono, Menlo, monospace" font-size="10.5" fill="#565a66">意图/补问标记</text>
+  <rect x="280" y="250" width="200" height="74" rx="2" fill="#ffffff" stroke="#22242c" stroke-width="1.5"/>
+  <rect x="280" y="250" width="200" height="28" rx="2" fill="#f1efe8" stroke="#22242c" stroke-width="1.5"/>
+  <text x="380" y="269" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="13" font-weight="700" fill="#22242c" text-anchor="middle">Episode</text>
+  <text x="292" y="296" font-family="SF Mono, Menlo, monospace" font-size="10.5" fill="#565a66">id · projectId</text>
+  <text x="292" y="313" font-family="SF Mono, Menlo, monospace" font-size="10.5" fill="#565a66">episodeNo · 目标镜头数</text>
+  <rect x="520" y="250" width="200" height="74" rx="2" fill="#ffffff" stroke="#22242c" stroke-width="1.5"/>
+  <rect x="520" y="250" width="200" height="28" rx="2" fill="#f1efe8" stroke="#22242c" stroke-width="1.5"/>
+  <text x="620" y="269" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="13" font-weight="700" fill="#22242c" text-anchor="middle">ScriptVersion</text>
+  <text x="532" y="296" font-family="SF Mono, Menlo, monospace" font-size="10.5" fill="#565a66">id · episodeId</text>
+  <text x="532" y="313" font-family="SF Mono, Menlo, monospace" font-size="10.5" fill="#565a66">content 只读 · 来源</text>
+  <rect x="40" y="250" width="200" height="91" rx="2" fill="#f5edd8" stroke="#22242c" stroke-width="1.5"/>
+  <rect x="40" y="250" width="200" height="28" rx="2" fill="#f1efe8" stroke="#22242c" stroke-width="1.5"/>
+  <text x="140" y="269" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="13" font-weight="700" fill="#22242c" text-anchor="middle">ProjectAsset</text>
+  <text x="52" y="296" font-family="SF Mono, Menlo, monospace" font-size="10.5" fill="#565a66">id · projectId</text>
+  <text x="52" y="313" font-family="SF Mono, Menlo, monospace" font-size="10.5" fill="#565a66">角色/世界设定</text>
+  <text x="52" y="330" font-family="SF Mono, Menlo, monospace" font-size="10.5" fill="#565a66">被本集覆盖</text>
+  <rect x="280" y="430" width="200" height="74" rx="2" fill="#ffffff" stroke="#22242c" stroke-width="1.5"/>
+  <rect x="280" y="430" width="200" height="28" rx="2" fill="#f1efe8" stroke="#22242c" stroke-width="1.5"/>
+  <text x="380" y="449" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="13" font-weight="700" fill="#22242c" text-anchor="middle">Scene</text>
+  <text x="292" y="476" font-family="SF Mono, Menlo, monospace" font-size="10.5" fill="#565a66">id · episodeId</text>
+  <text x="292" y="493" font-family="SF Mono, Menlo, monospace" font-size="10.5" fill="#565a66">sceneNo · 场次</text>
+  <rect x="520" y="430" width="200" height="91" rx="2" fill="#ffffff" stroke="#22242c" stroke-width="2"/>
+  <rect x="520" y="430" width="200" height="28" rx="2" fill="#f1efe8" stroke="#22242c" stroke-width="2"/>
+  <text x="620" y="449" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="13" font-weight="700" fill="#22242c" text-anchor="middle">Shot</text>
+  <text x="532" y="476" font-family="SF Mono, Menlo, monospace" font-size="10.5" fill="#565a66">id · sceneId</text>
+  <text x="532" y="493" font-family="SF Mono, Menlo, monospace" font-size="10.5" fill="#565a66">镜号 · 景别/运镜</text>
+  <text x="532" y="510" font-family="SF Mono, Menlo, monospace" font-size="10.5" fill="#565a66">status</text>
+  <rect x="760" y="430" width="200" height="74" rx="2" fill="#ffffff" stroke="#22242c" stroke-width="1.5"/>
+  <rect x="760" y="430" width="200" height="28" rx="2" fill="#f1efe8" stroke="#22242c" stroke-width="1.5"/>
+  <text x="860" y="449" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="13" font-weight="700" fill="#22242c" text-anchor="middle">PromptVersion</text>
+  <text x="772" y="476" font-family="SF Mono, Menlo, monospace" font-size="10.5" fill="#565a66">id · shotId</text>
+  <text x="772" y="493" font-family="SF Mono, Menlo, monospace" font-size="10.5" fill="#565a66">image/video · v</text>
+  <rect x="40" y="430" width="200" height="91" rx="2" fill="#ffffff" stroke="#22242c" stroke-width="1.5"/>
+  <rect x="40" y="430" width="200" height="28" rx="2" fill="#f1efe8" stroke="#22242c" stroke-width="1.5"/>
+  <text x="140" y="449" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="13" font-weight="700" fill="#22242c" text-anchor="middle">AssetVersion</text>
+  <text x="52" y="476" font-family="SF Mono, Menlo, monospace" font-size="10.5" fill="#565a66">id · 资产通用</text>
+  <text x="52" y="493" font-family="SF Mono, Menlo, monospace" font-size="10.5" fill="#565a66">before/after · diff</text>
+  <text x="52" y="510" font-family="SF Mono, Menlo, monospace" font-size="10.5" fill="#565a66">保留最近 5 版</text>
+  <rect x="1000" y="430" width="200" height="91" rx="2" fill="#f6e7e4" stroke="#22242c" stroke-width="1.5"/>
+  <rect x="1000" y="430" width="200" height="28" rx="2" fill="#f1efe8" stroke="#22242c" stroke-width="1.5"/>
+  <text x="1100" y="449" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="13" font-weight="700" fill="#22242c" text-anchor="middle">Issue</text>
+  <text x="1012" y="476" font-family="SF Mono, Menlo, monospace" font-size="10.5" fill="#565a66">id · shot/资产</text>
+  <text x="1012" y="493" font-family="SF Mono, Menlo, monospace" font-size="10.5" fill="#565a66">措辞|事实 · 可忽略</text>
+  <text x="1012" y="510" font-family="SF Mono, Menlo, monospace" font-size="10.5" fill="#565a66">忽略入 manifest</text>
+  <rect x="1000" y="70" width="200" height="91" rx="2" fill="#f1efe8" stroke="#22242c" stroke-width="1.5"/>
+  <rect x="1000" y="70" width="200" height="28" rx="2" fill="#f1efe8" stroke="#22242c" stroke-width="1.5"/>
+  <text x="1100" y="89" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="13" font-weight="700" fill="#22242c" text-anchor="middle">DomainTask</text>
+  <text x="1012" y="116" font-family="SF Mono, Menlo, monospace" font-size="10.5" fill="#565a66">id · projectId</text>
+  <text x="1012" y="133" font-family="SF Mono, Menlo, monospace" font-size="10.5" fill="#565a66">kind · status</text>
+  <text x="1012" y="150" font-family="SF Mono, Menlo, monospace" font-size="10.5" fill="#565a66">租约 · attempts</text>
+  <rect x="1000" y="250" width="200" height="91" rx="2" fill="#f5edd8" stroke="#22242c" stroke-width="1.5"/>
+  <rect x="1000" y="250" width="200" height="28" rx="2" fill="#f1efe8" stroke="#22242c" stroke-width="1.5"/>
+  <text x="1100" y="269" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="13" font-weight="700" fill="#22242c" text-anchor="middle">Event</text>
+  <text x="1012" y="296" font-family="SF Mono, Menlo, monospace" font-size="10.5" fill="#565a66">id · projectId</text>
+  <text x="1012" y="313" font-family="SF Mono, Menlo, monospace" font-size="10.5" fill="#565a66">seq 单调递增</text>
+  <text x="1012" y="330" font-family="SF Mono, Menlo, monospace" font-size="10.5" fill="#565a66">SSE journal</text>
+  <rect x="1000" y="610" width="200" height="91" rx="2" fill="#f1efe8" stroke="#22242c" stroke-width="1.5"/>
+  <rect x="1000" y="610" width="200" height="28" rx="2" fill="#f1efe8" stroke="#22242c" stroke-width="1.5"/>
+  <text x="1100" y="629" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="13" font-weight="700" fill="#22242c" text-anchor="middle">ExportPackage</text>
+  <text x="1012" y="656" font-family="SF Mono, Menlo, monospace" font-size="10.5" fill="#565a66">id · projectId</text>
+  <text x="1012" y="673" font-family="SF Mono, Menlo, monospace" font-size="10.5" fill="#565a66">ZIP 16 文件</text>
+  <text x="1012" y="690" font-family="SF Mono, Menlo, monospace" font-size="10.5" fill="#565a66">manifest 含忽略穿帮</text>
+  <line x1="240" y1="95" x2="280" y2="95" stroke="#565a66" stroke-width="1.4"/>
+  <text x="248" y="90" font-family="SF Mono, Menlo, monospace" font-size="10" fill="#666b78">1</text>
+  <text x="272" y="90" font-family="SF Mono, Menlo, monospace" font-size="10" fill="#666b78" text-anchor="end">N</text>
+  <line x1="480" y1="95" x2="520" y2="95" stroke="#565a66" stroke-width="1.4"/>
+  <text x="488" y="90" font-family="SF Mono, Menlo, monospace" font-size="10" fill="#666b78">1</text>
+  <text x="512" y="90" font-family="SF Mono, Menlo, monospace" font-size="10" fill="#666b78" text-anchor="end">1</text>
+  <line x1="720" y1="95" x2="760" y2="95" stroke="#565a66" stroke-width="1.4"/>
+  <text x="728" y="90" font-family="SF Mono, Menlo, monospace" font-size="10" fill="#666b78">1</text>
+  <text x="752" y="90" font-family="SF Mono, Menlo, monospace" font-size="10" fill="#666b78" text-anchor="end">N</text>
+  <line x1="440" y1="144" x2="440" y2="250" stroke="#565a66" stroke-width="1.4"/>
+  <text x="388" y="126" font-family="SF Mono, Menlo, monospace" font-size="10" fill="#666b78">1:N</text>
+  <line x1="480" y1="275" x2="520" y2="275" stroke="#565a66" stroke-width="1.4"/>
+  <text x="488" y="270" font-family="SF Mono, Menlo, monospace" font-size="10" fill="#666b78">1</text>
+  <text x="512" y="270" font-family="SF Mono, Menlo, monospace" font-size="10" fill="#666b78" text-anchor="end">N</text>
+  <line x1="240" y1="275" x2="280" y2="275" stroke="#565a66" stroke-width="1.4"/>
+  <text x="248" y="270" font-family="SF Mono, Menlo, monospace" font-size="10" fill="#666b78">1</text>
+  <text x="272" y="270" font-family="SF Mono, Menlo, monospace" font-size="10" fill="#666b78" text-anchor="end">N</text>
+  <line x1="380" y1="341" x2="380" y2="430" stroke="#565a66" stroke-width="1.4"/>
+  <text x="388" y="306" font-family="SF Mono, Menlo, monospace" font-size="10" fill="#666b78">1:N</text>
+  <line x1="480" y1="455" x2="520" y2="455" stroke="#565a66" stroke-width="1.4"/>
+  <text x="488" y="450" font-family="SF Mono, Menlo, monospace" font-size="10" fill="#666b78">1</text>
+  <text x="512" y="450" font-family="SF Mono, Menlo, monospace" font-size="10" fill="#666b78" text-anchor="end">N</text>
+  <line x1="720" y1="455" x2="760" y2="455" stroke="#565a66" stroke-width="1.4"/>
+  <text x="728" y="450" font-family="SF Mono, Menlo, monospace" font-size="10" fill="#666b78">1</text>
+  <text x="752" y="450" font-family="SF Mono, Menlo, monospace" font-size="10" fill="#666b78" text-anchor="end">N</text>
+  <line x1="140" y1="341" x2="140" y2="430" stroke="#565a66" stroke-width="1.4"/>
+  <text x="148" y="316" font-family="SF Mono, Menlo, monospace" font-size="10" fill="#666b78">1:N</text>
+  <path d="M 620 521 L 620 560 L 1100 560 L 1100 521" fill="none" stroke="#565a66" stroke-width="1.4"/>
+  <text x="860" y="553" font-family="SF Mono, Menlo, monospace" font-size="10" fill="#666b78" text-anchor="middle">1:N（含资产穿帮）</text>
+  
+  <line x1="980" y1="100" x2="980" y2="640" stroke="#565a66" stroke-width="1.4"/>
+  
+  <text x="984" y="154" font-family="SF Mono, Menlo, monospace" font-size="10" fill="#666b78">1:N</text>
+  
+  <text x="984" y="334" font-family="SF Mono, Menlo, monospace" font-size="10" fill="#666b78">1:N</text>
+  <path d="M 980 640 L 1000 640" fill="none" stroke="#565a66" stroke-width="1.4"/>
+  <text x="984" y="634" font-family="SF Mono, Menlo, monospace" font-size="10" fill="#666b78">1:N</text>
+  <text x="40" y="600" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="11" fill="#666b78" text-anchor="start">运行域：DomainTask · Event · ExportPackage 由 Project 挂载（右轨）</text>
+  <text x="620" y="740" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="11" fill="#666b78" text-anchor="middle">本集覆盖：Episode 可覆盖 ProjectAsset（仅本集生效）· 原始剧本只读 · 编辑产新版本 · 穿帮不可删只可忽略</text>
+</svg>

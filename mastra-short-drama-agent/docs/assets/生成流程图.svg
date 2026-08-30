@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 880">
+  <rect width="960" height="880" fill="#f7f6f1"/>
+  <defs>
+    <marker id="arrB" viewBox="0 0 10 7" refX="9" refY="3.5" markerWidth="9" markerHeight="6.5" orient="auto"><path d="M0,0 L10,3.5 L0,7 Z" fill="#1f5f8b"/></marker>
+    <marker id="arrI" viewBox="0 0 10 7" refX="9" refY="3.5" markerWidth="9" markerHeight="6.5" orient="auto"><path d="M0,0 L10,3.5 L0,7 Z" fill="#565a66"/></marker>
+    <marker id="arrG" viewBox="0 0 10 7" refX="9" refY="3.5" markerWidth="9" markerHeight="6.5" orient="auto"><path d="M0,0 L10,3.5 L0,7 Z" fill="#b8860b"/></marker>
+    <marker id="arrR" viewBox="0 0 10 7" refX="9" refY="3.5" markerWidth="9" markerHeight="6.5" orient="auto"><path d="M0,0 L10,3.5 L0,7 Z" fill="#c0392b"/></marker>
+  </defs>
+  <text x="40" y="38" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="19" font-weight="700" fill="#22242c" letter-spacing="1">生成主流程</text>
+  <text x="920" y="36" font-family="SF Mono, Menlo, monospace" font-size="10.5" fill="#666b78" text-anchor="end" letter-spacing="1">自动连续 · 无确认门槛 · 单镜失败不中断</text>
+  <rect x="340" y="66" width="280" height="46" rx="2" fill="#ffffff" stroke="#22242c" stroke-width="1.5"/>
+  <text x="480.0" y="95" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="13" font-weight="600" fill="#22242c" text-anchor="middle">登录（demo · 7 天会话）</text>
+  <path d="M 480,112,480,140" fill="none" stroke="#1f5f8b" stroke-width="2" marker-end="url(#arrB)"/>
+  <rect x="340" y="140" width="280" height="46" rx="2" fill="#ffffff" stroke="#22242c" stroke-width="1.5"/>
+  <text x="480.0" y="159" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="13" font-weight="600" fill="#22242c" text-anchor="middle">新建 / 选择项目</text>
+  <text x="480.0" y="177" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10" fill="#565a66" text-anchor="middle">进入项目主对话</text>
+  <path d="M 480,186,480,214" fill="none" stroke="#1f5f8b" stroke-width="2" marker-end="url(#arrB)"/>
+  <rect x="340" y="214" width="280" height="46" rx="2" fill="#ffffff" stroke="#22242c" stroke-width="1.5"/>
+  <text x="480.0" y="233" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="13" font-weight="600" fill="#22242c" text-anchor="middle">粘贴或上传剧本</text>
+  <text x="480.0" y="251" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10" fill="#565a66" text-anchor="middle">.md / .txt · 原文只读存档</text>
+  <path d="M 480,260,480,288" fill="none" stroke="#1f5f8b" stroke-width="2" marker-end="url(#arrB)"/>
+  <path d="M 480 288 L 560 326 L 480 364 L 400 326 Z" fill="#f5edd8" stroke="#22242c" stroke-width="1.5"/>
+  <text x="480" y="331" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="12.5" font-weight="600" fill="#22242c" text-anchor="middle">信息齐全？</text>
+  <rect x="700" y="288" width="220" height="76" rx="2" fill="#e3edf4" stroke="#22242c" stroke-width="1.5"/>
+  <text x="810" y="312" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="13" font-weight="600" fill="#22242c" text-anchor="middle">依次补问</text>
+  <text x="810" y="330" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#565a66" text-anchor="middle">项目名 → 集数 → 镜头数</text>
+  <text x="810" y="348" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#565a66" text-anchor="middle">建议 20–40 · 默认 30</text>
+  <path d="M 560,326,700,326" fill="none" stroke="#1f5f8b" stroke-width="2" marker-end="url(#arrB)"/>
+  
+  <path d="M 700,316,566,316" fill="none" stroke="#1f5f8b" stroke-width="2" marker-end="url(#arrB)"/>
+  
+  <path d="M 480,364,480,388" fill="none" stroke="#1f5f8b" stroke-width="2" marker-end="url(#arrB)"/>
+  
+  <rect x="340" y="388" width="280" height="46" rx="2" fill="#ffffff" stroke="#22242c" stroke-width="1.5"/>
+  <text x="480.0" y="407" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="13" font-weight="600" fill="#22242c" text-anchor="middle">启动自动连续生成</text>
+  <text x="480.0" y="425" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10" fill="#565a66" text-anchor="middle">同项目一次一集</text>
+  <path d="M 480,434,480,458" fill="none" stroke="#1f5f8b" stroke-width="2" marker-end="url(#arrB)"/>
+  <rect x="40" y="458" width="880" height="96" rx="2" fill="none" stroke="#666b78" stroke-width="1.2" stroke-dasharray="5,4"/>
+  <text x="52" y="478" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="12" font-weight="700" fill="#565a66" letter-spacing="1">自动连续管线</text>
+  <text x="908" y="478" font-family="SF Mono, Menlo, monospace" font-size="9.5" fill="#666b78" text-anchor="end">Worker 执行 · 阶段事件实时写 journal</text>
+  <rect x="64" y="492" width="118" height="42" rx="2" fill="#ffffff" stroke="#22242c" stroke-width="1.5"/>
+  <text x="123" y="517" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="12.5" font-weight="600" fill="#22242c" text-anchor="middle">剧本解析</text>
+  <path d="M 182,513,204,513" fill="none" stroke="#1f5f8b" stroke-width="1.8" marker-end="url(#arrB)"/>
+  <rect x="204" y="492" width="118" height="42" rx="2" fill="#ffffff" stroke="#22242c" stroke-width="1.5"/>
+  <text x="263" y="517" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="12.5" font-weight="600" fill="#22242c" text-anchor="middle">故事资产</text>
+  <path d="M 322,513,344,513" fill="none" stroke="#1f5f8b" stroke-width="1.8" marker-end="url(#arrB)"/>
+  <rect x="344" y="492" width="118" height="42" rx="2" fill="#ffffff" stroke="#22242c" stroke-width="1.5"/>
+  <text x="403" y="517" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="12.5" font-weight="600" fill="#22242c" text-anchor="middle">场次规划</text>
+  <path d="M 462,513,484,513" fill="none" stroke="#1f5f8b" stroke-width="1.8" marker-end="url(#arrB)"/>
+  <rect x="484" y="492" width="118" height="42" rx="2" fill="#f5edd8" stroke="#22242c" stroke-width="2"/>
+  <text x="543" y="517" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="12.5" font-weight="600" fill="#22242c" text-anchor="middle">分镜生成</text>
+  <path d="M 602,513,624,513" fill="none" stroke="#1f5f8b" stroke-width="1.8" marker-end="url(#arrB)"/>
+  <rect x="624" y="492" width="118" height="42" rx="2" fill="#ffffff" stroke="#22242c" stroke-width="1.5"/>
+  <text x="683" y="517" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="12.5" font-weight="600" fill="#22242c" text-anchor="middle">连续性检查</text>
+  <path d="M 742,513,764,513" fill="none" stroke="#1f5f8b" stroke-width="1.8" marker-end="url(#arrB)"/>
+  <rect x="764" y="492" width="118" height="42" rx="2" fill="#ffffff" stroke="#22242c" stroke-width="1.5"/>
+  <text x="823" y="517" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="12.5" font-weight="600" fill="#22242c" text-anchor="middle">生产包</text>
+  <path d="M 480 620 L 552 654 L 480 688 L 408 654 Z" fill="#f6e7e4" stroke="#22242c" stroke-width="1.5"/>
+  <text x="480" y="659" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="12" font-weight="600" fill="#22242c" text-anchor="middle">单镜失败？</text>
+  <path d="M 620,534,620,580,496,580,496,620" fill="none" stroke="#565a66" stroke-width="1.5" marker-end="url(#arrI)"/>
+  <rect x="120" y="630" width="236" height="48" rx="2" fill="#f6e7e4" stroke="#c0392b" stroke-width="1.5"/>
+  <text x="238" y="650" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="12.5" font-weight="600" fill="#c0392b" text-anchor="middle">标记失败 · 单项重试</text>
+  <text x="238" y="668" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#565a66" text-anchor="middle">不中断 · 已完成保留</text>
+  <path d="M 408,654,356,654" fill="none" stroke="#c0392b" stroke-width="2" marker-end="url(#arrR)"/>
+  <text x="382" y="644" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#c0392b" text-anchor="middle">是</text>
+  <path d="M 238,630,238,600,830,600,830,554" fill="none" stroke="#c0392b" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arrR)"/>
+  <text x="540" y="613" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#c0392b" text-anchor="middle">重试成功后回到检查</text>
+  <rect x="700" y="616" width="220" height="76" rx="2" fill="#f5edd8" stroke="#22242c" stroke-width="1.5"/>
+  <text x="810" y="638" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="12.5" font-weight="600" fill="#22242c" text-anchor="middle">穿帮处理</text>
+  <text x="810" y="656" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#565a66" text-anchor="middle">措辞类 → 自动修订</text>
+  <text x="810" y="674" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#565a66" text-anchor="middle">事实类 → 标记 / 忽略入 manifest</text>
+  <path d="M 782,534,810,534,810,616" fill="none" stroke="#565a66" stroke-width="1.5" marker-end="url(#arrI)"/>
+  
+  <rect x="300" y="742" width="360" height="46" rx="2" fill="#ffffff" stroke="#22242c" stroke-width="2"/>
+  <text x="480.0" y="771" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="13" font-weight="600" fill="#22242c" text-anchor="middle">完成：制作摘要 + 穿帮汇总 + 图版定稿</text>
+  <path d="M 480,688,480,742" fill="none" stroke="#1f5f8b" stroke-width="2" marker-end="url(#arrB)"/>
+  <text x="516" y="722" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#565a66" text-anchor="middle">否 · 全部完成</text>
+  <rect x="300" y="812" width="360" height="46" rx="2" fill="#e3edf4" stroke="#22242c" stroke-width="1.5"/>
+  <text x="480.0" y="831" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="13" font-weight="600" fill="#22242c" text-anchor="middle">一键导出整项目 ZIP</text>
+  <text x="480.0" y="849" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10" fill="#565a66" text-anchor="middle">project-assets.md + 每集 5 文件</text>
+  <path d="M 480,788,480,812" fill="none" stroke="#1f5f8b" stroke-width="2" marker-end="url(#arrB)"/>
+  <rect x="60" y="452" width="200" height="56" rx="2" fill="none" stroke="#666b78" stroke-width="1.2" stroke-dasharray="5,4"/>
+  <text x="140" y="410" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="12" font-weight="600" fill="#565a66" text-anchor="middle">取消（保留已完成）</text>
+  <text x="140" y="428" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#666b78" text-anchor="middle">继续制作 / 重新开始</text>
+  <path d="M 340,411,160,411,160,452" fill="none" stroke="#666b78" stroke-width="1.2" stroke-dasharray="5,3" marker-end="url(#arrI)"/>
+</svg>

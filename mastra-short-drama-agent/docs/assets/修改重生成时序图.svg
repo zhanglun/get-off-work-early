@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 830">
+  <rect width="960" height="830" fill="#f7f6f1"/>
+  <defs>
+    <marker id="arrB" viewBox="0 0 10 7" refX="9" refY="3.5" markerWidth="9" markerHeight="6.5" orient="auto"><path d="M0,0 L10,3.5 L0,7 Z" fill="#1f5f8b"/></marker>
+    <marker id="arrI" viewBox="0 0 10 7" refX="9" refY="3.5" markerWidth="9" markerHeight="6.5" orient="auto"><path d="M0,0 L10,3.5 L0,7 Z" fill="#565a66"/></marker>
+    <marker id="arrG" viewBox="0 0 10 7" refX="9" refY="3.5" markerWidth="9" markerHeight="6.5" orient="auto"><path d="M0,0 L10,3.5 L0,7 Z" fill="#b8860b"/></marker>
+    <marker id="arrR" viewBox="0 0 10 7" refX="9" refY="3.5" markerWidth="9" markerHeight="6.5" orient="auto"><path d="M0,0 L10,3.5 L0,7 Z" fill="#c0392b"/></marker>
+  </defs>
+  <text x="40" y="38" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="19" font-weight="700" fill="#22242c" letter-spacing="1">修改与重生成时序</text>
+  <text x="920" y="36" font-family="SF Mono, Menlo, monospace" font-size="10.5" fill="#666b78" text-anchor="end" letter-spacing="1">打字修改 → 影响分析 → 确认 → 局部重生成 → SSE 原位更新</text>
+  <rect x="28" y="58" width="124" height="34" rx="2" fill="#f1efe8" stroke="#22242c" stroke-width="1.5"/>
+  <text x="90" y="80" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="12.5" font-weight="700" fill="#22242c" text-anchor="middle">用户</text>
+  <line x1="90" y1="92" x2="90" y2="790" stroke="#d9dcd4" stroke-width="1" stroke-dasharray="4,3"/>
+  <rect x="178" y="58" width="124" height="34" rx="2" fill="#f1efe8" stroke="#22242c" stroke-width="1.5"/>
+  <text x="240" y="80" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="12.5" font-weight="700" fill="#22242c" text-anchor="middle">前端 React</text>
+  <line x1="240" y1="92" x2="240" y2="790" stroke="#d9dcd4" stroke-width="1" stroke-dasharray="4,3"/>
+  <rect x="338" y="58" width="124" height="34" rx="2" fill="#f1efe8" stroke="#22242c" stroke-width="1.5"/>
+  <text x="400" y="80" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="12.5" font-weight="700" fill="#22242c" text-anchor="middle">API NestJS</text>
+  <line x1="400" y1="92" x2="400" y2="790" stroke="#d9dcd4" stroke-width="1" stroke-dasharray="4,3"/>
+  <rect x="498" y="58" width="124" height="34" rx="2" fill="#f1efe8" stroke="#22242c" stroke-width="1.5"/>
+  <text x="560" y="80" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="12.5" font-weight="700" fill="#22242c" text-anchor="middle">Worker</text>
+  <line x1="560" y1="92" x2="560" y2="790" stroke="#d9dcd4" stroke-width="1" stroke-dasharray="4,3"/>
+  <rect x="648" y="58" width="124" height="34" rx="2" fill="#f1efe8" stroke="#22242c" stroke-width="1.5"/>
+  <text x="710" y="80" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="12.5" font-weight="700" fill="#22242c" text-anchor="middle">PostgreSQL</text>
+  <line x1="710" y1="92" x2="710" y2="790" stroke="#d9dcd4" stroke-width="1" stroke-dasharray="4,3"/>
+  <rect x="798" y="58" width="124" height="34" rx="2" fill="#f1efe8" stroke="#22242c" stroke-width="1.5"/>
+  <text x="860" y="80" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="12.5" font-weight="700" fill="#22242c" text-anchor="middle">模型 Provider</text>
+  <line x1="860" y1="92" x2="860" y2="790" stroke="#d9dcd4" stroke-width="1" stroke-dasharray="4,3"/>
+  <line x1="90" y1="122" x2="240" y2="122" stroke="#1f5f8b" stroke-width="1.8" marker-end="url(#arrB)"/>
+  <text x="165.0" y="115" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#565a66" text-anchor="middle">打字「把风衣改成深灰大衣」</text>
+  <line x1="240" y1="170" x2="400" y2="170" stroke="#1f5f8b" stroke-width="1.8" marker-end="url(#arrB)"/>
+  <text x="320.0" y="163" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#565a66" text-anchor="middle">POST /messages 意图路由</text>
+  <line x1="400" y1="218" x2="710" y2="218" stroke="#565a66" stroke-width="1.8" marker-end="url(#arrI)"/>
+  <text x="555.0" y="211" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#565a66" text-anchor="middle">读资产与引用关系</text>
+  <line x1="710" y1="266" x2="400" y2="266" stroke="#565a66" stroke-width="1.8" stroke-dasharray="5,3" marker-end="url(#arrI)"/>
+  <text x="555.0" y="259" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#565a66" text-anchor="middle">影响范围（3 集 24 镜）</text>
+  <line x1="400" y1="314" x2="240" y2="314" stroke="#1f5f8b" stroke-width="1.8" stroke-dasharray="5,3" marker-end="url(#arrB)"/>
+  <text x="320.0" y="307" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#565a66" text-anchor="middle">影响确认卡 · 划掉→替换 diff</text>
+  <line x1="90" y1="362" x2="240" y2="362" stroke="#1f5f8b" stroke-width="1.8" marker-end="url(#arrB)"/>
+  <text x="165.0" y="355" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#565a66" text-anchor="middle">确认全部重生成</text>
+  <line x1="240" y1="410" x2="400" y2="410" stroke="#1f5f8b" stroke-width="1.8" marker-end="url(#arrB)"/>
+  <text x="320.0" y="403" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#565a66" text-anchor="middle">确认</text>
+  <line x1="400" y1="458" x2="710" y2="458" stroke="#565a66" stroke-width="1.8" marker-end="url(#arrI)"/>
+  <text x="555.0" y="451" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#565a66" text-anchor="middle">创建重生成任务（项目互斥）</text>
+  <line x1="710" y1="506" x2="560" y2="506" stroke="#565a66" stroke-width="1.8" marker-end="url(#arrI)"/>
+  <text x="635" y="499" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#565a66" text-anchor="middle">领取（SKIP LOCKED 租约）</text>
+  <rect x="430" y="530" width="460" height="150" rx="2" fill="none" stroke="#22242c" stroke-width="1.2" stroke-dasharray="6,4"/>
+  <rect x="428" y="521" width="120" height="18" fill="#f7f6f1" stroke="#22242c" stroke-width="1"/>
+  <text x="488" y="534" font-family="SF Mono, Menlo, monospace" font-size="10" fill="#22242c" text-anchor="middle">loop 每集依次</text>
+  <line x1="560" y1="568" x2="860" y2="568" stroke="#1f5f8b" stroke-width="1.8" marker-end="url(#arrB)"/>
+  <text x="710.0" y="561" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#565a66" text-anchor="middle">局部重生成受影响镜头</text>
+  <line x1="860" y1="616" x2="560" y2="616" stroke="#c0392b" stroke-width="1.8" stroke-dasharray="5,3" marker-end="url(#arrR)"/>
+  <text x="710.0" y="609" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#565a66" text-anchor="middle">新内容（失败→Mock·红）</text>
+  <line x1="560" y1="664" x2="710" y2="664" stroke="#565a66" stroke-width="1.8" marker-end="url(#arrI)"/>
+  <text x="635.0" y="657" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#565a66" text-anchor="middle">写新版本 v5 + 事件 journal</text>
+  <line x1="710" y1="716" x2="240" y2="716" stroke="#b8860b" stroke-width="2" marker-end="url(#arrG)"/>
+  <text x="475" y="709" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#b8860b" text-anchor="middle">SSE 推送 · 图版原位更新</text>
+  <line x1="240" y1="762" x2="90" y2="762" stroke="#1f5f8b" stroke-width="1.8" stroke-dasharray="5,3" marker-end="url(#arrB)"/>
+  <text x="165" y="755" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#565a66" text-anchor="middle">新版本工件 + 影响与耗时</text>
+</svg>

@@ -1,0 +1,145 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "修改与重生成 · 打字到新版本",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1300,
+      780
+    ]
+  },
+  "participants": [
+    {
+      "id": "user",
+      "type": "external",
+      "label": "用户"
+    },
+    {
+      "id": "web",
+      "type": "frontend",
+      "label": "前端 React"
+    },
+    {
+      "id": "api",
+      "type": "backend",
+      "label": "API NestJS"
+    },
+    {
+      "id": "worker",
+      "type": "backend",
+      "label": "Worker"
+    },
+    {
+      "id": "pg",
+      "type": "database",
+      "label": "PostgreSQL"
+    },
+    {
+      "id": "llm",
+      "type": "external",
+      "label": "模型 Provider"
+    }
+  ],
+  "segments": [
+    {
+      "from": 488,
+      "to": 596,
+      "label": "按集依次（一次一集）"
+    }
+  ],
+  "messages": [
+    {
+      "from": "user",
+      "to": "web",
+      "y": 170,
+      "label": "打字「把风衣改成深灰大衣」",
+      "variant": "emphasis"
+    },
+    {
+      "from": "web",
+      "to": "api",
+      "y": 197,
+      "label": "POST /messages · 意图路由",
+      "variant": "emphasis"
+    },
+    {
+      "from": "api",
+      "to": "pg",
+      "y": 234,
+      "label": "读资产与引用关系"
+    },
+    {
+      "from": "pg",
+      "to": "api",
+      "y": 271,
+      "label": "影响范围（3 集 24 镜）",
+      "variant": "return"
+    },
+    {
+      "from": "api",
+      "to": "web",
+      "y": 308,
+      "label": "影响确认卡 · 划掉→替换",
+      "variant": "return"
+    },
+    {
+      "from": "user",
+      "to": "web",
+      "y": 345,
+      "label": "确认全部重生成"
+    },
+    {
+      "from": "web",
+      "to": "api",
+      "y": 382,
+      "label": "确认"
+    },
+    {
+      "from": "api",
+      "to": "pg",
+      "y": 419,
+      "label": "创建重生成任务（项目互斥）"
+    },
+    {
+      "from": "pg",
+      "to": "worker",
+      "y": 456,
+      "label": "领取（SKIP LOCKED 租约）"
+    },
+    {
+      "from": "worker",
+      "to": "llm",
+      "y": 500,
+      "label": "局部重生成受影响镜头",
+      "variant": "emphasis"
+    },
+    {
+      "from": "llm",
+      "to": "worker",
+      "y": 540,
+      "label": "新内容（失败切 Mock）",
+      "variant": "return"
+    },
+    {
+      "from": "worker",
+      "to": "pg",
+      "y": 580,
+      "label": "写新版本 v5 + 事件"
+    },
+    {
+      "from": "pg",
+      "to": "web",
+      "y": 640,
+      "label": "SSE 推送 · 图版原位更新",
+      "variant": "emphasis"
+    },
+    {
+      "from": "web",
+      "to": "user",
+      "y": 674,
+      "label": "新版本工件 + 影响与耗时",
+      "variant": "return"
+    }
+  ]
+}

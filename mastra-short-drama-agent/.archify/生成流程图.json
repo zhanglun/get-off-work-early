@@ -1,0 +1,196 @@
+{
+  "schema_version": 1,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "生成主流程 · 自动连续无门槛",
+    "quality_profile": "standard",
+    "viewBox": [
+      1440,
+      720
+    ]
+  },
+  "lanes": [
+    {
+      "id": "user",
+      "label": "用户操作"
+    },
+    {
+      "id": "dialog",
+      "label": "对话系统"
+    },
+    {
+      "id": "pipeline",
+      "label": "生成管线"
+    },
+    {
+      "id": "except",
+      "label": "异常处理"
+    }
+  ],
+  "phases": [
+    {
+      "id": "import",
+      "label": "导入",
+      "fromCol": 0,
+      "toCol": 3
+    },
+    {
+      "id": "produce",
+      "label": "自动生成",
+      "fromCol": 4,
+      "toCol": 4
+    },
+    {
+      "id": "finish",
+      "label": "完成",
+      "fromCol": 5,
+      "toCol": 5
+    }
+  ],
+  "mainPath": [
+    "project",
+    "script",
+    "start",
+    "parse",
+    "produce",
+    "finish"
+  ],
+  "nodes": [
+    {
+      "id": "project",
+      "lane": "user",
+      "col": 0,
+      "type": "frontend",
+      "label": "新建项目",
+      "sublabel": "登录 · 主对话"
+    },
+    {
+      "id": "script",
+      "lane": "user",
+      "col": 2,
+      "type": "frontend",
+      "label": "粘贴剧本",
+      "sublabel": "只读存档"
+    },
+    {
+      "id": "ask",
+      "lane": "dialog",
+      "col": 2,
+      "type": "backend",
+      "label": "依次补问",
+      "sublabel": "三问补齐"
+    },
+    {
+      "id": "start",
+      "lane": "dialog",
+      "col": 3,
+      "type": "backend",
+      "label": "启动生成",
+      "sublabel": "一次一集"
+    },
+    {
+      "id": "cancel",
+      "lane": "except",
+      "col": 3,
+      "type": "messagebus",
+      "label": "取消可续",
+      "sublabel": "保留已完成"
+    },
+    {
+      "id": "parse",
+      "lane": "pipeline",
+      "col": 4,
+      "type": "backend",
+      "label": "解析与资产",
+      "sublabel": "解析 · 资产"
+    },
+    {
+      "id": "produce",
+      "lane": "pipeline",
+      "col": 5,
+      "type": "backend",
+      "label": "场次·分镜·检查",
+      "sublabel": "六阶段管线"
+    },
+    {
+      "id": "finish",
+      "lane": "dialog",
+      "col": 5,
+      "type": "database",
+      "label": "完成导出",
+      "sublabel": "一键 ZIP"
+    },
+    {
+      "id": "retry",
+      "lane": "except",
+      "col": 5,
+      "type": "messagebus",
+      "label": "单镜失败重试",
+      "sublabel": "不中断"
+    }
+  ],
+  "edges": [
+    {
+      "from": "project",
+      "to": "script",
+      "role": "main"
+    },
+    {
+      "from": "script",
+      "to": "start",
+      "role": "main",
+      "label": "信息齐"
+    },
+    {
+      "from": "script",
+      "to": "ask",
+      "role": "branch"
+    },
+    {
+      "from": "ask",
+      "to": "script",
+      "role": "return"
+    },
+    {
+      "from": "start",
+      "to": "parse",
+      "role": "main"
+    },
+    {
+      "from": "parse",
+      "to": "produce",
+      "role": "main"
+    },
+    {
+      "from": "produce",
+      "to": "finish",
+      "role": "main"
+    },
+    {
+      "from": "produce",
+      "to": "retry",
+      "role": "error"
+    },
+    {
+      "from": "retry",
+      "to": "produce",
+      "role": "return"
+    },
+    {
+      "from": "start",
+      "to": "cancel",
+      "role": "branch",
+      "label": "取消",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelDy": -20
+    },
+    {
+      "from": "cancel",
+      "to": "start",
+      "role": "return",
+      "label": "继续",
+      "labelDy": 24
+    }
+  ]
+}

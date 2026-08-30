@@ -1,438 +1,138 @@
-# 整体架构设计方案
+# 短剧分镜制作助手：技术架构
 
-> 状态：产品方向已确认，技术架构方案待评审
->
-> 本文档描述目标产品架构，不代表现有 Spike 已经满足全部架构要求。
->
-> 2026-08-30：按产品形态决策（`product-form.md`，对话即产品）更新——对话路由升为唯一交互入口，新增会话与事件协议设计。
+> 状态：已确认（2026-08-30 问答定案）
+> 配套基线：`product-design.md`（产品）+ `DESIGN.md`（视觉）
 
-## 1. 架构目标
+## 1. 技术栈（已确认）
 
-系统需要支持：
+| 层 | 选型 | 决策依据 |
+|---|---|---|
+| 后端运行时 | Node 22 + TypeScript + Mastra | 复用 Spike 的 Workflow/Agent/结构化输出 |
+| API 框架 | NestJS | 用户熟悉栈（agent-base 同款）；模块/Guard/DI 结构强制力；SSE 用 @nestjs/common Sse |
+| 前端 | React 18 + Vite（SPA） | 生态成熟；视觉稿转组件直接 |
+| 服务端状态 | TanStack Query + 少量 Zustand | SSE/缓存/表单编辑均有现成模式 |
+| 数据库 | PostgreSQL 16 | 任务租约（SKIP LOCKED）、事件 journal、双进程并发写 |
+| ORM | Prisma（Spike schema 迁移扩展） | 迁移零成本复用 |
+| 实时通道 | SSE + 事件表 journal + `afterSeq` 续传 | 单向推送足够；刷新先快照再续订 |
+| 模型接入 | OpenAI 兼容接口（`MODEL_BASE_URL`/`MODEL_API_KEY`/`MODEL_NAME`） | 开发顺序：**真实模型先行**，Mock 仅作兜底 |
+| 仓库结构 | pnpm monorepo（原地改造本目录） | apps/web + apps/server + packages/shared |
 
-- 一集剧本到分镜生产包的自动连续流程；
-- **对话即产品**：第一屏输入框、活动流实时滚动、工件内联呈现（见 `product-form.md`）；
-- 会话 = 项目 × 集：历史栏即项目列表，刷新/换设备恢复同一会话；
-- 打字修改：自然语言 → 意图路由 → 影响分析 → 局部重生成 → 新版本工件；
-- 单个场次或镜头失败隔离；
-- 故事资产修改后的影响分析和局部重生成；
-- 版本和问题可追踪；
-- 服务器部署；
-- Mock / Real 模型切换；
-- 未来增加真实图像/视频生成而不重做业务层。
-
-## 2. 总体架构
-
-```mermaid
-flowchart TB
-    U[用户浏览器]
-    W[对话前端<br/>输入框 · 活动流 · 工件]
-    API[业务 API]
-    SSE[SSE 活动流事件通道]
-    CHAT[Chat Router 对话路由<br/>唯一交互入口]
-    APP[Application Services]
-    WF[Workflow Orchestrator]
-    AGENT[Agent Layer]
-    RULE[Domain Rules / Impact Analysis]
-    REPO[Repositories]
-    DB[(PostgreSQL 业务库<br/>含会话与事件)]
-    RT[(Mastra Runtime Storage)]
-    MEM[(Mastra Memory)]
-    WORKER[任务 Worker]
-    FILE[文件存储接口]
-    MODEL[Model Provider Adapter]
-    MOCK[Mock Provider]
-    REAL[Real LLM Provider]
-
-    U --> W
-    W -->|消息 / 指令| API
-    W -->|订阅活动流| SSE
-    API --> CHAT
-    API --> APP
-    CHAT -->|意图路由| APP
-    APP --> WF
-    WORKER --> WF
-    WF --> AGENT
-    WF --> RULE
-    WF --> REPO
-    AGENT --> MODEL
-    MODEL --> MOCK
-    MODEL --> REAL
-    REPO --> DB
-    WF --> RT
-    CHAT --> MEM
-    WF -->|进度/工件事件| DB
-    SSE -->|读事件journal| DB
-    APP --> FILE
-```
-
-与旧版关键差异：**Chat Router 从"右侧辅助助手"升为唯一交互入口**（打字与点选操作都经过它路由）；新增 **SSE 活动流事件通道**，从事件 journal 读取并向对话前端推送；会话与事件成为持久化业务数据。
-
-## 3. 分层职责
-
-### 3.1 对话前端
-
-负责：
-
-- 会话历史栏（项目 × 集 = 会话，状态实时同步）；
-- 第一屏输入框：粘贴剧本、上传 `.md`/`.txt`；
-- 订阅并渲染活动流（阶段、进度、耗时，可折叠）；
-- 渲染工件：资产组、场次/分镜组、问题汇总、制作摘要、生产包；
-- 输入框发送打字指令与 `/` 快捷指令；点卡片编辑作为兜底入口。
-
-不负责：
-
-- 判断业务状态；
-- 计算影响范围；
-- 直接写数据库；
-- 直接调用模型；
-- 在前端保存业务事实（工件状态以服务端为准）。
-
-### 3.2 API 层
-
-负责：
-
-- HTTP 接口；
-- 请求校验；
-- 创建任务；
-- 查询任务和资产；
-- 返回统一错误格式；
-- 提供下载和文件访问。
-
-API 不应该在请求生命周期内同步执行完整生产流程。
-
-### 3.3 Chat Router（唯一交互入口）与 Application Service
-
-Chat Router 负责把用户的每一条输入路由为业务用例：
-
-- 意图识别：导入 / 修改资产 / 修改镜头与 Prompt / 查询 / 重试 / 忽略问题 / 导出；
-- 参数补齐：缺失的项目名称、集数、镜号等就地追问；
-- 快捷指令：`/导出`、`/只看第 N 场`、`/重试镜 N`；
-- 无法确定时询问用户，不猜测副作用操作。
-
-Application Service 负责把路由结果转换为明确业务用例：
-
-- `createIngestionTask`；
-- `startProductionTask`；
-- `editStoryAsset`；
-- `editShot`；
-- `retryFailedScope`；
-- `ignoreIssue`；
-- `exportProductionPackage`；
-- `queryAssets` / `queryIssues` / `queryVersions`。
-
-约束：Chat Router 只做意图路由，不直接执行业务、不直接写数据库；所有副作用走 Application Service，与点卡片操作共用同一条管道。
-
-### 3.4 Workflow 层
-
-负责：
-
-- 自动连续执行各阶段；
-- 任务状态；
-- 进度；
-- 重试；
-- 并发控制；
-- 单项失败隔离；
-- 局部重跑；
-- 调用 Agent 和领域规则；
-- 写入审查与版本记录。
-
-用户不需要直接操作 Workflow。
-
-### 3.5 Agent 层
-
-Agent 只负责需要模型判断的内容：
-
-- Script Analyst；
-- Scene Planner；
-- Storyboard Director；
-- Continuity Reviewer；
-- Prompt Refiner；
-- Chat Assistant。
-
-Agent 输出必须经过结构化 Schema 校验，Agent 不能直接写数据库。
-
-### 3.6 Domain Rules
-
-确定性规则负责：
-
-- 输入格式解析；
-- 数据 Schema 校验；
-- 问题等级分类；
-- 影响范围计算；
-- 资产状态推进；
-- 版本 Diff；
-- 导出前检查。
-
-### 3.7 Repository
-
-Repository 负责业务数据读写，不负责模型推理。
-
-业务事实：
+## 2. Monorepo 结构（原地改造）
 
 ```text
-Project
-Episode
-ScriptVersion
-StoryBible
-Character
-Location
-Prop
-Relationship
-TimelineEvent
-Scene
-Shot
-PromptVersion
-Review
-Feedback
-ExportPackage
-ChangeProposal
-DomainTask
+mastra-short-drama-agent/
+├── apps/
+│   ├── server/            # 现 src/ + prisma/ 迁入（NestJS）
+│   │   ├── src/
+│   │   │   ├── auth/      # module + guard（demo 登录、cookie 会话）
+│   │   │   ├── projects/  # module + controller + service（项目/剧集/对话）
+│   │   │   ├── events/    # SSE module（journal 读取 + afterSeq 续传）
+│   │   │   ├── exports/   # 整项目 ZIP module
+│   │   │   ├── mastra/    # Mastra 实例 provider（agents/workflows 装配）
+│   │   │   ├── agents/    # Mastra Agents（沿用 Spike + 扩展）
+│   │   │   ├── workflows/ # 自动连续生成管线（去确认门槛）
+│   │   │   ├── worker/    # Worker 入口（Nest 独立应用，无 HTTP）
+│   │   │   ├── domain/    # 影响分析 / 版本 / 导出 / 会话服务
+│   │   │   └── llm/       # Provider：real（OpenAI 兼容）→ mock 兜底
+│   │   └── prisma/        # schema + migrations（从 Spike 迁移）
+│   └── web/               # React + Vite
+│       └── src/
+│           ├── pages/     # 登录 / 项目列表 / 项目工作区
+│           └── features/  # 对话流 / 编号边栏 / 图版区 / 输入框
+├── packages/
+│   └── shared/            # Zod schema + TS 类型 + SSE 事件契约（前后端共用）
+├── pnpm-workspace.yaml
+├── CONTEXT.md
+├── PRODUCT.md / DESIGN.md
+└── docs/
 ```
 
-## 4. 业务数据、Runtime 和聊天记忆分离
+迁移纪律：一次性 `git mv` 重组，`src/ → apps/server/src/` 保持文件历史；重组提交与功能提交分开。
+
+## 3. 数据模型（PG + Prisma，概要）
+
+![数据模型图](assets/数据模型图.png)
+
+在 Spike 模型基础上扩展：
 
 ```text
-PostgreSQL 业务库
-  └── 结构化业务事实、版本、问题、导出、任务
-
-Mastra Runtime Storage
-  └── Workflow snapshot、运行状态、执行上下文
-
-Mastra Memory
-  └── 聊天 thread、message、辅助上下文
+User（demo 账号） + Session（7 天，HttpOnly 签名 cookie）
+Project ── Episode ── ScriptVersion（原文只读）
+   │
+   ├── ProjectAsset（项目级角色/世界设定，可被各集覆盖）
+   └── EpisodeAsset / Scene / Shot / PromptVersion
+Review / Issue（措辞|事实两类，可忽略→入 manifest）
+AssetVersion（每资产保留最近 5 版，before/after/diff）
+Conversation / Message（项目主对话）
+DomainTask（kind/status/progress/leaseOwner/leaseUntil/attempts）
+Event（journal：projectId 内 seq 单调递增，SSE 读此表）
+ExportPackage（ZIP 落盘 /data/exports）
 ```
 
-聊天记录不能替代角色、场景、镜头等业务事实。
+关键约束：原始剧本只读；编辑产生新版本不覆盖；问题不可删除只可忽略；事件先落库再推送。
 
-### 4.1 会话与事件协议（对话形态新增）
-
-**会话模型**：
+## 4. API 设计（REST + SSE）
 
 ```text
-Conversation（会话）= Project × Episode
-  ├── Message：用户消息（剧本折叠）、agent 回复
-  ├── Run：一次生成/修改任务的引用（DomainTask）
-  └── Artifact：资产组 / 场次组 / 分镜组 / 问题汇总 / 制作摘要 / 生产包
+POST /api/auth/login          demo 账号，7 天 cookie（AuthGuard 保护其余路由）
+GET  /api/projects            共享列表（最近更新倒序）
+POST /api/projects            新建（进入空对话）
+GET  /api/projects/:id/snapshot   刷新恢复：消息+工件当前态+任务态
+POST /api/projects/:id/messages   对话统一入口（意图路由：导入/补问/修改/重试/导出）
+GET  /api/projects/:id/events?sse  活动流（Last-Event-ID / afterSeq 续传）
+POST /api/tasks/:id/cancel    取消（保留已完成）
+POST /api/episodes/:id/retry  失败单项重试（明确 scope）
+POST /api/exports/:projectId  整项目 ZIP
+POST /api/admin/reset         管理口令 → 清空 Demo 数据
 ```
 
-- 会话持久化在业务库；历史栏数据 = 会话列表查询；
-- 每个工件有稳定 `activityId`，重试/重生成后**原位更新**并携带新版本号，不在对话里重复堆叠。
+## 5. 任务执行（API + Worker 分离）
 
-**活动流事件 envelope**：
+- 任务写 `DomainTask`，Worker 以 `SELECT ... FOR UPDATE SKIP LOCKED` 领取并设置租约；
+- 同一项目一次只跑一个任务（项目级互斥，产品已确认）；
+- 生成管线：剧本解析 → 故事资产 → 场次 → 分镜 → Prompt → 连续性检查 → 生产包，无确认门槛；
+- 每阶段完成即写事件（stage_completed / artifact_created …），SSE 实时推；
+- 取消 = 停止后续阶段，已完成资产保留，可"继续制作"（从第一个未完成阶段续跑）；
+- 服务器重启后 lease 过期任务可重新入队，不丢已完成结果。
 
-```ts
-type StreamEvent = {
-  schemaVersion: 1;
-  eventId: string;
-  seq: number;              // 会话内单调递增
-  conversationId: string;
-  type:
-    | 'run_started' | 'stage_started' | 'stage_progress' | 'stage_completed'
-    | 'message' | 'artifact_created' | 'artifact_updated'
-    | 'issue_reported' | 'done' | 'error';
-  occurredAt: string;
-  payload: unknown;         // 按 type 定义，工件事件必须带 activityId
-};
-```
-
-不变量（沿用 drama-agent 活动流研究成果）：
-
-1. `seq` 会话内单调递增，前端按 `seq` 去重与排序；
-2. 一个 Run 只有一个终态（`done`/`error`），终态后拒绝新的业务事件；
-3. 事件先写 journal 再推送，慢消费者不阻塞生产；
-4. 客户端断线默认**不等于**取消任务。
-
-**断线恢复**：
-
-- SSE 携带 `Last-Event-ID`（或 `?afterSeq=`）从 journal 重放；
-- journal 过期或首次进入历史会话时返回会话快照（消息 + 工件当前态 + 终态），不重新执行任何 Workflow。
-
-## 5. 目标生产流程架构
-
-```mermaid
-flowchart LR
-    A[Script Ingestion] --> B[Story Understanding]
-    B --> C[Scene Planning]
-    C --> D[Storyboard Production]
-    D --> E[Continuity Review]
-    E --> F[Auto Refine]
-    F --> G[Production Package]
-    X[Asset Edit] --> Y[Impact Analysis]
-    Y --> C
-    Y --> D
-    Y --> E
-    R[Retry Failed Scope] --> D
-```
-
-默认自动连续执行，不在 StoryBible 或 Scene 设置强制确认节点。
-
-## 6. 资产依赖关系
-
-```text
-ScriptVersion
-  ↓
-StoryBible
-  ├── Character
-  ├── Location
-  ├── Prop
-  ├── Relationship
-  └── TimelineEvent
-       ↓
-     Scene
-       ↓
-      Shot
-       ├── PromptVersion(image)
-       ├── PromptVersion(video)
-       └── Review
-```
-
-编辑影响规则示例：
-
-```text
-Character 外观变化
-  → 受影响 Scene
-  → 受影响 Shot
-  → Image Prompt / Video Prompt
-  → Review 重新执行
-```
-
-## 7. 任务执行设计
-
-目标部署采用 API 与 Worker 分离：
-
-```text
-浏览器 → API：创建任务，立即返回 taskId
-Worker → 领取 queued 任务
-Worker → 执行 Workflow
-Worker → 更新 DomainTask 和资产
-Worker → 进度/工件事件写入 journal
-浏览器 → SSE：订阅会话活动流（Last-Event-ID 断线续传）
-```
-
-第一版可采用 PostgreSQL 任务表作为轻量队列：
-
-- 使用任务状态和租约字段；
-- Worker 通过行锁领取任务；
-- 超时任务可以重新入队；
-- 任务结果和进度写入 PostgreSQL。
-
-后续任务规模扩大时，可以替换为 Redis/BullMQ，不改变 Application Service 和 Workflow 接口。
-
-## 8. 模型适配层
+## 6. 模型层（真实先行，Mock 兜底）
 
 ```text
 ModelProvider
-├── MockProvider
-├── OpenAIProvider
-├── ZhipuProvider
-└── FutureImage/VideoProvider
+├── RealProvider（OpenAI 兼容：chat + 结构化 JSON 输出）
+└── MockProvider（固定/规则化输出，仅兜底）
 ```
 
-模型适配层负责：
+- 开发环境即配置真实 Key，输出质量从第一天验证；
+- 真实调用失败或未配 Key → 自动切 Mock，**继续生成**，但对话、结果卡、manifest 均标注 `MOCK`（红色印章）；
+- 前端永不接触 API Key。
 
-- 模型名称；
-- 请求和响应格式；
-- Token 统计；
-- 延迟；
-- 重试和错误分类；
-- 结构化输出。
+## 7. 前端架构
 
-业务层不直接依赖某个模型厂商。
+- 路由：`/login` `/projects` `/projects/:id`（工作区）；
+- 工作区 = 编号边栏（阶段账+场次索引）+ 对话列 + 图版列，按 `DESIGN.md` 令牌实现；
+- SSE 客户端：EventSource + afterSeq 重连；服务端状态 TanStack Query 缓存，SSE 事件到达时失效对应 query；
+- 修改链路：打字 → 影响分析卡（划掉→替换 diff）→ 确认 → 后台重生成 → 图版原位更新（v+1）。
 
-## 9. 文件存储
-
-抽象接口：
-
-```ts
-interface AssetStorage {
-  put(key: string, content: Buffer | string): Promise<string>;
-  get(key: string): Promise<Buffer>;
-  delete(key: string): Promise<void>;
-}
-```
-
-第一版默认：
+## 8. 部署
 
 ```text
-服务器本地磁盘 /data/exports
+docker-compose.yml
+├── postgres:16（volume 持久化）
+├── api（服务 web-dist 静态产物 + API + SSE）
+└── worker（独立进程，同一镜像不同入口）
 ```
 
-后续可替换为：
+- 首次部署自动跑 `prisma migrate deploy`；
+- 导出目录 `/data/exports` 挂 volume；
+- 环境变量：`DATABASE_URL` / `MODEL_*` / `ADMIN_TOKEN` / `SESSION_SECRET` / `EXPORT_ROOT`。
 
-- S3；
-- MinIO；
-- OSS；
-- COS。
+## 9. 配图
 
-## 10. API 设计原则
+![系统架构图](assets/系统架构图.png)
 
-- 会话是一级资源：
-  - `GET /conversations`：历史栏列表；
-  - `POST /conversations/:id/messages`：打字统一入口（Chat Router 路由）；
-  - `GET /conversations/:id/events`：SSE 活动流（支持 `afterSeq` 重放）；
-  - `GET /conversations/:id/snapshot`：恢复快照；
-- 写操作返回资源或任务 ID；
-- 长任务返回 `202 Accepted`；
-- 查询接口可以在刷新后恢复；
-- 编辑操作返回新版本；
-- 重试操作只接收明确 scope；
-- 业务错误使用可理解的中文 message 和机器可读 code；
-- API 不暴露必须由用户理解的内部 Workflow step。
+完整图表索引见 [assets/README.md](assets/README.md)。
 
-## 11. 可观测性
+## 10. 明确不做
 
-至少记录：
-
-- taskId；
-- projectId / episodeId；
-- assetId；
-- workflow 类型；
-- agent 类型；
-- model / mode；
-- 开始时间；
-- 结束时间；
-- 输入输出 token；
-- 错误；
-- 重试次数；
-- 受影响范围。
-
-## 12. 安全边界
-
-第一版不实现用户体系，但服务器部署仍需：
-
-- 不把模型 API Key 写入前端；
-- API Key 只存在服务器环境变量；
-- 文件目录不能任意路径读写；
-- 上传文件限制扩展名、大小和编码；
-- 生产环境建议通过反向代理设置访问保护；
-- 后续认证层应位于 Web/API 入口，不侵入领域层。
-
-## 13. 与现有 Spike 的关系
-
-可复用候选：
-
-- Markdown Parser；
-- Zod 领域 Schema；
-- Agent 结构化输出；
-- 部分 Workflow 步骤；
-- Prisma Repository；
-- PromptVersion 和 Review 数据结构。
-
-需要重构：
-
-- 强制 StoryBible/Scene 确认门槛；
-- 测试面板式前端（→ 对话前端：输入框 + 活动流 + 工件）；
-- 进程内 `void start...` 任务执行；
-- 内存 Job Map（→ 持久化任务表 + 事件 journal）；
-- 资产编辑和影响分析；
-- 服务器版 Worker；
-- 无会话模型的临时交互（→ 会话、消息、工件持久化 + SSE）。
-
-## 14. 配套图表
-
-由 fireworks-tech-graph 生成，源文件与导出图位于 `docs/diagrams/`（索引见其 README）：
-
-- `architecture-conversation`：本文 §2 总体架构的可视化（六层 + 主流程/异步分色）；
-- `sequence-chat-edit`：打字修改全链路时序（意图路由 → 影响分析 → G2A 重生成 → 事件推送 → 工件更新）；
-- `flow-production`：生产流水线与三条回路（修改 / 失败 / 不中断旁路）。
+WebSocket、Redis/BullMQ（PG 任务表够用）、微服务拆分、K8s、CDN、多区域、真实图像/视频生成接入。

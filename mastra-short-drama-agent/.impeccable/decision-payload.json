@@ -1,0 +1,110 @@
+{
+  "title": "选择视觉世界",
+  "question": "掷签指定了「油印台本」。保留它、选择备选，或重掷。",
+  "options": [
+    {
+      "id": "assigned",
+      "label": "油印台本",
+      "kicker": "THE ROLL",
+      "lineage": "剧组蜡纸油印的对白台本",
+      "thesis": "整个产品是一份不断被打样、校对、换页的活台本。",
+      "palette": ["#eef0e8", "#3a3f8f", "#232438", "#c9372c"],
+      "materials": ["蜡纸油印", "速印打样", "红笔校对", "打孔装订"],
+      "viewport": "登录页是一张居中的台本首页：机械纸面、油墨紫蓝的标题、一行校对批注式的邀请；点击进入即「开印」。",
+      "risk": "印刷世界的层级若做得胆小，会退化成「米色纸+衬线」的 AI 套版；必须把油墨的紫蓝和校对红做足。",
+      "raised": [
+        { "from": "词典页与图版", "raise": "顶部导词行——场次导航写明当前在场的第一个与最后一个镜号。" },
+        { "from": "词典页与图版", "raise": "颜色只活在带框图版里——分镜预览与 Prompt 是台本里的图版插页。" },
+        { "from": "词典页与图版", "raise": "划掉—替换的校对原语——修改 diff 就是排字工的勘误标记。" },
+        { "from": "千纸鹤折序", "raise": "页边编号列加金色活动点——制作流程阶段像折纸步骤，可追踪、可回退。" }
+      ]
+    },
+    {
+      "id": "model-pick",
+      "label": "分镜稿纸",
+      "kicker": "IMPECCABLE’S PICK",
+      "lineage": "影视/动画分镜师的画格稿纸",
+      "thesis": "产品就是那张画满画格的稿纸：画格即卡片，蓝铅笔即草稿。",
+      "palette": ["#f2f2ee", "#2b2c30", "#6f9bd1", "#c9552e"],
+      "materials": ["画格边框", "非复印蓝铅笔", "页脚镜号序列"],
+      "viewport": "工作区是一张连续的横向稿纸，场与镜以画格生长，蓝铅笔是生成中的镜头。",
+      "risk": "对分镜工具最自然的落点，也因此是同类产品最常被想到的方向——熟悉是它的代价。"
+    },
+    {
+      "id": "challenger-lexicon",
+      "label": "词典页与图版",
+      "verdict": "competitive",
+      "lineage": "19 世纪辞书排印",
+      "thesis": "每个词条按「配给的排版装置」分级，颜色只活在带框图版里。",
+      "palette": ["#e9e6d8", "#1d1b16", "#a33226", "#2c4a8f"],
+      "materials": ["铜版插图", "肩题索引", "勘误表"],
+      "viewport": "打开的词典对页，资产像词条按重要度获得排版装置。",
+      "case": "系统语法极强（导词/图版/勘误原语），但剧组人群对辞书的辨识弱于台本——清晰度胜、身份认同负。",
+      "risk": "排印装置若流于装饰，就成了普通的「古典纸面」。"
+    },
+    {
+      "id": "challenger-orizuru",
+      "label": "千纸鹤折序",
+      "verdict": "competitive",
+      "lineage": "折纸步骤谱",
+      "thesis": "32 道编号折痕，一个金点标记当前步骤，任何一步都可回退。",
+      "palette": ["#c8402e", "#f0ede0", "#2a2723", "#c99a2e"],
+      "materials": ["和纸纤维", "折痕白", "页边步骤编号"],
+      "viewport": "一页一步的折序谱，流程阶段如折痕逐次展开。",
+      "case": "可回退步骤的状态语法与「继续/重新开始」完美对应；但折纸世界离剧组身份太远。",
+      "risk": "隐喻精美但与内容产业无亲缘，易读成主题皮肤。"
+    },
+    {
+      "id": "challenger-ascii",
+      "label": "ASCII 磷光场",
+      "verdict": "declined",
+      "lineage": "字符终端成像",
+      "palette": ["#0a0f0a", "#5df08a"],
+      "materials": ["等宽字符", "磷光辉光"],
+      "case": "暗底磷光重蹈旧稿覆辙，剧组无人认领。",
+      "kept": "整页一种网格的彻底承诺。"
+    },
+    {
+      "id": "challenger-teletext",
+      "label": "电视图文页",
+      "verdict": "declined",
+      "lineage": "广播图文检索",
+      "palette": ["#000000", "#f8e71c", "#2cc0ff"],
+      "materials": ["块镶嵌图形", "三位页码"],
+      "case": "黑底块字是复古玩梗，不适合操作型工具。",
+      "kept": "三位数直达地址——场·镜编号作为可键入的地址。"
+    },
+    {
+      "id": "challenger-gravity",
+      "label": "重力雨园",
+      "verdict": "declined",
+      "lineage": "超现实园艺",
+      "palette": ["#5d7263", "#c9d6c3"],
+      "materials": ["矢量场", "彩色雨"],
+      "case": "梦幻世界与生产工具的克制相冲。",
+      "kept": "颜色即物理规则的纪律。"
+    },
+    {
+      "id": "challenger-eboy",
+      "label": "像素都市",
+      "verdict": "declined",
+      "lineage": "eBoy 等距像素画",
+      "palette": ["#e8452c", "#2cc0c8", "#111111"],
+      "materials": ["硬像素", "等距网格"],
+      "case": "全饱和 RGB 的玩趣压过了制作现场的正经。",
+      "kept": "悬停标签不破网格的纪律。"
+    }
+  ],
+  "reroll": { "registers": ["safer", "bolder"] },
+  "buildPath": { "value": "code" },
+  "canon": true,
+  "canonCard": {
+    "label": "类别标准",
+    "thesis": "这类产品通常的样子，做到无可挑剔。",
+    "palette": ["#ffffff", "#111827", "#2563eb"],
+    "materials": ["整洁网格", "系统无衬线"],
+    "viewport": "访客预期的标准布局，满工满料执行。",
+    "risk": "与其他产品无法区分——这是它的设计目标。"
+  },
+  "steer": true
+}

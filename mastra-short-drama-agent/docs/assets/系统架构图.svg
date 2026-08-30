@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 780">
+  <rect width="960" height="780" fill="#f7f6f1"/>
+  <defs>
+    <marker id="arrB" viewBox="0 0 10 7" refX="9" refY="3.5" markerWidth="9" markerHeight="6.5" orient="auto"><path d="M0,0 L10,3.5 L0,7 Z" fill="#1f5f8b"/></marker>
+    <marker id="arrI" viewBox="0 0 10 7" refX="9" refY="3.5" markerWidth="9" markerHeight="6.5" orient="auto"><path d="M0,0 L10,3.5 L0,7 Z" fill="#565a66"/></marker>
+    <marker id="arrG" viewBox="0 0 10 7" refX="9" refY="3.5" markerWidth="9" markerHeight="6.5" orient="auto"><path d="M0,0 L10,3.5 L0,7 Z" fill="#b8860b"/></marker>
+    <marker id="arrR" viewBox="0 0 10 7" refX="9" refY="3.5" markerWidth="9" markerHeight="6.5" orient="auto"><path d="M0,0 L10,3.5 L0,7 Z" fill="#c0392b"/></marker>
+  </defs>
+  <text x="40" y="38" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="19" font-weight="700" fill="#22242c" letter-spacing="1">系统架构</text>
+  <text x="920" y="36" font-family="SF Mono, Menlo, monospace" font-size="10.5" fill="#666b78" text-anchor="end" letter-spacing="1">NestJS + Mastra · 场记日志</text>
+  <rect x="40" y="56" width="880" height="104" rx="2" fill="none" stroke="#666b78" stroke-width="1.2" stroke-dasharray="5,4"/>
+  <text x="52" y="76" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="12" font-weight="700" fill="#565a66" letter-spacing="1">客户端</text>
+  <text x="908" y="76" font-family="SF Mono, Menlo, monospace" font-size="9.5" fill="#666b78" text-anchor="end">React 18 + Vite SPA</text>
+  <rect x="60" y="92" width="180" height="50" rx="2" fill="#e3edf4" stroke="#22242c" stroke-width="1.5"/>
+  <text x="150.0" y="114" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="13.5" font-weight="600" fill="#22242c" text-anchor="middle">登录页</text>
+  <text x="150.0" y="132" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#565a66" text-anchor="middle">demo · 7 天会话</text>
+  <rect x="258" y="92" width="180" height="50" rx="2" fill="#e3edf4" stroke="#22242c" stroke-width="1.5"/>
+  <text x="348.0" y="114" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="13.5" font-weight="600" fill="#22242c" text-anchor="middle">项目列表</text>
+  <text x="348.0" y="132" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#565a66" text-anchor="middle">共享 · 管理重置</text>
+  <rect x="456" y="92" width="444" height="50" rx="2" fill="#ffffff" stroke="#22242c" stroke-width="2"/>
+  <text x="678.0" y="114" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="13.5" font-weight="600" fill="#22242c" text-anchor="middle">项目工作区</text>
+  <text x="678.0" y="132" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#565a66" text-anchor="middle">编号边栏 · 对话列 · 图版列</text>
+  <rect x="40" y="186" width="880" height="140" rx="2" fill="none" stroke="#666b78" stroke-width="1.2" stroke-dasharray="5,4"/>
+  <text x="52" y="206" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="12" font-weight="700" fill="#565a66" letter-spacing="1">API 层</text>
+  <text x="908" y="206" font-family="SF Mono, Menlo, monospace" font-size="9.5" fill="#666b78" text-anchor="end">NestJS · module / guard / controller</text>
+  <rect x="60" y="226" width="180" height="54" rx="2" fill="#e3edf4" stroke="#22242c" stroke-width="1.5"/>
+  <text x="150.0" y="248" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="13.5" font-weight="600" fill="#22242c" text-anchor="middle">AuthModule</text>
+  <text x="150.0" y="270" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#565a66" text-anchor="middle">Guard · 签名 Cookie</text>
+  <rect x="258" y="226" width="200" height="54" rx="2" fill="#ffffff" stroke="#22242c" stroke-width="2"/>
+  <text x="358.0" y="248" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="13.5" font-weight="600" fill="#22242c" text-anchor="middle">对话路由</text>
+  <text x="358.0" y="270" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#565a66" text-anchor="middle">意图识别 · 依次补问</text>
+  <rect x="476" y="226" width="150" height="54" rx="2" fill="#f5edd8" stroke="#22242c" stroke-width="1.5"/>
+  <text x="551.0" y="248" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="13.5" font-weight="600" fill="#22242c" text-anchor="middle">SSE 活动流</text>
+  <text x="551.0" y="270" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#565a66" text-anchor="middle">afterSeq 续传</text>
+  <rect x="644" y="226" width="256" height="54" rx="2" fill="#e3edf4" stroke="#22242c" stroke-width="1.5"/>
+  <text x="772.0" y="248" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="13.5" font-weight="600" fill="#22242c" text-anchor="middle">导出模块</text>
+  <text x="772.0" y="270" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#565a66" text-anchor="middle">整项目 ZIP · manifest</text>
+  <rect x="40" y="352" width="880" height="150" rx="2" fill="none" stroke="#666b78" stroke-width="1.2" stroke-dasharray="5,4"/>
+  <text x="52" y="372" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="12" font-weight="700" fill="#565a66" letter-spacing="1">编排层</text>
+  <text x="908" y="372" font-family="SF Mono, Menlo, monospace" font-size="9.5" fill="#666b78" text-anchor="end">Mastra（作为库装配进 Provider）</text>
+  <rect x="60" y="394" width="240" height="72" rx="2" fill="#ffffff" stroke="#22242c" stroke-width="2"/>
+  <text x="180.0" y="416" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="13.5" font-weight="600" fill="#22242c" text-anchor="middle">自动连续生成管线</text>
+  <text x="180.0" y="456" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#565a66" text-anchor="middle">剧本→资产→场次→分镜→检查→包 · 无确认门槛</text>
+  <rect x="322" y="394" width="226" height="72" rx="2" fill="#e3edf4" stroke="#22242c" stroke-width="1.5"/>
+  <text x="435.0" y="416" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="13.5" font-weight="600" fill="#22242c" text-anchor="middle">Agents</text>
+  <text x="435.0" y="456" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#565a66" text-anchor="middle">解析 · 场次 · 分镜 · 审查</text>
+  <rect x="570" y="394" width="290" height="72" rx="2" fill="#e3edf4" stroke="#22242c" stroke-width="1.5"/>
+  <text x="715.0" y="416" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="13.5" font-weight="600" fill="#22242c" text-anchor="middle">模型 Provider</text>
+  <text x="715.0" y="456" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#565a66" text-anchor="middle">OpenAI 兼容 → Mock 兜底</text>
+  <text x="715" y="486" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10" fill="#c0392b" text-anchor="middle">失败自动切 Mock · 前端不接触 Key</text>
+  <rect x="40" y="528" width="880" height="200" rx="2" fill="none" stroke="#666b78" stroke-width="1.2" stroke-dasharray="5,4"/>
+  <text x="52" y="548" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="12" font-weight="700" fill="#565a66" letter-spacing="1">执行与数据</text>
+  <rect x="60" y="586" width="200" height="64" rx="2" fill="#ffffff" stroke="#22242c" stroke-width="2"/>
+  <text x="160.0" y="608" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="13.5" font-weight="600" fill="#22242c" text-anchor="middle">Worker</text>
+  <text x="160.0" y="640" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#565a66" text-anchor="middle">任务租约 · SKIP LOCKED · 重启恢复</text>
+  <rect x="300" y="586" width="300" height="64" rx="2" fill="#f1efe8" stroke="#22242c" stroke-width="1.5"/>
+  <text x="450.0" y="608" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="13.5" font-weight="600" fill="#22242c" text-anchor="middle">PostgreSQL 16</text>
+  <text x="450.0" y="640" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#565a66" text-anchor="middle">业务 · 任务表 · 事件 journal · Prisma</text>
+  <rect x="640" y="586" width="260" height="64" rx="2" fill="#f1efe8" stroke="#22242c" stroke-width="1.5"/>
+  <text x="770.0" y="608" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="13.5" font-weight="600" fill="#22242c" text-anchor="middle">文件存储</text>
+  <text x="770.0" y="640" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#565a66" text-anchor="middle">/data/exports · Volume</text>
+  <path d="M 546,142,368,186,368,226" fill="none" stroke="#1f5f8b" stroke-width="2" marker-end="url(#arrB)"/>
+  <text x="448" y="168" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#1f5f8b" text-anchor="middle">REST / 对话指令</text>
+  <path d="M 551,226,551,186,556,142" fill="none" stroke="#b8860b" stroke-width="2" marker-end="url(#arrG)"/>
+  <text x="624" y="198" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#b8860b" text-anchor="middle">SSE 事件</text>
+  <path d="M 340,280 311,280 311,586" fill="none" stroke="#565a66" stroke-width="1.5" marker-end="url(#arrI)"/>
+  <text x="240" y="440" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#565a66" text-anchor="middle">任务入队 · 读写</text>
+  <path d="M 160,586,160,466" fill="none" stroke="#565a66" stroke-width="1.5" marker-end="url(#arrI)"/>
+  <text x="102" y="532" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#565a66" text-anchor="middle">领取任务执行</text>
+  <path d="M 180,394 180,384 715,384 715,394" fill="none" stroke="#1f5f8b" stroke-width="2" marker-end="url(#arrB)"/>
+  <text x="435" y="420" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#1f5f8b" text-anchor="middle">Agent 模型调用</text>
+  <path d="M 260,618,300,618" fill="none" stroke="#565a66" stroke-width="1.5" marker-end="url(#arrI)"/>
+  <text x="280" y="608" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#565a66" text-anchor="middle">事件·版本</text>
+  <path d="M 880,280,880,586" fill="none" stroke="#565a66" stroke-width="1.5" marker-end="url(#arrI)"/>
+  <text x="892" y="440" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#565a66" text-anchor="start">ZIP 落盘</text>
+  <g font-family="SF Mono, Menlo, monospace" font-size="10" fill="#565a66">
+    <line x1="60" y1="762" x2="96" y2="762" stroke="#1f5f8b" stroke-width="2"/><text x="102" y="765">主调用</text>
+    <line x1="170" y1="762" x2="206" y2="762" stroke="#565a66" stroke-width="1.5"/><text x="212" y="765">读写 / 触发</text>
+    <line x1="310" y1="762" x2="346" y2="762" stroke="#b8860b" stroke-width="2"/><text x="352" y="765">SSE 实时</text>
+    <text x="450" y="765" fill="#c0392b">红 = Mock 兜底 / 失败路径</text>
+  </g></svg>

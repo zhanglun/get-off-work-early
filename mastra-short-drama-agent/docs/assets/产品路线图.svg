@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240 470">
+  <rect width="1240" height="470" fill="#f7f6f1"/>
+  <defs>
+    <marker id="arrI" viewBox="0 0 10 7" refX="9" refY="3.5" markerWidth="9" markerHeight="6.5" orient="auto"><path d="M0,0 L10,3.5 L0,7 Z" fill="#565a66"/></marker>
+  </defs>
+  <text x="40" y="38" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="19" font-weight="700" fill="#22242c" letter-spacing="1">产品路线图</text>
+  <text x="1200" y="36" font-family="SF Mono, Menlo, monospace" font-size="10.5" fill="#666b78" text-anchor="end">已确认延后项排序 · 触发条件驱动</text>
+  <rect x="46" y="110" width="260" height="170" rx="2" fill="#f5edd8" stroke="#22242c" stroke-width="2"/>
+  <ellipse cx="84" cy="142" rx="26" ry="20" fill="none" stroke="#b8860b" stroke-width="1.8"/>
+  <text x="84" y="147" font-family="SF Mono, Menlo, monospace" font-size="12.5" font-weight="700" fill="#b8860b" text-anchor="middle">v1.0</text>
+  <text x="122" y="147" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="13" font-weight="700" fill="#22242c">Demo 闭环（当前）</text>
+  <text x="62" y="180" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="11.5" fill="#565a66">· 登录 · 导入 · 自动生成</text>
+  <text x="62" y="202" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="11.5" fill="#565a66">· 修改 · 版本 · 穿帮</text>
+  <text x="62" y="224" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="11.5" fill="#565a66">· 整项目 ZIP · 部署恢复</text>
+  <path d="M 321.0 172 L 332.0 184 L 321.0 196 L 310.0 184 Z" fill="#f7f6f1" stroke="#565a66" stroke-width="1.2"/>
+  <line x1="306" y1="184" x2="310.0" y2="184" stroke="#565a66" stroke-width="1.4"/>
+  <line x1="332.0" y1="184" x2="336" y2="184" stroke="#565a66" stroke-width="1.4" marker-end="url(#arrI)"/>
+  <text x="176.0" y="96" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#b8860b" text-anchor="middle">goal 验收 7 条</text>
+  <rect x="46" y="110" width="260" height="170" rx="2" fill="#ffffff" stroke="#22242c" stroke-width="1.5"/>
+  <ellipse cx="84" cy="142" rx="26" ry="20" fill="none" stroke="#22242c" stroke-width="1.3"/>
+  <text x="84" y="147" font-family="SF Mono, Menlo, monospace" font-size="12.5" font-weight="700" fill="#22242c" text-anchor="middle">v1.x</text>
+  <text x="122" y="147" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="13" font-weight="700" fill="#22242c">质量与打磨</text>
+  <text x="62" y="180" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="11.5" fill="#565a66">· 真实模型质量验收</text>
+  <text x="62" y="202" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="11.5" fill="#565a66">· CSV/Excel · 格式扩展</text>
+  <path d="M 321.0 172 L 332.0 184 L 321.0 196 L 310.0 184 Z" fill="#f7f6f1" stroke="#565a66" stroke-width="1.2"/>
+  <line x1="306" y1="184" x2="310.0" y2="184" stroke="#565a66" stroke-width="1.4"/>
+  <line x1="332.0" y1="184" x2="336" y2="184" stroke="#565a66" stroke-width="1.4" marker-end="url(#arrI)"/>
+  <rect x="46" y="110" width="260" height="170" rx="2" fill="#ffffff" stroke="#22242c" stroke-width="1.5"/>
+  <ellipse cx="84" cy="142" rx="26" ry="20" fill="none" stroke="#22242c" stroke-width="1.3"/>
+  <text x="84" y="147" font-family="SF Mono, Menlo, monospace" font-size="12.5" font-weight="700" fill="#22242c" text-anchor="middle">v2.0</text>
+  <text x="122" y="147" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="13" font-weight="700" fill="#22242c">多用户生产化</text>
+  <text x="62" y="180" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="11.5" fill="#565a66">· 注册登录 · 数据隔离</text>
+  <text x="62" y="202" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="11.5" fill="#565a66">· S3 对象存储</text>
+  <text x="62" y="224" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="11.5" fill="#565a66">· Redis 队列</text>
+  <path d="M 321.0 172 L 332.0 184 L 321.0 196 L 310.0 184 Z" fill="#f7f6f1" stroke="#565a66" stroke-width="1.2"/>
+  <line x1="306" y1="184" x2="310.0" y2="184" stroke="#565a66" stroke-width="1.4"/>
+  <line x1="332.0" y1="184" x2="336" y2="184" stroke="#565a66" stroke-width="1.4" marker-end="url(#arrI)"/>
+  <rect x="46" y="110" width="260" height="170" rx="2" fill="#ffffff" stroke="#22242c" stroke-width="1.5"/>
+  <ellipse cx="84" cy="142" rx="26" ry="20" fill="none" stroke="#22242c" stroke-width="1.3"/>
+  <text x="84" y="147" font-family="SF Mono, Menlo, monospace" font-size="12.5" font-weight="700" fill="#22242c" text-anchor="middle">v3.0</text>
+  <text x="122" y="147" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="13" font-weight="700" fill="#22242c">真实媒体生成</text>
+  <text x="62" y="180" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="11.5" fill="#565a66">· 图像 · 视频 Provider</text>
+  <text x="62" y="202" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="11.5" fill="#565a66">· 配音字幕剪辑对接</text>
+  <text x="176.0" y="344" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#666b78" text-anchor="middle">v1.0 验收全绿 + 真实剧本演示</text>
+  <text x="466.0" y="344" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#666b78" text-anchor="middle">Demo 验证价值 · 需多人使用</text>
+  <text x="756.0" y="344" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#666b78" text-anchor="middle">分镜包被下游真实消费</text>
+  <text x="620" y="302" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#666b78" text-anchor="middle">触发条件</text>
+  <rect x="920" y="330" width="280" height="96" rx="2" fill="none" stroke="#666b78" stroke-width="1.2" stroke-dasharray="5,4"/>
+  <text x="1060" y="354" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="12" font-weight="700" fill="#565a66" text-anchor="middle">暂不规划</text>
+  <text x="1060" y="376" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#666b78" text-anchor="middle">多集跨集连续性 · 图数据库</text>
+  <text x="1060" y="394" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#666b78" text-anchor="middle">MCP 插件市场 · 多租户 · 实时协作</text>
+  <text x="1060" y="412" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#666b78" text-anchor="middle">（出现真实需求再评审）</text>
+</svg>

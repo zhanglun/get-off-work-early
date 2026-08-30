@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<style>
+  :root {
+    --paper: #f7f6f1; --paper-2: #f1efe8; --ink: #22242c; --ink-2: #565a66;
+    --rule: #d9dcd4; --rule-2: #e7e9e2; --blue: #1f5f8b; --blue-wash: #e3edf4;
+    --red: #c0392b; --red-wash: #f6e7e4; --gold: #b8860b; --gold-deep: #8a6508;
+    --sans: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    --mono: "SF Mono", ui-monospace, Menlo, monospace;
+    --kai: "Kaiti SC", "STKaiti", serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--sans); background: var(--paper); color: var(--ink); width: 1600px; height: 1000px; overflow: hidden; }
+  .sheet { display: flex; height: 100%; }
+  /* 页眉 */
+  .head { height: 64px; border-bottom: 1.5px solid var(--ink); display: flex; align-items: center; padding: 0 28px; gap: 16px; }
+  .head .back { color: var(--ink-2); font-size: 13px; }
+  .head .name { font-size: 19px; font-weight: 700; letter-spacing: 1px; }
+  .head .ep { border: 1px solid var(--ink); border-radius: 2px; padding: 3px 12px; font-size: 13px; }
+  .head .ep b { font-weight: 600; }
+  .head .sp { flex: 1; }
+  .stamp { font-family: var(--mono); font-size: 11px; letter-spacing: 2px; color: var(--red); border: 1.5px solid var(--red); border-radius: 3px; padding: 2px 8px; transform: rotate(-2deg); }
+  .btn { font-size: 13px; border: 1px solid var(--ink); background: transparent; color: var(--ink); border-radius: 2px; padding: 6px 14px; }
+  .btn.primary { background: var(--blue); border-color: var(--blue); color: #fff; }
+  .main { flex: 1; display: flex; min-height: 0; }
+  /* 左页：对话 */
+  .page-l { width: 44%; border-right: 1.5px solid var(--ink); display: flex; flex-direction: column; }
+  .page-head { font-size: 12px; color: var(--ink-2); padding: 14px 28px 10px; border-bottom: 1px solid var(--rule); font-family: var(--mono); letter-spacing: 1px; }
+  .convo { flex: 1; padding: 22px 28px; }
+  .u-msg { border-bottom: 1px solid var(--rule-2); padding: 10px 0 14px; margin-bottom: 14px; }
+  .u-msg .who { font-family: var(--mono); font-size: 10.5px; color: var(--ink-2); letter-spacing: 2px; margin-bottom: 4px; }
+  .u-msg .txt { font-size: 14.5px; }
+  .a-note { font-size: 14.5px; padding: 10px 0; border-bottom: 1px solid var(--rule-2); line-height: 1.7; }
+  .a-note .kai { font-family: var(--kai); }
+  .a-note .q { color: var(--blue); font-weight: 600; }
+  /* 进度行 */
+  .prog { margin: 18px 0; padding: 14px 16px; background: var(--paper-2); border: 1px solid var(--rule); border-radius: 2px; }
+  .prog .row { display: flex; align-items: center; gap: 10px; font-size: 14px; }
+  .circ { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; }
+  .circ svg { position: absolute; inset: 0; }
+  .circ span { font-family: var(--mono); font-weight: 600; font-size: 13px; }
+  .prog .t { margin-left: auto; font-family: var(--mono); font-size: 12px; color: var(--ink-2); }
+  .bar { height: 3px; background: #e3e1d8; margin: 12px 0 10px; position: relative; }
+  .bar i { position: absolute; left: 0; top: 0; bottom: 0; width: 64%; background: var(--blue); }
+  .prog .sub { font-size: 12px; color: var(--ink-2); display: flex; justify-content: space-between; }
+  /* 输入 */
+  .composer { padding: 14px 28px 22px; }
+  .composer .box { border: 1px solid var(--ink); border-radius: 2px; padding: 12px 14px; background: #fff; }
+  .composer .ph { color: var(--ink-2); font-size: 14px; }
+  .composer .hint { font-size: 11.5px; color: var(--ink-2); margin-top: 8px; font-family: var(--kai); }
+  /* 中缝 */
+  .spine { width: 26px; background: var(--paper-2); border-right: 1px solid var(--rule); position: relative; }
+  .spine::before, .spine::after { content: ""; position: absolute; left: 8px; width: 9px; height: 9px; border-radius: 50%; background: var(--paper); border: 1.5px solid var(--ink-2); }
+  .spine::before { top: 90px; } .spine::after { top: 130px; }
+  /* 右页：登记 */
+  .page-r { flex: 1; display: flex; flex-direction: column; }
+  .tabs { display: flex; border-bottom: 1.5px solid var(--ink); }
+  .tabs .tb { padding: 13px 24px 11px; font-size: 14px; color: var(--ink-2); }
+  .tabs .tb.on { color: var(--ink); font-weight: 700; border-bottom: 3px solid var(--gold); margin-bottom: -1.5px; }
+  .reg { flex: 1; padding: 18px 28px; overflow: hidden; }
+  .sec { font-size: 12px; color: var(--ink-2); letter-spacing: 2px; border-bottom: 1px solid var(--ink); padding-bottom: 6px; margin-bottom: 12px; display: flex; justify-content: space-between; }
+  .assets { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+  .asset { border: 1px solid var(--rule); background: #fff; padding: 12px 14px; border-radius: 2px; }
+  .asset h4 { font-size: 14.5px; margin-bottom: 3px; display: flex; align-items: center; gap: 8px; }
+  .asset .lv { font-size: 10px; font-family: var(--mono); color: var(--blue); border: 1px solid var(--blue); border-radius: 2px; padding: 0 4px; letter-spacing: 1px; }
+  .asset p { font-size: 12.5px; color: var(--ink-2); }
+  .shot { border: 1px solid var(--rule); background: #fff; border-radius: 2px; padding: 13px 16px; margin-bottom: 10px; }
+  .shot .top { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+  .specs { display: flex; gap: 6px; font-size: 12px; color: var(--ink-2); }
+  .specs span { border-bottom: 1px solid var(--rule); padding: 0 2px 2px; }
+  .shot .desc { font-size: 13.5px; line-height: 1.6; }
+  .cont { margin: 8px 0 0 22px; font-size: 12.5px; color: var(--ink-2); border-left: none; padding-left: 0; }
+  .cont b { font-family: var(--mono); font-weight: 400; font-size: 10.5px; letter-spacing: 1.5px; display: block; color: var(--ink-2); }
+  .issue { background: var(--red-wash); border: 1px solid #e5c4bd; border-radius: 2px; padding: 10px 14px; font-size: 13px; margin-bottom: 8px; }
+  .issue .tag { font-family: var(--mono); font-size: 10px; color: var(--red); border: 1px solid var(--red); border-radius: 2px; padding: 0 5px; margin-right: 8px; }
+</style>
+</head>
+<body>
+<div class="sheet" style="flex-direction:column;">
+  <div class="head">
+    <span class="back">← 项目</span>
+    <span class="name">城市心跳</span>
+    <span class="ep">第 <b>2</b> 集</span>
+    <span class="stamp">MOCK</span>
+    <span class="sp"></span>
+    <button class="btn">导出项目 ZIP</button>
+  </div>
+  <div class="main">
+    <div class="page-l">
+      <div class="page-head">对话记录 · 第 2 集</div>
+      <div class="convo">
+        <div class="u-msg">
+          <div class="who">登记 · 剧本</div>
+          <div class="txt">剧本 · 4,208 字（已存档）</div>
+        </div>
+        <div class="a-note">第 2 集登记完毕。<span class="kai">这集准备登记多少个镜头？</span><br><span style="font-size:12.5px;color:var(--ink-2)">建议 20–40 个 · 默认 30 个</span></div>
+        <div class="u-msg">
+          <div class="who">登记 · 回复</div>
+          <div class="txt">28 个</div>
+        </div>
+        <div class="a-note">按 28 个镜头登记。沿用项目级角色：林小雨（长发）、陈默。<br>发现 1 处冲突：本集剧本中林小雨剪了短发。<span class="q">[更新项目设定] [仅本集短发] [暂不处理]</span></div>
+        <div class="prog">
+          <div class="row">
+            <span class="circ"><svg viewBox="0 0 30 30"><ellipse cx="15" cy="15" rx="13" ry="11" fill="none" stroke="#b8860b" stroke-width="1.6"/></svg><span>3</span></span>
+            分镜生成 18 / 28
+            <span class="t">00:41</span>
+          </div>
+          <div class="bar"><i></i></div>
+          <div class="sub"><span>完成后自动连续性检查</span><span><u style="text-decoration-color:var(--ink-2)">取消制作</u></span></div>
+        </div>
+      </div>
+      <div class="composer">
+        <div class="box"><div class="ph">补充要求将登记到下一阶段…</div></div>
+        <div class="hint">生成中仍可输入 · 例：节奏更快一些</div>
+      </div>
+    </div>
+    <div class="spine"></div>
+    <div class="page-r">
+      <div class="tabs">
+        <div class="tb on">制作流程</div>
+        <div class="tb">资产结果</div>
+      </div>
+      <div class="reg">
+        <div class="sec"><span>项目级资产</span><span>PROJECT</span></div>
+        <div class="assets">
+          <div class="asset"><h4>林小雨 <span class="lv">项目级</span></h4><p>26 岁 · 长发 · 米色风衣</p></div>
+          <div class="asset"><h4>陈默 <span class="lv">项目级</span></h4><p>30 岁 · 黑色大衣 · 沉稳</p></div>
+        </div>
+        <div class="sec"><span>分镜登记 · 场 2 咖啡馆靠窗位</span><span>18/28</span></div>
+        <div class="shot">
+          <div class="top">
+            <span class="circ"><svg viewBox="0 0 30 30"><ellipse cx="15" cy="15" rx="13" ry="11" fill="none" stroke="#22242c" stroke-width="1.2"/></svg><span>05</span></span>
+            <div class="specs"><span>中近景</span><span>缓慢推近</span><span>4s</span></div>
+          </div>
+          <div class="desc">林小雨抬头，看见陈默站在门口，雨水从大衣下摆滴落。</div>
+          <div class="cont"><b>IMAGE PROMPT</b>电影感，夜内景咖啡馆，暖光，窗上雨水，女性抬头看向门口…</div>
+        </div>
+        <div class="sec"><span>穿帮记录</span><span>2</span></div>
+        <div class="issue"><span class="tag">事实</span>合同在镜 14 已被撕毁，镜 22 又完整出现 <u>定位</u> · <u>忽略</u></div>
+        <div class="issue"><span class="tag">措辞</span>"表情严肃"不够具体 <u>自动修订 · 4 处</u></div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

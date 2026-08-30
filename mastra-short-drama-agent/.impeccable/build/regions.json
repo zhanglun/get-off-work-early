@@ -1,0 +1,19 @@
+{
+  "regions": [
+    { "id": "head-bar", "kind": "chrome", "grid": "A0:J0", "note": "顶栏：返回、项目名城市心跳、第2集芯片、MOCK 印章、导出按钮" },
+    { "id": "rail-scenes", "kind": "control", "grid": "A1:A4", "note": "编号边栏上半：场1-场5 场号与镜号区间，场2 金色高亮" },
+    { "id": "rail-meta", "kind": "control", "grid": "A5:A9", "note": "编号边栏下半：分组线与 资产/穿帮/包 计数项" },
+    { "id": "msg-script", "kind": "text", "grid": "B1:E1", "note": "用户消息：登记·剧本 4,208 字已存档" },
+    { "id": "note-ask", "kind": "text", "grid": "B2:E2", "note": "助手追问：登记多少镜头，建议20-40默认30" },
+    { "id": "msg-reply", "kind": "text", "grid": "B2:D2", "note": "用户回复：28 个" },
+    { "id": "note-conflict", "kind": "text", "grid": "B3:E3", "note": "助手说明：沿用项目角色并提示短发冲突" },
+    { "id": "progress", "kind": "control", "grid": "B4:F5", "note": "进度卡：圈码3 分镜生成18/28、蓝色进度条、取消链接" },
+    { "id": "composer", "kind": "control", "grid": "B9:F9", "note": "底部输入框：墨线边框白底占位文本" },
+    { "id": "plate-head", "kind": "chrome", "grid": "F1:J1", "note": "图版区头：场2 咖啡馆靠窗位 · 6/8" },
+    { "id": "shot-frame", "kind": "text", "grid": "F1:J3", "note": "分镜图版：圈码05、规格下划线、画面描述、IMAGE PROMPT 续行" },
+    { "id": "sec-assets", "kind": "text", "grid": "F3:J3", "note": "分节线：项目级资产 PROJECT" },
+    { "id": "asset-entries", "kind": "text", "grid": "F3:J4", "note": "两条项目级资产行：林小雨、陈默" },
+    { "id": "sec-issues", "kind": "text", "grid": "F4:J4", "note": "分节线：穿帮记录 2" },
+    { "id": "issue-entry", "kind": "text", "grid": "F4:J5", "note": "红色穿帮条目：合同道具矛盾，定位/忽略操作" }
+  ]
+}

@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240 470">
+  <rect width="1240" height="470" fill="#f7f6f1"/>
+  <defs>
+    <marker id="arrI" viewBox="0 0 10 7" refX="9" refY="3.5" markerWidth="9" markerHeight="6.5" orient="auto"><path d="M0,0 L10,3.5 L0,7 Z" fill="#565a66"/></marker>
+  </defs>
+  <text x="40" y="38" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="19" font-weight="700" fill="#22242c" letter-spacing="1">技术路线图</text>
+  <text x="1200" y="36" font-family="SF Mono, Menlo, monospace" font-size="10.5" fill="#666b78" text-anchor="end">M0 → M7 · 每步可独立验收</text>
+  <line x1="40" y1="94" x2="1200" y2="94" stroke="#22242c" stroke-width="2" marker-end="url(#arrI)"/>
+  <rect x="50" y="120" width="130" height="110" rx="2" fill="#f5edd8" stroke="#22242c" stroke-width="2"/>
+  <ellipse cx="75" cy="146" rx="16" ry="13" fill="none" stroke="#b8860b" stroke-width="1.6"/>
+  <text x="75" y="150" font-family="SF Mono, Menlo, monospace" font-size="11" font-weight="700" fill="#b8860b" text-anchor="middle">M0</text>
+  <text x="98" y="150" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="11.5" font-weight="700" fill="#22242c">规划与重组</text>
+  <text x="61" y="178" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10" fill="#565a66">四张清单</text>
+  <text x="61" y="196" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10" fill="#565a66">monorepo · git mv</text>
+  <line x1="115.0" y1="94" x2="115.0" y2="114" stroke="#22242c" stroke-width="1.2"/>
+  <text x="115.0" y="86" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#b8860b" text-anchor="middle">当前</text>
+  <rect x="193" y="120" width="130" height="110" rx="2" fill="#ffffff" stroke="#22242c" stroke-width="1.5"/>
+  <ellipse cx="218" cy="146" rx="16" ry="13" fill="none" stroke="#22242c" stroke-width="1.2"/>
+  <text x="218" y="150" font-family="SF Mono, Menlo, monospace" font-size="11" font-weight="700" fill="#22242c" text-anchor="middle">M1</text>
+  <text x="241" y="150" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="11.5" font-weight="700" fill="#22242c">登录与项目</text>
+  <text x="204" y="178" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10" fill="#565a66">Auth · 共享列表</text>
+  <text x="204" y="196" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10" fill="#565a66">SSE 骨架</text>
+  <line x1="258.0" y1="94" x2="258.0" y2="114" stroke="#22242c" stroke-width="1.2"/>
+  <rect x="336" y="120" width="130" height="110" rx="2" fill="#ffffff" stroke="#22242c" stroke-width="1.5"/>
+  <ellipse cx="361" cy="146" rx="16" ry="13" fill="none" stroke="#22242c" stroke-width="1.2"/>
+  <text x="361" y="150" font-family="SF Mono, Menlo, monospace" font-size="11" font-weight="700" fill="#22242c" text-anchor="middle">M2</text>
+  <text x="384" y="150" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="11.5" font-weight="700" fill="#22242c">导入与补问</text>
+  <text x="347" y="178" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10" fill="#565a66">项目/剧集模型</text>
+  <text x="347" y="196" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10" fill="#565a66">补问链路</text>
+  <line x1="401.0" y1="94" x2="401.0" y2="114" stroke="#22242c" stroke-width="1.2"/>
+  <rect x="479" y="120" width="130" height="110" rx="2" fill="#ffffff" stroke="#22242c" stroke-width="1.5"/>
+  <ellipse cx="504" cy="146" rx="16" ry="13" fill="none" stroke="#22242c" stroke-width="1.2"/>
+  <text x="504" y="150" font-family="SF Mono, Menlo, monospace" font-size="11" font-weight="700" fill="#22242c" text-anchor="middle">M3</text>
+  <text x="527" y="150" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="11.5" font-weight="700" fill="#22242c">生成与活动流</text>
+  <text x="490" y="178" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10" fill="#565a66">自动连续管线</text>
+  <text x="490" y="196" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10" fill="#565a66">阶段账 · Mock 兜底</text>
+  <line x1="544.0" y1="94" x2="544.0" y2="114" stroke="#22242c" stroke-width="1.2"/>
+  <rect x="622" y="120" width="130" height="110" rx="2" fill="#ffffff" stroke="#22242c" stroke-width="1.5"/>
+  <ellipse cx="647" cy="146" rx="16" ry="13" fill="none" stroke="#22242c" stroke-width="1.2"/>
+  <text x="647" y="150" font-family="SF Mono, Menlo, monospace" font-size="11" font-weight="700" fill="#22242c" text-anchor="middle">M4</text>
+  <text x="670" y="150" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="11.5" font-weight="700" fill="#22242c">图版工件</text>
+  <text x="633" y="178" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10" fill="#565a66">分镜卡 · 穿帮</text>
+  <text x="633" y="196" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10" fill="#565a66">模拟帧标注</text>
+  <line x1="687.0" y1="94" x2="687.0" y2="114" stroke="#22242c" stroke-width="1.2"/>
+  <rect x="765" y="120" width="130" height="110" rx="2" fill="#ffffff" stroke="#22242c" stroke-width="1.5"/>
+  <ellipse cx="790" cy="146" rx="16" ry="13" fill="none" stroke="#22242c" stroke-width="1.2"/>
+  <text x="790" y="150" font-family="SF Mono, Menlo, monospace" font-size="11" font-weight="700" fill="#22242c" text-anchor="middle">M5</text>
+  <text x="813" y="150" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="11.5" font-weight="700" fill="#22242c">修改与版本</text>
+  <text x="776" y="178" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10" fill="#565a66">影响分析</text>
+  <text x="776" y="196" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10" fill="#565a66">5 版 · diff · 回退</text>
+  <line x1="830.0" y1="94" x2="830.0" y2="114" stroke="#22242c" stroke-width="1.2"/>
+  <rect x="908" y="120" width="130" height="110" rx="2" fill="#ffffff" stroke="#22242c" stroke-width="1.5"/>
+  <ellipse cx="933" cy="146" rx="16" ry="13" fill="none" stroke="#22242c" stroke-width="1.2"/>
+  <text x="933" y="150" font-family="SF Mono, Menlo, monospace" font-size="11" font-weight="700" fill="#22242c" text-anchor="middle">M6</text>
+  <text x="956" y="150" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="11.5" font-weight="700" fill="#22242c">ZIP 导出</text>
+  <text x="919" y="178" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10" fill="#565a66">整项目 16 文件</text>
+  <text x="919" y="196" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10" fill="#565a66">manifest</text>
+  <line x1="973.0" y1="94" x2="973.0" y2="114" stroke="#22242c" stroke-width="1.2"/>
+  <rect x="1051" y="120" width="130" height="110" rx="2" fill="#ffffff" stroke="#22242c" stroke-width="1.5"/>
+  <ellipse cx="1076" cy="146" rx="16" ry="13" fill="none" stroke="#22242c" stroke-width="1.2"/>
+  <text x="1076" y="150" font-family="SF Mono, Menlo, monospace" font-size="11" font-weight="700" fill="#22242c" text-anchor="middle">M7</text>
+  <text x="1099" y="150" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="11.5" font-weight="700" fill="#22242c">部署与恢复</text>
+  <text x="1062" y="178" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10" fill="#565a66">Compose 三容器</text>
+  <text x="1062" y="196" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10" fill="#565a66">租约恢复</text>
+  <line x1="1116.0" y1="94" x2="1116.0" y2="114" stroke="#22242c" stroke-width="1.2"/>
+  <rect x="40" y="300" width="1160" height="128" rx="2" fill="none" stroke="#666b78" stroke-width="1.2" stroke-dasharray="5,4"/>
+  <text x="56" y="324" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="12" font-weight="700" fill="#565a66">技术债与演进（已定替换路径 · 触发才做）</text>
+  <rect x="50" y="340" width="260" height="64" rx="2" fill="#f1efe8" stroke="#d9dcd4" stroke-width="1.2"/>
+  <text x="62" y="364" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="12" font-weight="600" fill="#22242c">PG 任务表 → Redis/BullMQ</text>
+  <text x="62" y="386" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#666b78">触发：任务并发不足时</text>
+  <rect x="345" y="340" width="260" height="64" rx="2" fill="#f1efe8" stroke="#d9dcd4" stroke-width="1.2"/>
+  <text x="357" y="364" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="12" font-weight="600" fill="#22242c">本地磁盘 → S3/MinIO</text>
+  <text x="357" y="386" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#666b78">触发：多实例部署时</text>
+  <rect x="640" y="340" width="260" height="64" rx="2" fill="#f1efe8" stroke="#d9dcd4" stroke-width="1.2"/>
+  <text x="652" y="364" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="12" font-weight="600" fill="#22242c">认证层 · 用户体系</text>
+  <text x="652" y="386" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#666b78">触发：v2.0 多用户时</text>
+  <rect x="935" y="340" width="260" height="64" rx="2" fill="#f1efe8" stroke="#d9dcd4" stroke-width="1.2"/>
+  <text x="947" y="364" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="12" font-weight="600" fill="#22242c">真实图像/视频 Provider</text>
+  <text x="947" y="386" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#666b78">触发：v3.0 媒体生成时</text>
+</svg>

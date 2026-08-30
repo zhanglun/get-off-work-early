@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Scaffold reference: comp-c.png</title>
+  <link rel="stylesheet" href="layout.css">
+  <style>html,body{margin:0}body{background:#f8f6f6}.region{box-sizing:border-box}.region.text p{white-space:pre-wrap}</style>
+</head>
+<body>
+<!-- Reference only. Every region sits at its measured box inside a comp-aspect frame. Take the boxes (layout.css), keep your own semantic structure. -->
+<main class="comp-frame" style="max-width:1600px">
+  <div class="r-head-bar region chrome" data-region="head-bar"><!-- 顶栏：返回、项目名城市心跳、第2集芯片、MOCK 印章、导出按钮 --></div>
+  <div class="r-rail-scenes region control" data-region="rail-scenes"><!-- 编号边栏上半：场1-场5 场号与镜号区间，场2 金色高亮: rebuild the control's chrome from the crop (comp-spec.mjs --crop rail-scenes); its ink box, border, fill, radius, and label size are the comp's --></div>
+  <div class="r-rail-meta region control" data-region="rail-meta"><!-- 编号边栏下半：分组线与 资产/穿帮/包 计数项: rebuild the control's chrome from the crop (comp-spec.mjs --crop rail-meta); its ink box, border, fill, radius, and label size are the comp's --></div>
+  <div class="r-msg-script region text" data-region="msg-script"><!-- 用户消息：登记·剧本 4,208 字已存档 --><p style="line-height:1.05;margin:0">msg-script</p></div>
+  <div class="r-note-ask region text" data-region="note-ask"><!-- 助手追问：登记多少镜头，建议20-40默认30 --><p style="line-height:1.05;margin:0">note-ask</p></div>
+  <div class="r-msg-reply region text" data-region="msg-reply"><!-- 用户回复：28 个 --><p style="line-height:1.05;margin:0">msg-reply</p></div>
+  <div class="r-note-conflict region text" data-region="note-conflict"><!-- 助手说明：沿用项目角色并提示短发冲突 --><p style="line-height:1.05;margin:0">note-conflict</p></div>
+  <div class="r-progress region control" data-region="progress"><!-- 进度卡：圈码3 分镜生成18/28、蓝色进度条、取消链接: rebuild the control's chrome from the crop (comp-spec.mjs --crop progress); its ink box, border, fill, radius, and label size are the comp's --></div>
+  <div class="r-composer region control" data-region="composer"><!-- 底部输入框：墨线边框白底占位文本: rebuild the control's chrome from the crop (comp-spec.mjs --crop composer); its ink box, border, fill, radius, and label size are the comp's --></div>
+  <div class="r-plate-head region chrome" data-region="plate-head"><!-- 图版区头：场2 咖啡馆靠窗位 · 6/8 --></div>
+  <div class="r-shot-frame region text" data-region="shot-frame"><!-- 分镜图版：圈码05、规格下划线、画面描述、IMAGE PROMPT 续行 --><p style="line-height:1.05;margin:0">shot-frame</p></div>
+  <div class="r-sec-assets region text" data-region="sec-assets"><!-- 分节线：项目级资产 PROJECT --><p style="line-height:1.05;margin:0">sec-assets</p></div>
+  <div class="r-asset-entries region text" data-region="asset-entries"><!-- 两条项目级资产行：林小雨、陈默 --><p style="line-height:1.05;margin:0">asset-entries</p></div>
+  <div class="r-sec-issues region text" data-region="sec-issues"><!-- 分节线：穿帮记录 2 --><p style="line-height:1.05;margin:0">sec-issues</p></div>
+  <div class="r-issue-entry region text" data-region="issue-entry"><!-- 红色穿帮条目：合同道具矛盾，定位/忽略操作 --><p style="line-height:1.05;margin:0">issue-entry</p></div>
+</main>
+</body>
+</html>

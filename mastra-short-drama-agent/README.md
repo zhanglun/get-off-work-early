@@ -264,26 +264,13 @@ STORAGE_MODE=postgres pnpm run run:full
 
 - `CONTEXT.md`：下次会话必须优先读取的项目上下文和工作规则
 
-### 已确认的产品方案草案（待评审）
+### 当前产品与设计基线
 
-- `docs/prd.md`：产品需求、范围、成功标准和验收原则
-- `docs/user-flows.md`：用户主流程、生成流程、修改、重试、问题和导出流程
-- `docs/information-architecture.md`：页面结构、导航和卡片工作区
-- `docs/architecture.md`：Web/API/Worker/Workflow/Agent/数据层和部署架构
-- `docs/state-machines.md`：任务、资产、问题、版本和导出状态机
-- `docs/traceability-matrix.md`：需求 → 页面 → API → Workflow → 数据 → 测试
-- `docs/deployment.md`：服务器部署、Worker、数据备份和恢复方案
+- `docs/product-design.md`：Demo 产品设计（18 轮问答确认）
+- `DESIGN.md`：「场记日志」视觉世界（方向与构图均经用户选定）
+- `docs/mockups/ui-visual-draft.html`：视觉稿（登录/列表/工作区制作中/完成/修改确认 5 状态）
 
-### 原有设计和技术 Spike 文档
-
-- `docs/product-brief.md`
-- `docs/capability-map.md`
-- `docs/domain-model.md`
-- `docs/workflow-design.md`
-- `docs/evaluation-plan.md`
-- `docs/migration-from-agent-base.md`
-
-> 现有 `src/` 代码和原有 Workflow 目前冻结为技术 Spike。产品方案评审通过后，将按 `traceability-matrix.md` 重新判断复用、重构和淘汰，不把既有代码自动视为最终产品实现。
+> `src/` 为冻结的技术 Spike，M0 时按 `docs/implementation-plan.md` 四张清单处置。当前产品/视觉/技术依据以基线文档为准；历史方案文档已删（git 历史可恢复）。
 
 ## 当前明确出界
 

@@ -1,0 +1,256 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "系统架构 · 短剧分镜制作助手",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1280,
+      680
+    ]
+  },
+  "components": [
+    {
+      "id": "browser",
+      "type": "frontend",
+      "label": "React SPA",
+      "sublabel": "登录 · 列表 · 工作区",
+      "pos": [
+        40,
+        300
+      ],
+      "size": [
+        150,
+        64
+      ]
+    },
+    {
+      "id": "auth",
+      "type": "security",
+      "label": "AuthModule",
+      "sublabel": "demo 会话 · 7 天",
+      "pos": [
+        260,
+        140
+      ],
+      "size": [
+        140,
+        60
+      ]
+    },
+    {
+      "id": "chat",
+      "type": "backend",
+      "label": "对话路由",
+      "sublabel": "意图识别 · 依次补问",
+      "pos": [
+        260,
+        300
+      ],
+      "size": [
+        150,
+        64
+      ]
+    },
+    {
+      "id": "sse",
+      "type": "backend",
+      "label": "SSE 活动流",
+      "sublabel": "afterSeq 续传",
+      "pos": [
+        260,
+        460
+      ],
+      "size": [
+        140,
+        60
+      ]
+    },
+    {
+      "id": "exportm",
+      "type": "backend",
+      "label": "导出模块",
+      "sublabel": "整项目 ZIP · manifest",
+      "pos": [
+        470,
+        140
+      ],
+      "size": [
+        150,
+        60
+      ]
+    },
+    {
+      "id": "mastra",
+      "type": "backend",
+      "label": "Mastra 编排",
+      "sublabel": "自动连续管线 · Agents",
+      "pos": [
+        500,
+        300
+      ],
+      "size": [
+        160,
+        64
+      ]
+    },
+    {
+      "id": "llm",
+      "type": "external",
+      "label": "模型 Provider",
+      "sublabel": "OpenAI 兼容",
+      "pos": [
+        730,
+        240
+      ],
+      "size": [
+        150,
+        60
+      ]
+    },
+    {
+      "id": "mock",
+      "type": "external",
+      "label": "Mock 兜底",
+      "sublabel": "MOCK 印章披露",
+      "pos": [
+        730,
+        400
+      ],
+      "size": [
+        140,
+        56
+      ]
+    },
+    {
+      "id": "worker",
+      "type": "backend",
+      "label": "Worker",
+      "sublabel": "任务租约 · SKIP LOCKED",
+      "pos": [
+        470,
+        460
+      ],
+      "size": [
+        150,
+        60
+      ]
+    },
+    {
+      "id": "pg",
+      "type": "database",
+      "label": "PostgreSQL 16",
+      "sublabel": "业务 · 任务 · 事件 journal",
+      "pos": [
+        730,
+        540
+      ],
+      "size": [
+        170,
+        60
+      ]
+    },
+    {
+      "id": "files",
+      "type": "database",
+      "label": "文件存储",
+      "sublabel": "/data/exports",
+      "pos": [
+        950,
+        140
+      ],
+      "size": [
+        130,
+        56
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "NestJS API",
+      "wraps": [
+        "auth",
+        "chat",
+        "sse",
+        "exportm"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "编排层",
+      "wraps": [
+        "mastra",
+        "llm",
+        "mock"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "执行与数据",
+      "wraps": [
+        "worker",
+        "pg",
+        "files"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "browser",
+      "to": "auth",
+      "label": "登录"
+    },
+    {
+      "from": "browser",
+      "to": "chat",
+      "label": "REST · 对话指令",
+      "labelAt": [
+        275,
+        378
+      ]
+    },
+    {
+      "from": "sse",
+      "to": "browser",
+      "label": "SSE 事件推送",
+      "variant": "emphasis"
+    },
+    {
+      "from": "chat",
+      "to": "pg",
+      "label": "任务入队 · 读写"
+    },
+    {
+      "from": "worker",
+      "to": "mastra",
+      "label": "领取任务执行",
+      "fromSide": "top",
+      "toSide": "bottom"
+    },
+    {
+      "from": "mastra",
+      "to": "llm",
+      "label": "Agent 模型调用",
+      "variant": "emphasis",
+      "labelDx": -36
+    },
+    {
+      "from": "llm",
+      "to": "mock",
+      "label": "失败自动切换",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "from": "worker",
+      "to": "pg",
+      "label": "事件 · 版本写入"
+    },
+    {
+      "from": "exportm",
+      "to": "files",
+      "label": "ZIP 落盘"
+    }
+  ]
+}
