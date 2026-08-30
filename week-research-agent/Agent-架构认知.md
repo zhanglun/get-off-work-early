@@ -689,7 +689,151 @@ Level 4：+ 摘要压缩             → 处理超长对话（ChatGPT 级）
 
 ---
 
-## 十二、关键认知总结（一句话系列）
+## 十二、Context 压缩：三个层次，三个时机
+
+> 很多人以为"context 压缩"是"超了才压"——等到 token 爆了再做滑动窗口。实际上我们的项目用了**三种不同时机、不同层次**的节流手段，从源头就把 context 控制住了。这一章把它们盘点清楚。
+
+### 12.1 先厘清：项目里有两个不同的 context
+
+| Context | 在哪 | 包含什么 | 生命周期 |
+|---------|------|---------|---------|
+| **A. 单次研究的 messages** | `state.messages`（researcher.py） | system + history + user + 每轮 assistant + 每轮 tool result | 一次 `run_research_agent` 内 |
+| **B. 跨会话的 history** | SQLite（storage.py） | 每轮只存 user + assistant.summary | 永久 |
+
+"压缩"发生在三个地方，对应两种 context、三个不同时机。
+
+### 12.2 压缩点 1：工具结果层——单条结果截断（**事前**压缩）
+
+工具返回的内容在**进 messages 之前**就先砍掉，从源头限流：
+
+**`fetch_url` 截断到 5000 字符**（`common/tools.py:125,189-193`）：
+
+```python
+def fetch_url(url: str, max_length: int = 5000) -> dict:
+    ...
+    if len(text) > max_length:
+        text = text[:max_length]       # 硬截断
+        truncated = True
+```
+
+一篇网页正文可能 2-5 万字，不砍的话一次 fetch_url 就能吃掉 128K 上下文的一小半。
+
+**`search_web` 每条结果摘要截断到 300 字**（`common/tools.py:310`）：
+
+```python
+"content": r.get("body", "")[:300],   # 每条搜索摘要最多 300 字
+```
+
+10 条结果 × 300 字 = 3000 字，可控。
+
+**关键认知：这是预防性压缩，不是补救。** 在每个"内容进入 context 的入口"设卡，比"超了再压"简单得多、也稳得多。
+
+### 12.3 压缩点 2：阶段间层——findings 提取（**结构化**压缩）
+
+两步法的隐藏价值：阶段 B **不直接用 messages**，而是用 `_extract_findings(state)` 提取出的干净素材（`researcher.py:216-273`）：
+
+```python
+def _extract_findings(state: ResearchState) -> str:
+    """
+    【为什么不直接把 messages 给阶段 B？】
+    messages 里有大量无关内容（system prompt、assistant 思考过程、tool_call 元数据）。
+    阶段 B 只需要"搜索到了什么 + 读到了什么"。提取成干净的文本，token 更省、效果更好。
+    """
+    useful_records = [tc for tc in state.tool_history
+                      if tc.success and tc.tool_name in ("search_web", "fetch_url")]
+```
+
+这是**提取式压缩**：从几十 KB 的 messages 里抽出 2-5 KB 的核心素材（findings），扔掉所有过程噪音。
+
+**深层洞察：不同阶段需要不同粒度的 context。**
+- 阶段 A 要全量 messages——它要继续推理（"刚才搜到 X，我再搜 Y 验证"）
+- 阶段 B 只要 findings——它只负责写报告，过程噪音反而分散注意力
+
+这就是"两步法"不只是隔离格式问题（Day 4 踩坑 3），还顺带完成了一次最有效的 context 压缩。
+
+### 12.4 压缩点 3：会话层——存历史只存 summary（**事后**压缩）
+
+跨会话的压缩，发生在 `server/main.py:97-100`：
+
+```python
+# 存回 session：只存 user + assistant.summary，不存 tool 中间消息
+storage.append_message(session_id, "user", req.topic)
+answer = state.report.get("summary", "（无摘要）")  # ← 用 summary，不是全量报告
+storage.append_message(session_id, "assistant", answer)
+```
+
+为什么？因为下次对话时这段历史会被 `get_history()` 取出拼进新 prompt（`researcher.py:82-83`）。如果存全量 messages，聊 5 轮历史就十几万 token；存 summary，每轮历史只有几百字，**多轮对话能持续很久**。
+
+这是**摘要式压缩**——和 ChatGPT 长对话"早期对话自动总结成摘要"是同一思路，只是我们的 summary 是"本来就生成了、顺便存"，成本为零。
+
+### 12.5 三个压缩点全景图
+
+```
+用户问"研究 X"
+    │
+    │  压缩点 3（事后）：上次对话的 summary 被取出（几百字）
+    ▼
+┌─────────────────────────────────────────┐
+│  阶段 A：researcher（messages 在涨）      │
+│                                          │
+│  system + history + user                 │
+│     + 第1轮 assistant + tool_result      │
+│     + 第2轮 assistant + tool_result      │  ← 压缩点 1（事前）：
+│     + ...                                │     fetch_url 砍到 5000 字
+│                                          │     search_web 摘要砍到 300 字
+└──────────────┬───────────────────────────┘
+               │
+               │  压缩点 2（阶段间）：_extract_findings()
+               │  从几万 token 的 messages 抽出 findings（2-5KB）
+               ▼
+┌─────────────────────────────────────────┐
+│  阶段 B：reporter（只看 findings）        │
+└──────────────┬───────────────────────────┘
+               │
+               │  压缩点 3（事后）：只把 summary 存回 SQLite
+               ▼
+            下次对话用
+```
+
+### 12.6 没做的压缩手段（诚实盘点）
+
+| 手段 | 做法 | 用了？ |
+|------|------|--------|
+| **滑动窗口** | 只保留最近 N 条 messages，老的删 | ❌ 没做 |
+| **token 计数截断** | 算 token，超了从前面砍 | ❌ 没做 |
+| **LLM 摘要历史** | 运行中用 LLM 总结早期对话 | ⚠️ 半做（存的是现成 summary，不是运行中摘要） |
+| **向量检索历史** | 历史入向量库，按相关性取 | ❌ 没做（RAG 检索的是文档，不是对话历史） |
+
+**为什么没做也能跑？** 三个节流点已经把 context 控制住了：
+- 工具结果截断（点 1）→ 单轮不会爆
+- `max_steps=8`（researcher.py:103）→ 轮数有上限
+- summary 存历史（点 3）→ 跨会话不累积
+
+### 12.7 什么时候需要补"真正的压缩"
+
+1. **max_steps 调大（20-30）**：tool_result 累积可能超限 → 滑动窗口或 token 计数
+2. **单次工具结果必须很长**（fetch 整本书）：简单截断丢信息 → 需要在 messages 层做 LLM 摘要
+3. **会话数>+轮数很大**：需要 Level 4 的"摘要压缩"（见 10.5 Memory 成熟度层级）
+
+### 12.8 关联代码
+
+| 概念 | 文件 | 说明 |
+|------|------|------|
+| 事前截断（fetch） | `common/tools.py:125` | `fetch_url(max_length=5000)`，超长网页硬截断 |
+| 事前截断（search） | `common/tools.py:310` | 每条搜索摘要 `[:300]` |
+| 阶段间提取 | `research_agent/researcher.py:216` | `_extract_findings()` 只留成功的搜索/抓取素材 |
+| 事后存 summary | `server/main.py:97` | 只存 `report["summary"]`，不存全量 messages |
+| 历史拼回 prompt | `research_agent/researcher.py:82` | `state.messages.extend(history)` |
+| 防失控上限 | `research_agent/researcher.py:103` | `max_steps=8` 是最后一道闸 |
+
+### 12.9 核心认知
+
+> **压缩的真相：不是"超了才压"，而是在每个内容进入 context 的入口节流。**
+> 事前截断（工具层）+ 阶段间提取（结构层）+ 事后摘要（会话层）——三个时机各司其职，等 context 真爆了再补救，已经晚了。
+
+---
+
+## 十三、关键认知总结（一句话系列）
 
 | 认知 | 一句话 |
 |------|--------|
@@ -705,10 +849,13 @@ Level 4：+ 摘要压缩             → 处理超长对话（ChatGPT 级）
 | **LLM 记忆的真相** | LLM 无记忆，"记忆"= 每次把历史 messages 重新喂给它 |
 | **Memory 的难点** | 不在"存"，在"加载策略"（最近N条/摘要/向量检索） |
 | **Agent vs Workflow** | 不是二选一，是不同层级：Agent 决策，Workflow 执行，成熟系统=Agent 编排多个 Workflow |
+| **Context 压缩** | 三个时机：事前截断（工具结果）、阶段间提取（findings）、事后摘要（存 summary） |
+| **压缩的真相** | 不是超了才压，而是在每个内容进入 context 的入口节流 |
+| **两步法的隐藏价值** | findings 提取不只是隔离格式，还是最有效的一次 context 压缩 |
 
 ---
 
-## 十三、这些认知从哪来
+## 十四、这些认知从哪来
 
 所有认知都来自亲手实现的 Research Agent（Day 1-8），不是纸上谈兵：
 
@@ -722,6 +869,7 @@ Level 4：+ 摘要压缩             → 处理超长对话（ChatGPT 级）
 | 外部依赖不可靠 | Day 3/5/7 多次踩 DuckDuckGo 超时 |
 | messages 是记忆载体 | Day 8 Session Memory 拼接 history 到 messages |
 | Memory 的加载策略 | Day 8 思考"历史长了怎么办"引出 Redis/向量库 |
+| Context 压缩三层 | Day 5 `_extract_findings`（阶段间提取）+ Day 7 summary 存历史（事后摘要）+ fetch_url 截断（事前限流） |
 | Agent vs Workflow 分层 | Day 8 Workflow 复用 Day 5 Agent + 讨论"两者关系"后的认知升级 |
 
 > 🔑 **这些认知之所以深刻，是因为有代码实证。** 没有亲手写过，看再多文章也只是"知道"，不是"理解"。
