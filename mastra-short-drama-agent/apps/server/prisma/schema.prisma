@@ -26,6 +26,8 @@ model Episode {
   episodeNo      Int
   title          String?
   status         String          @default("draft")
+  shotTarget     Int?
+  openedAt       DateTime?
   project        Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
   scriptVersions ScriptVersion[]
   storyBibles    StoryBible[]

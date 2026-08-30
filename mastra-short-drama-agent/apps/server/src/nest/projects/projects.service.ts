@@ -46,7 +46,7 @@ export class ProjectsService {
         latestEpisodeNo: latest?.episodeNo ?? null,
         latestStatus: status,
         openIssueCount: issueCount,
-        lastOpenedEpisodeNo: latest?.episodeNo ?? null,
+        lastOpenedEpisodeNo: episodes.find((ep) => ep.openedAt)?.episodeNo ?? latest?.episodeNo ?? null,
         updatedAt: project.updatedAt.toISOString(),
       };
     });
@@ -80,7 +80,7 @@ export class ProjectsService {
           id: ep.id,
           episodeNo: ep.episodeNo,
           status: ep.status,
-          shotTarget: null,
+          shotTarget: ep.shotTarget,
           updatedAt: ep.updatedAt.toISOString(),
         }),
       ),

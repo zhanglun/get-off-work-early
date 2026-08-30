@@ -3,11 +3,12 @@ import { PrismaService } from '../prisma.service.js';
 import { EventsModule } from '../events/events.module.js';
 import { ProjectsService } from './projects.service.js';
 import { ProjectsController } from './projects.controller.js';
+import { EpisodesController } from './episodes.controller.js';
 
 @Module({
   imports: [EventsModule],
   providers: [PrismaService, ProjectsService],
-  controllers: [ProjectsController],
+  controllers: [ProjectsController, EpisodesController],
   exports: [ProjectsService],
 })
 export class ProjectsModule {}
