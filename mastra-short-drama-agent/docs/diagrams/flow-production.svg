@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 780" width="960" height="780">
+  <style>text { font-family: 'Courier New','Lucida Console','PingFang SC','Microsoft YaHei','SimHei',monospace; fill: #caf0f8; }</style>
+  <defs>
+    <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse"><path d="M 30 0 L 0 0 0 30" fill="none" stroke="#112240" stroke-width="0.5"/></pattern>
+    <marker id="ac" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#00b4d8"/></marker>
+    <marker id="ao" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#f77f00"/></marker>
+  </defs>
+  <rect width="960" height="780" fill="#0a1628"/>
+  <rect width="960" height="780" fill="url(#grid)" opacity="0.6"/>
+  <text x="40" y="42" font-size="16" font-weight="700" fill="#ffffff">自动连续生产流程 · 生成 / 修改 / 失败三条回路</text>
+  <text x="40" y="60" font-size="10" fill="#48cae4" opacity="0.7">PRODUCTION PIPELINE · 无强制确认节点 · 问题不中断</text>
+  <rect x="340" y="110" width="280" height="54" rx="2" fill="#0d1f3c" stroke="#00b4d8" stroke-width="1"/>
+  <text x="480" y="132" text-anchor="middle" font-size="13" font-weight="700">剧本导入</text>
+  <text x="480" y="151" text-anchor="middle" font-size="10" fill="#48cae4" opacity="0.75">粘贴 / .md .txt 上传 · 不可覆盖版本</text>
+  <rect x="340" y="204" width="280" height="54" rx="2" fill="#0d1f3c" stroke="#00b4d8" stroke-width="1"/>
+  <text x="480" y="226" text-anchor="middle" font-size="13" font-weight="700">故事资产</text>
+  <text x="480" y="245" text-anchor="middle" font-size="10" fill="#48cae4" opacity="0.75">角色 · 场景 · 道具 · 关系 · 时间线</text>
+  <rect x="340" y="298" width="280" height="54" rx="2" fill="#0d1f3c" stroke="#00b4d8" stroke-width="1"/>
+  <text x="480" y="320" text-anchor="middle" font-size="13" font-weight="700">场次规划</text>
+  <text x="480" y="339" text-anchor="middle" font-size="10" fill="#48cae4" opacity="0.75">场 1..N · 目标 / 冲突</text>
+  <rect x="340" y="392" width="280" height="54" rx="2" fill="#0d1f3c" stroke="#00b4d8" stroke-width="1"/>
+  <text x="480" y="414" text-anchor="middle" font-size="13" font-weight="700">分镜生成</text>
+  <text x="480" y="433" text-anchor="middle" font-size="10" fill="#48cae4" opacity="0.75">镜卡 + Image / Video Prompt</text>
+  <rect x="340" y="486" width="280" height="54" rx="2" fill="#0d1f3c" stroke="#00b4d8" stroke-width="1"/>
+  <text x="480" y="508" text-anchor="middle" font-size="13" font-weight="700">连续性检查</text>
+  <text x="480" y="527" text-anchor="middle" font-size="10" fill="#48cae4" opacity="0.75">规则分类 · 措辞类 / 事实类</text>
+  <rect x="340" y="580" width="280" height="54" rx="2" fill="#0d1f3c" stroke="#00b4d8" stroke-width="1"/>
+  <text x="480" y="602" text-anchor="middle" font-size="13" font-weight="700">低风险自动修订</text>
+  <text x="480" y="621" text-anchor="middle" font-size="10" fill="#48cae4" opacity="0.75">仅措辞/格式 · 事实只标记 (G1A)</text>
+  <rect x="340" y="674" width="280" height="54" rx="2" fill="#0d1f3c" stroke="#00b4d8" stroke-width="1"/>
+  <text x="480" y="696" text-anchor="middle" font-size="13" font-weight="700">生产包</text>
+  <text x="480" y="715" text-anchor="middle" font-size="10" fill="#48cae4" opacity="0.75">9 文件 · manifest 记录忽略项</text>
+  <line x1="480" y1="164" x2="480" y2="204" stroke="#00b4d8" stroke-width="1.2" marker-end="url(#ac)"/>
+  <line x1="480" y1="258" x2="480" y2="298" stroke="#00b4d8" stroke-width="1.2" marker-end="url(#ac)"/>
+  <line x1="480" y1="352" x2="480" y2="392" stroke="#00b4d8" stroke-width="1.2" marker-end="url(#ac)"/>
+  <line x1="480" y1="446" x2="480" y2="486" stroke="#00b4d8" stroke-width="1.2" marker-end="url(#ac)"/>
+  <line x1="480" y1="540" x2="480" y2="580" stroke="#00b4d8" stroke-width="1.2" marker-end="url(#ac)"/>
+  <line x1="480" y1="634" x2="480" y2="674" stroke="#00b4d8" stroke-width="1.2" marker-end="url(#ac)"/>
+  <text x="492" y="188" font-size="10" fill="#48cae4" opacity="0.8">202 Accepted · 后台连续执行</text>
+  <rect x="60" y="270" width="220" height="50" rx="2" fill="#0d1f3c" stroke="#06d6a0" stroke-width="1"/>
+  <text x="170" y="290" text-anchor="middle" font-size="12.5" font-weight="700" fill="#06d6a0">修改资产 / 镜头</text>
+  <text x="170" y="307" text-anchor="middle" font-size="10" fill="#48cae4" opacity="0.75">打字或点卡片 · 同一管道</text>
+  <rect x="60" y="364" width="220" height="50" rx="2" fill="#0d1f3c" stroke="#06d6a0" stroke-width="1"/>
+  <text x="170" y="384" text-anchor="middle" font-size="12.5" font-weight="700" fill="#06d6a0">影响分析</text>
+  <text x="170" y="401" text-anchor="middle" font-size="10" fill="#48cae4" opacity="0.75">Rules 确定性计算 · 先报影响再执行</text>
+  <line x1="170" y1="320" x2="170" y2="364" stroke="#06d6a0" stroke-width="1.2" marker-end="url(#ac)"/>
+  <polyline points="280,389 310,389 310,325 340,325" fill="none" stroke="#06d6a0" stroke-width="1.2" marker-end="url(#ac)"/>
+  <text x="292" y="380" font-size="10" fill="#06d6a0">受影响重生成</text>
+  <text x="60" y="256" font-size="10" fill="#06d6a0" opacity="0.7">修改回路 · G2A</text>
+  <rect x="700" y="392" width="220" height="50" rx="2" fill="#0d1f3c" stroke="#f77f00" stroke-width="1"/>
+  <text x="810" y="412" text-anchor="middle" font-size="12.5" font-weight="700" fill="#f77f00">重试失败项</text>
+  <text x="810" y="429" text-anchor="middle" font-size="10" fill="#48cae4" opacity="0.75">只重跑失败范围 · 保留成功结果</text>
+  <line x1="700" y1="417" x2="624" y2="417" stroke="#f77f00" stroke-width="1.2" marker-end="url(#ao)"/>
+  <text x="700" y="378" font-size="10" fill="#f77f00" opacity="0.7">失败回路 · 单项隔离</text>
+  <polyline points="620,513 655,513 655,701 624,701" fill="none" stroke="#48cae4" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#ac)"/>
+  <text x="662" y="600" font-size="10" fill="#48cae4" opacity="0.8">标记问题并继续</text>
+  <text x="662" y="614" font-size="10" fill="#48cae4" opacity="0.6">忽略项写入 manifest</text>
+  <rect x="690" y="700" width="250" height="56" fill="#0d1f3c" stroke="#00b4d8" stroke-width="1"/>
+  <line x1="690" y1="714" x2="940" y2="714" stroke="#00b4d8" stroke-width="0.5"/>
+  <text x="815" y="711" text-anchor="middle" font-size="9" fill="#48cae4">FLOW · PRODUCTION PIPELINE · 2026-08-30</text>
+  <text x="815" y="736" text-anchor="middle" font-size="12" font-weight="700" fill="#00b4d8">生产流程图</text>
+  <text x="815" y="751" text-anchor="middle" font-size="9" fill="#48cae4" opacity="0.7">绿=修改回路 · 橙=失败回路 · 虚=不中断旁路</text>
+</svg>

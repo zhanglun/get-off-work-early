@@ -3,13 +3,17 @@
 > 状态：产品方向已确认，技术架构方案待评审
 >
 > 本文档描述目标产品架构，不代表现有 Spike 已经满足全部架构要求。
+>
+> 2026-08-30：按产品形态决策（`product-form.md`，对话即产品）更新——对话路由升为唯一交互入口，新增会话与事件协议设计。
 
 ## 1. 架构目标
 
 系统需要支持：
 
 - 一集剧本到分镜生产包的自动连续流程；
-- 页面实时查看任务进度；
+- **对话即产品**：第一屏输入框、活动流实时滚动、工件内联呈现（见 `product-form.md`）；
+- 会话 = 项目 × 集：历史栏即项目列表，刷新/换设备恢复同一会话；
+- 打字修改：自然语言 → 意图路由 → 影响分析 → 局部重生成 → 新版本工件；
 - 单个场次或镜头失败隔离；
 - 故事资产修改后的影响分析和局部重生成；
 - 版本和问题可追踪；
@@ -22,15 +26,16 @@
 ```mermaid
 flowchart TB
     U[用户浏览器]
-    W[Web 工作区]
+    W[对话前端<br/>输入框 · 活动流 · 工件]
     API[业务 API]
-    CHAT[Chat Command Router]
+    SSE[SSE 活动流事件通道]
+    CHAT[Chat Router 对话路由<br/>唯一交互入口]
     APP[Application Services]
     WF[Workflow Orchestrator]
     AGENT[Agent Layer]
     RULE[Domain Rules / Impact Analysis]
     REPO[Repositories]
-    DB[(PostgreSQL 业务数据库)]
+    DB[(PostgreSQL 业务库<br/>含会话与事件)]
     RT[(Mastra Runtime Storage)]
     MEM[(Mastra Memory)]
     WORKER[任务 Worker]
@@ -40,11 +45,11 @@ flowchart TB
     REAL[Real LLM Provider]
 
     U --> W
-    W --> API
-    W --> CHAT
+    W -->|消息 / 指令| API
+    W -->|订阅活动流| SSE
     API --> CHAT
     API --> APP
-    CHAT --> APP
+    CHAT -->|意图路由| APP
     APP --> WF
     WORKER --> WF
     WF --> AGENT
@@ -56,29 +61,32 @@ flowchart TB
     REPO --> DB
     WF --> RT
     CHAT --> MEM
+    WF -->|进度/工件事件| DB
+    SSE -->|读事件journal| DB
     APP --> FILE
-    W --> API
 ```
+
+与旧版关键差异：**Chat Router 从"右侧辅助助手"升为唯一交互入口**（打字与点选操作都经过它路由）；新增 **SSE 活动流事件通道**，从事件 journal 读取并向对话前端推送；会话与事件成为持久化业务数据。
 
 ## 3. 分层职责
 
-### 3.1 Web 工作区
+### 3.1 对话前端
 
 负责：
 
-- 导入剧本；
-- 显示生成进度；
-- 显示故事资产、场次和分镜卡片；
-- 编辑资产；
-- 展示问题和版本；
-- 触发重试、导出和聊天。
+- 会话历史栏（项目 × 集 = 会话，状态实时同步）；
+- 第一屏输入框：粘贴剧本、上传 `.md`/`.txt`；
+- 订阅并渲染活动流（阶段、进度、耗时，可折叠）；
+- 渲染工件：资产组、场次/分镜组、问题汇总、制作摘要、生产包；
+- 输入框发送打字指令与 `/` 快捷指令；点卡片编辑作为兜底入口。
 
 不负责：
 
 - 判断业务状态；
 - 计算影响范围；
 - 直接写数据库；
-- 直接调用模型。
+- 直接调用模型；
+- 在前端保存业务事实（工件状态以服务端为准）。
 
 ### 3.2 API 层
 
@@ -93,17 +101,27 @@ flowchart TB
 
 API 不应该在请求生命周期内同步执行完整生产流程。
 
-### 3.3 Application Service
+### 3.3 Chat Router（唯一交互入口）与 Application Service
 
-负责把用户操作转换为明确业务用例：
+Chat Router 负责把用户的每一条输入路由为业务用例：
+
+- 意图识别：导入 / 修改资产 / 修改镜头与 Prompt / 查询 / 重试 / 忽略问题 / 导出；
+- 参数补齐：缺失的项目名称、集数、镜号等就地追问；
+- 快捷指令：`/导出`、`/只看第 N 场`、`/重试镜 N`；
+- 无法确定时询问用户，不猜测副作用操作。
+
+Application Service 负责把路由结果转换为明确业务用例：
 
 - `createIngestionTask`；
 - `startProductionTask`；
 - `editStoryAsset`；
 - `editShot`；
 - `retryFailedScope`；
+- `ignoreIssue`；
 - `exportProductionPackage`；
-- `askChatAssistant`。
+- `queryAssets` / `queryIssues` / `queryVersions`。
+
+约束：Chat Router 只做意图路由，不直接执行业务、不直接写数据库；所有副作用走 Application Service，与点卡片操作共用同一条管道。
 
 ### 3.4 Workflow 层
 
@@ -187,6 +205,49 @@ Mastra Memory
 
 聊天记录不能替代角色、场景、镜头等业务事实。
 
+### 4.1 会话与事件协议（对话形态新增）
+
+**会话模型**：
+
+```text
+Conversation（会话）= Project × Episode
+  ├── Message：用户消息（剧本折叠）、agent 回复
+  ├── Run：一次生成/修改任务的引用（DomainTask）
+  └── Artifact：资产组 / 场次组 / 分镜组 / 问题汇总 / 制作摘要 / 生产包
+```
+
+- 会话持久化在业务库；历史栏数据 = 会话列表查询；
+- 每个工件有稳定 `activityId`，重试/重生成后**原位更新**并携带新版本号，不在对话里重复堆叠。
+
+**活动流事件 envelope**：
+
+```ts
+type StreamEvent = {
+  schemaVersion: 1;
+  eventId: string;
+  seq: number;              // 会话内单调递增
+  conversationId: string;
+  type:
+    | 'run_started' | 'stage_started' | 'stage_progress' | 'stage_completed'
+    | 'message' | 'artifact_created' | 'artifact_updated'
+    | 'issue_reported' | 'done' | 'error';
+  occurredAt: string;
+  payload: unknown;         // 按 type 定义，工件事件必须带 activityId
+};
+```
+
+不变量（沿用 drama-agent 活动流研究成果）：
+
+1. `seq` 会话内单调递增，前端按 `seq` 去重与排序；
+2. 一个 Run 只有一个终态（`done`/`error`），终态后拒绝新的业务事件；
+3. 事件先写 journal 再推送，慢消费者不阻塞生产；
+4. 客户端断线默认**不等于**取消任务。
+
+**断线恢复**：
+
+- SSE 携带 `Last-Event-ID`（或 `?afterSeq=`）从 journal 重放；
+- journal 过期或首次进入历史会话时返回会话快照（消息 + 工件当前态 + 终态），不重新执行任何 Workflow。
+
 ## 5. 目标生产流程架构
 
 ```mermaid
@@ -245,7 +306,8 @@ Character 外观变化
 Worker → 领取 queued 任务
 Worker → 执行 Workflow
 Worker → 更新 DomainTask 和资产
-浏览器 → API：轮询或订阅任务状态
+Worker → 进度/工件事件写入 journal
+浏览器 → SSE：订阅会话活动流（Last-Event-ID 断线续传）
 ```
 
 第一版可采用 PostgreSQL 任务表作为轻量队列：
@@ -305,9 +367,14 @@ interface AssetStorage {
 
 ## 10. API 设计原则
 
+- 会话是一级资源：
+  - `GET /conversations`：历史栏列表；
+  - `POST /conversations/:id/messages`：打字统一入口（Chat Router 路由）；
+  - `GET /conversations/:id/events`：SSE 活动流（支持 `afterSeq` 重放）；
+  - `GET /conversations/:id/snapshot`：恢复快照；
 - 写操作返回资源或任务 ID；
 - 长任务返回 `202 Accepted`；
-- 查询接口可以在页面刷新后恢复；
+- 查询接口可以在刷新后恢复；
 - 编辑操作返回新版本；
 - 重试操作只接收明确 scope；
 - 业务错误使用可理解的中文 message 和机器可读 code；
@@ -355,9 +422,17 @@ interface AssetStorage {
 需要重构：
 
 - 强制 StoryBible/Scene 确认门槛；
-- 测试面板式前端；
+- 测试面板式前端（→ 对话前端：输入框 + 活动流 + 工件）；
 - 进程内 `void start...` 任务执行；
-- 内存 Job Map；
+- 内存 Job Map（→ 持久化任务表 + 事件 journal）；
 - 资产编辑和影响分析；
 - 服务器版 Worker；
-- 页面信息架构。
+- 无会话模型的临时交互（→ 会话、消息、工件持久化 + SSE）。
+
+## 14. 配套图表
+
+由 fireworks-tech-graph 生成，源文件与导出图位于 `docs/diagrams/`（索引见其 README）：
+
+- `architecture-conversation`：本文 §2 总体架构的可视化（六层 + 主流程/异步分色）；
+- `sequence-chat-edit`：打字修改全链路时序（意图路由 → 影响分析 → G2A 重生成 → 事件推送 → 工件更新）；
+- `flow-production`：生产流水线与三条回路（修改 / 失败 / 不中断旁路）。
