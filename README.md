@@ -23,6 +23,7 @@
 ```
 get-off-work-early/
 ├── README.md                        # 本文件（总索引 + 接续约定）
+├── 项目目录说明.md                  # 根目录各文件夹定位、状态和学习入口
 ├── AI_Agent_Study_Roadmap.md        # Agent 线路：10 Lesson 计划 + 实际进度对账 + 学习进度
 ├── Agent_Learning_Context_Lesson01_02.md  # Agent 线路：Lesson 01-02 理论笔记
 ├── week-research-agent/             # Agent 线路：7 天冲刺 + Day8-10 打磨（代码 + 笔记）
