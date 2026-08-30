@@ -79,7 +79,8 @@ docs/implementation-plan.md     M0 产出（待创建）
 ## 7. 进度记录
 
 - 2026-08-30：产品/视觉/技术定案 + 双路线图落盘（见上文）。
-- 2026-08-30：**M0 完成**——implementation-plan.md 四张清单（复用/重构/新增/淘汰）+ monorepo 原地重组提交；`pnpm -r check` 通过、server 测试 10/10。下一步 M1。
+- 2026-08-30：**M0 完成**——implementation-plan.md 四张清单（复用/重构/新增/淘汰）+ monorepo 原地重组提交；`pnpm -r check` 通过、server 测试 10/10。
+- 2026-08-30：**M1 完成**——NestJS auth/projects/events(SSE)/admin 四模块 + shared 契约包 + 前端登录/列表/工作区骨架；m1_baseline 迁移落库；curl 与浏览器双验收通过。下一步 M2。
 
 ## 8. 下一步
 
