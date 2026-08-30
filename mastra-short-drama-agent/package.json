@@ -1,0 +1,38 @@
+{
+  "name": "mastra-short-drama-agent",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "dev": "mastra dev",
+    "build": "mastra build",
+    "check": "tsc --noEmit",
+    "test": "tsx --test test/*.spec.ts",
+    "run:sample": "tsx src/run-sample.ts",
+    "run:understanding": "tsx src/run-story-understanding.ts",
+    "run:scenes": "tsx src/run-scene-planning.ts",
+    "run:full": "tsx src/run-full-pipeline.ts",
+    "db:generate": "DATABASE_URL=${DATABASE_URL:-postgresql://short_drama:short_drama@localhost:5434/short_drama} prisma generate --schema prisma/schema.prisma",
+    "db:validate": "DATABASE_URL=${DATABASE_URL:-postgresql://short_drama:short_drama@localhost:5434/short_drama} prisma validate --schema prisma/schema.prisma",
+    "db:migrate": "DATABASE_URL=${DATABASE_URL:-postgresql://short_drama:short_drama@localhost:5434/short_drama} prisma migrate dev --schema prisma/schema.prisma --name init",
+    "db:deploy": "DATABASE_URL=${DATABASE_URL:-postgresql://short_drama:short_drama@localhost:5434/short_drama} prisma migrate deploy --schema prisma/schema.prisma",
+    "api": "tsx src/api.ts"
+  },
+  "dependencies": {
+    "@mastra/core": "1.63.2",
+    "@mastra/memory": "1.28.1",
+    "@mastra/pg": "1.22.2",
+    "@prisma/client": "6.19.3",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "latest",
+    "mastra": "1.27.2",
+    "prisma": "6.19.3",
+    "tsx": "^4.23.12",
+    "typescript": "^6.0.3"
+  }
+}

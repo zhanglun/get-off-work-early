@@ -1,4 +1,8 @@
-# Storyboard Agent
+# Storyboard Agent（历史基线，已冻结）
+
+> 当前不再作为活跃开发线。后续短剧业务主线位于 [`../../mastra-short-drama-agent/`](../../mastra-short-drama-agent/README.md)。
+>
+> 本目录保留原始工作背景、分镜提示词优化能力、架构决策和盲测设计，供 Mastra 版本参考和迁移对照。
 
 剧本 → 分镜提示词优化服务。v1 沿用旧系统切分，专注每镜提示词的「生成→审查→改写」循环（generator-critic），客户盲测打分对比新旧。
 

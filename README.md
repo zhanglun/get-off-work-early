@@ -13,9 +13,9 @@
 
 | 线路 | 当前状态 | 下一步 | 进度文件 | 最后活动 |
 | ------ | --------- | -------- | ---------- | ---------- |
-| 🤖 AI Agent | ▶ 学习中 | Mastra Lesson 01（最小 Agent + Tool）；LangGraph Lesson 02（真实工具） | [`AI_Agent_Study_Roadmap.md`](AI_Agent_Study_Roadmap.md) →「学习进度（会话接续用）」 | 2026-08-18 |
+| 🤖 AI Agent | ▶ 学习中 | Mastra 短剧 Agent：StoryBible → 场次 → 分镜 → 提示词 → 审查 → 导出 | [`AI_Agent_Study_Roadmap.md`](AI_Agent_Study_Roadmap.md) →「学习进度（会话接续用）」 | 2026-08-29 |
 | 🦾 具身智能 | ⏸ 暂停 | 第 2 周 - 真实数据（遥操作 + Open X-Embodiment + RLDS） | [`embodied-data-loop/学习进度.md`](embodied-data-loop/学习进度.md) | 2026-08-07 |
-| 🧱 Agent 底座 | ▶ 当前主线 | 周一架子已提前达成；接真实端点/旧接口/任务中心；决策：先 workflow 后 agent（[workflow-vs-agent.md](agent-base/docs/workflow-vs-agent.md)） | [`agent-base/学习进度.md`](agent-base/学习进度.md) | 2026-08-16 |
+| 🧱 Agent 底座 | ▶ 历史基线 | NestJS 分镜提示词优化基线已冻结；当前短剧主线转到 Mastra Short Drama Agent | [`agent-base/学习进度.md`](agent-base/学习进度.md) | 2026-08-29 |
 | 📘 面试手册 | ⏸ 暂停 | 无独立进度文件（13 章已完成，约 2.9 万行） | [`ai-platform-interview-handbook/README.md`](ai-platform-interview-handbook/README.md) | 2026-07-14 |
 
 ## 目录结构
@@ -27,7 +27,9 @@ get-off-work-early/
 ├── Agent_Learning_Context_Lesson01_02.md  # Agent 线路：Lesson 01-02 理论笔记
 ├── week-research-agent/             # Agent 线路：7 天冲刺 + Day8-10 打磨（代码 + 笔记）
 ├── embodied-data-loop/              # 具身线路：4 周转型计划（笔记 + 进度）
-├── agent-base/                      # Agent 底座线路：storyboard-agent（架子已达成）
+├── agent-base/                      # Agent 底座线路：NestJS storyboard-agent（架子已达成）
+├── mastra-playground/               # Mastra 基础学习：最小 Agent + Tool
+├── mastra-short-drama-agent/        # Mastra 主线：短剧制作协作 Agent
 └── ai-platform-interview-handbook/  # 面试手册：13 章推演文档
 ```
 
@@ -35,9 +37,9 @@ get-off-work-early/
 
 - **Agent 线路**：手写 Research Agent 已完成核心能力（含 SSE、SQLite 持久化、Token 成本统计）；LangGraph Lesson 01 已跑通最小 StateGraph 工具循环；另建 `mastra-playground/` 独立 TypeScript 沙盒并完成框架概念与本地 API 阅读。MCP、Long-term Memory、容器化部署仍是作品集缺口。
 - **具身线路**：第 1 周核心目标完成（具身智能全景 / 数据闭环 / ROS 概念 / 产业玩家）。背景：正在面试纽鼐机器人（杭州），此线为面试驱动。
-- **Agent 底座**：目标短剧场景 agent 能力（当前 workload：分镜提示词 agent）。架子已提前达成（2026-08-16），文档包 5 件 + 决策文档 [workflow-vs-agent.md](agent-base/docs/workflow-vs-agent.md)（先 workflow 后 agent）；周一接真实端点/旧接口/任务中心。详见其进度文件。
+- **Agent 底座**：目标短剧场景 Agent 能力。`agent-base/` 保留历史需求、架构决策和 NestJS 分镜提示词优化基线；当前唯一活跃业务主线是 [`mastra-short-drama-agent/`](mastra-short-drama-agent/README.md)，目标是从 StoryBible 扩展到场次、分镜、提示词、审查和导出。详见其进度文件。
 - **面试手册**：内容层已完整（含 Redis / PostgreSQL / Docker & K8s 章节），若 Agent 线路做容器化部署可复用其知识层。
 
 ---
 
-> 最后更新：2026-08-18
+> 最后更新：2026-08-29

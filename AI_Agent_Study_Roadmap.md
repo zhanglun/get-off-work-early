@@ -162,7 +162,7 @@ agent-learning/ ├── 01-mini-agent/ ├── 02-tool-calling/ ├──
 - Day5：两步法 + System Prompt + fetch_url 深度阅读
 - Day10：Token 成本量化（state.add_usage）
 - LangGraph Lesson 01：最小工具循环图（`StateGraph` / `ToolNode` / 条件路由），配套 `LangGraph-学习笔记.md`
-- Mastra 框架预研：独立 `mastra-playground/` TypeScript 沙盒、本地 `@mastra/core@1.59.0` API 阅读与构建验证
+- Mastra 框架实践：`mastra-playground/` 保留为通用 API 学习沙盒；`mastra-short-drama-agent/` 已成为唯一活跃短剧业务主线，完成 StoryBible、Scene Planning、Shot/Prompt/Review/Refine、确认门槛、PostgreSQL、异步 API、聊天入口和导出闭环
 
 ## 剩余缺口（按求职作品集优先级）
 
@@ -184,9 +184,9 @@ Agent 路线最后提交 2026-07-22，此后重心转向：
 
 > 每次学习结束及时更新本节。
 
-**当前状态**：▶ 学习中——LangGraph Lesson 01 已完成；Mastra Lesson 01/02 已完成：`calculatorAgent` 注册 `addTool` / `multiplyTool`，Lesson 02 用 `toolChoice: auto` 对四类问题断言有序 tool-call 序列与拒绝调用。TypeScript 检查与 Mastra build 已通过；真实调用确认 provider 收到 `tool_choice: auto`，但智谱 `glm-4.7-flash` 对三条工具用例返回 429（访问量过大），仅“天气问题不调用工具”用例成功。
+**当前状态**：▶ 学习与开发中——LangGraph Lesson 01 已完成；Mastra Lesson 01/02 已完成。短剧业务主线已收敛到 `mastra-short-drama-agent/`，并完成 Project/Episode、Markdown 解析、StoryBible、Scene Planning、分镜生产、提示词、审查修订、确认门槛、版本、PostgreSQL、异步 API、聊天路由、资产工作区和导出。Mock 全链路和 PostgreSQL 全链路均已验证；真实模型调用尚未执行，当前环境没有可用 Provider Key。
 
-**下一步**：待 provider 恢复后重跑 `pnpm run lesson:02` 收集完整选择结果；随后进入 Mastra Lesson 03（Workflow：固定“拆 → 执行 → 汇总”对照 Python `workflow/`）。LangGraph 后续继续 Lesson 02（真实三工具）。MCP 三步计划保留为作品集优先级缺口。
+**下一步**：为 `mastra-short-drama-agent/` 补真实 Provider 验证、真实短剧样本和质量评估集；随后增强局部修改的实际资产应用、生产队列和下游图像/视频模型适配。Mastra 通用 Lesson 03、LangGraph 后续 Lesson 和 MCP 仍作为独立学习路线。
 
 1. **11a 手写最小 MCP Server**：不用 SDK，stdio + JSON-RPC 2.0，实现 initialize / tools/list / tools/call，把现有 add / read_file 包成 server，理解协议本质
 2. **11b 官方 SDK 重写 + 连真实生态**：mcp Python SDK（FastMCP 风格），连接 1-2 个社区 server（filesystem / fetch）验证 client 发现与调用
