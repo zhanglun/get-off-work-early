@@ -8,192 +8,196 @@ datasource db {
 }
 
 model Project {
-  id        String    @id @default(cuid())
-  name      String
-  description String?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  episodes  Episode[]
+  id           String          @id @default(cuid())
+  name         String
+  description  String?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  episodes     Episode[]
+  conversation Conversation?
+  assets       ProjectAsset[]
+  events       Event[]
+  exports      ProjectExport[]
 }
 
 model Episode {
-  id                   String         @id @default(cuid())
-  projectId            String
-  episodeNo            Int
-  title                String?
-  status               String         @default("draft")
-  project              Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  scriptVersions       ScriptVersion[]
-  storyBibles          StoryBible[]
-  scenes               Scene[]
-  exportPackages       ExportPackage[]
-  createdAt            DateTime       @default(now())
-  updatedAt            DateTime       @updatedAt
+  id             String          @id @default(cuid())
+  projectId      String
+  episodeNo      Int
+  title          String?
+  status         String          @default("draft")
+  project        Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  scriptVersions ScriptVersion[]
+  storyBibles    StoryBible[]
+  scenes         Scene[]
+  exportPackages ExportPackage[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
 
   @@unique([projectId, episodeNo])
   @@index([projectId])
 }
 
 model ScriptVersion {
-  id          String      @id @default(cuid())
-  episodeId   String
-  version     Int
-  format      String
-  content     String
+  id             String       @id @default(cuid())
+  episodeId      String
+  version        Int
+  format         String
+  content        String
   sourceFileName String?
-  episode     Episode     @relation(fields: [episodeId], references: [id], onDelete: Cascade)
-  storyBibles StoryBible[]
-  createdAt   DateTime    @default(now())
+  episode        Episode      @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  storyBibles    StoryBible[]
+  createdAt      DateTime     @default(now())
 
   @@unique([episodeId, version])
   @@index([episodeId])
 }
 
 model StoryBible {
-  id              String         @id @default(cuid())
-  episodeId       String
-  scriptVersionId String
-  version         Int            @default(1)
-  status          String         @default("proposed")
-  summary         String
-  logline         String
-  characters      Json
-  locations       Json
-  props           Json
-  relationships   Json
-  timeline        Json
-  ambiguities     Json
-  conflicts       Json
-  episode         Episode        @relation(fields: [episodeId], references: [id], onDelete: Cascade)
-  scriptVersion   ScriptVersion  @relation(fields: [scriptVersionId], references: [id], onDelete: Cascade)
-  scenes          Scene[]
-  characterRecords Character[]
-  locationRecords Location[]
-  propRecords     Prop[]
+  id                  String          @id @default(cuid())
+  episodeId           String
+  scriptVersionId     String
+  version             Int             @default(1)
+  status              String          @default("proposed")
+  summary             String
+  logline             String
+  characters          Json
+  locations           Json
+  props               Json
+  relationships       Json
+  timeline            Json
+  ambiguities         Json
+  conflicts           Json
+  episode             Episode         @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  scriptVersion       ScriptVersion   @relation(fields: [scriptVersionId], references: [id], onDelete: Cascade)
+  scenes              Scene[]
+  characterRecords    Character[]
+  locationRecords     Location[]
+  propRecords         Prop[]
   relationshipRecords Relationship[]
-  timelineEvents  TimelineEvent[]
-  createdAt       DateTime       @default(now())
+  timelineEvents      TimelineEvent[]
+  createdAt           DateTime        @default(now())
 
   @@index([episodeId])
   @@index([scriptVersionId])
 }
 
 model Character {
-  id                  String     @id @default(cuid())
-  storyBibleId        String
-  name                String
-  aliases             Json
-  age                 String?
-  appearance          String
-  clothing            String
-  personality         String
-  speakingStyle       String
+  id                   String     @id @default(cuid())
+  storyBibleId         String
+  name                 String
+  aliases              Json
+  age                  String?
+  appearance           String
+  clothing             String
+  personality          String
+  speakingStyle        String
   canonicalDescription String
-  sourceRefs          Json
-  confidence          Float      @default(0)
-  status              String     @default("proposed")
-  version             Int        @default(1)
-  storyBible          StoryBible @relation(fields: [storyBibleId], references: [id], onDelete: Cascade)
-  createdAt           DateTime   @default(now())
+  sourceRefs           Json
+  confidence           Float      @default(0)
+  status               String     @default("proposed")
+  version              Int        @default(1)
+  storyBible           StoryBible @relation(fields: [storyBibleId], references: [id], onDelete: Cascade)
+  createdAt            DateTime   @default(now())
 
   @@index([storyBibleId])
 }
 
 model Location {
-  id                  String     @id @default(cuid())
-  storyBibleId        String
-  name                String
-  layout              String
-  lighting            String
-  colorStyle          String
-  fixedProps          Json
-  spatialConstraints  Json
-  sourceRefs          Json
-  confidence          Float      @default(0)
-  status              String     @default("proposed")
-  version             Int        @default(1)
-  storyBible          StoryBible @relation(fields: [storyBibleId], references: [id], onDelete: Cascade)
-  createdAt           DateTime   @default(now())
+  id                 String     @id @default(cuid())
+  storyBibleId       String
+  name               String
+  layout             String
+  lighting           String
+  colorStyle         String
+  fixedProps         Json
+  spatialConstraints Json
+  sourceRefs         Json
+  confidence         Float      @default(0)
+  status             String     @default("proposed")
+  version            Int        @default(1)
+  storyBible         StoryBible @relation(fields: [storyBibleId], references: [id], onDelete: Cascade)
+  createdAt          DateTime   @default(now())
 
   @@index([storyBibleId])
 }
 
 model Prop {
-  id                  String     @id @default(cuid())
-  storyBibleId        String
-  name                String
-  appearance          String
-  owner               String?
-  continuityRules     Json
-  sourceRefs          Json
-  confidence          Float      @default(0)
-  status              String     @default("proposed")
-  version             Int        @default(1)
-  storyBible          StoryBible @relation(fields: [storyBibleId], references: [id], onDelete: Cascade)
-  createdAt           DateTime   @default(now())
+  id              String     @id @default(cuid())
+  storyBibleId    String
+  name            String
+  appearance      String
+  owner           String?
+  continuityRules Json
+  sourceRefs      Json
+  confidence      Float      @default(0)
+  status          String     @default("proposed")
+  version         Int        @default(1)
+  storyBible      StoryBible @relation(fields: [storyBibleId], references: [id], onDelete: Cascade)
+  createdAt       DateTime   @default(now())
 
   @@index([storyBibleId])
 }
 
 model Relationship {
-  id                  String     @id @default(cuid())
-  storyBibleId        String
-  fromEntity           String
-  toEntity             String
-  type                String
-  description         String
-  sourceRefs          Json
-  version             Int        @default(1)
-  storyBible          StoryBible @relation(fields: [storyBibleId], references: [id], onDelete: Cascade)
-  createdAt           DateTime   @default(now())
+  id           String     @id @default(cuid())
+  storyBibleId String
+  fromEntity   String
+  toEntity     String
+  type         String
+  description  String
+  sourceRefs   Json
+  version      Int        @default(1)
+  storyBible   StoryBible @relation(fields: [storyBibleId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now())
 
   @@index([storyBibleId])
 }
 
 model TimelineEvent {
-  id                  String     @id @default(cuid())
-  storyBibleId        String
-  sceneNo             Int
-  sequence            Int
-  timeLabel           String
-  participants        Json
-  action              String
-  emotionalChange     String
-  dramaticPurpose     String
-  sourceRefs          Json
-  version             Int        @default(1)
-  storyBible          StoryBible @relation(fields: [storyBibleId], references: [id], onDelete: Cascade)
-  createdAt           DateTime   @default(now())
+  id              String     @id @default(cuid())
+  storyBibleId    String
+  sceneNo         Int
+  sequence        Int
+  timeLabel       String
+  participants    Json
+  action          String
+  emotionalChange String
+  dramaticPurpose String
+  sourceRefs      Json
+  version         Int        @default(1)
+  storyBible      StoryBible @relation(fields: [storyBibleId], references: [id], onDelete: Cascade)
+  createdAt       DateTime   @default(now())
 
   @@index([storyBibleId])
   @@index([storyBibleId, sceneNo, sequence])
 }
 
 model Scene {
-  id             String     @id @default(cuid())
-  episodeId      String
-  storyBibleId   String
-  sceneNo        Int
-  heading        String
-  timeLabel      String?
-  locationLabel  String?
-  characters     Json
-  actions        Json
-  dialogues      Json
-  notes          Json
-  rawText        String
-  objective      String         @default("")
-  conflict       String         @default("")
-  beats          Json?
-  emotionalArc   String         @default("")
+  id              String     @id @default(cuid())
+  episodeId       String
+  storyBibleId    String
+  sceneNo         Int
+  heading         String
+  timeLabel       String?
+  locationLabel   String?
+  characters      Json
+  actions         Json
+  dialogues       Json
+  notes           Json
+  rawText         String
+  objective       String     @default("")
+  conflict        String     @default("")
+  beats           Json?
+  emotionalArc    String     @default("")
   continuityNotes Json?
-  sourceRefs     Json?
-  confidence     Float          @default(0)
-  planningStatus String         @default("proposed")
-  episode        Episode    @relation(fields: [episodeId], references: [id], onDelete: Cascade)
-  storyBible     StoryBible @relation(fields: [storyBibleId], references: [id], onDelete: Cascade)
-  shots          Shot[]
-  createdAt      DateTime   @default(now())
+  sourceRefs      Json?
+  confidence      Float      @default(0)
+  planningStatus  String     @default("proposed")
+  episode         Episode    @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  storyBible      StoryBible @relation(fields: [storyBibleId], references: [id], onDelete: Cascade)
+  shots           Shot[]
+  createdAt       DateTime   @default(now())
 
   @@unique([storyBibleId, sceneNo])
   @@index([episodeId])
@@ -201,38 +205,38 @@ model Scene {
 }
 
 model Shot {
-  id           String          @id @default(cuid())
-  sceneId      String
-  sequence     Int
-  status       String          @default("draft")
-  payload      Json
-  scene        Scene           @relation(fields: [sceneId], references: [id], onDelete: Cascade)
-  prompts      PromptVersion[]
-  reviews      Review[]
-  createdAt    DateTime        @default(now())
-  updatedAt    DateTime        @updatedAt
+  id        String          @id @default(cuid())
+  sceneId   String
+  sequence  Int
+  status    String          @default("draft")
+  payload   Json
+  scene     Scene           @relation(fields: [sceneId], references: [id], onDelete: Cascade)
+  prompts   PromptVersion[]
+  reviews   Review[]
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
 
   @@unique([sceneId, sequence])
   @@index([sceneId])
 }
 
 model PromptVersion {
-  id            String   @id @default(cuid())
-  shotId        String
-  kind          String
-  version       Int
-  content       String
-  rationale     String?
-  model         String?
-  sourceType    String   @default("agent")
-  sourceRef     String?
-  status        String   @default("draft")
-  inputTokens   Int      @default(0)
-  outputTokens  Int      @default(0)
-  latencyMs     Int      @default(0)
-  basedOnId     String?
-  shot          Shot     @relation(fields: [shotId], references: [id], onDelete: Cascade)
-  createdAt     DateTime @default(now())
+  id           String   @id @default(cuid())
+  shotId       String
+  kind         String
+  version      Int
+  content      String
+  rationale    String?
+  model        String?
+  sourceType   String   @default("agent")
+  sourceRef    String?
+  status       String   @default("draft")
+  inputTokens  Int      @default(0)
+  outputTokens Int      @default(0)
+  latencyMs    Int      @default(0)
+  basedOnId    String?
+  shot         Shot     @relation(fields: [shotId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
 
   @@unique([shotId, kind, version])
   @@index([shotId])
@@ -246,13 +250,13 @@ model Review {
   reviewerType String
   round        Int      @default(1)
   passed       Boolean
-  confidence  Float?
-  findings    Json
-  changes     String?
-  model       String?
-  inputTokens Int       @default(0)
+  confidence   Float?
+  findings     Json
+  changes      String?
+  model        String?
+  inputTokens  Int      @default(0)
   outputTokens Int      @default(0)
-  latencyMs   Int       @default(0)
+  latencyMs    Int      @default(0)
   shot         Shot?    @relation(fields: [shotId], references: [id], onDelete: Cascade)
   createdAt    DateTime @default(now())
 
@@ -261,7 +265,7 @@ model Review {
 }
 
 model ChangeProposal {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   targetType  String
   targetId    String
   changeType  String
@@ -270,41 +274,51 @@ model ChangeProposal {
   after       Json
   reason      String
   impactScope Json
-  status      String   @default("pending")
-  createdBy   String   @default("agent")
+  status      String    @default("pending")
+  createdBy   String    @default("agent")
   decidedBy   String?
   decidedAt   DateTime?
-  createdAt   DateTime @default(now())
+  createdAt   DateTime  @default(now())
 
   @@index([targetType, targetId])
   @@index([status])
 }
 
 model Feedback {
-  id          String   @id @default(cuid())
-  targetType  String
-  targetId    String
-  rating      Int?
-  action      String?
-  comment     String?
-  createdBy   String?
-  createdAt   DateTime @default(now())
+  id         String   @id @default(cuid())
+  targetType String
+  targetId   String
+  rating     Int?
+  action     String?
+  comment    String?
+  createdBy  String?
+  createdAt  DateTime @default(now())
 
   @@index([targetType, targetId])
 }
 
 model DomainTask {
-  id          String   @id @default(cuid())
-  kind        String
-  status      String   @default("queued")
-  progress    Json
-  inputRef    String?
-  outputRef   String?
-  error       String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id              String    @id @default(cuid())
+  kind            String
+  status          String    @default("queued")
+  progress        Json
+  projectId       String?
+  episodeId       String?
+  inputRef        String?
+  outputRef       String?
+  error           String?
+  leaseOwner      String?
+  leaseUntil      DateTime?
+  attempts        Int       @default(0)
+  startedAt       DateTime?
+  finishedAt      DateTime?
+  cancelRequested Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   @@index([kind, status])
+  @@index([projectId])
+  @@index([leaseUntil])
 }
 
 model ExportPackage {
@@ -319,4 +333,130 @@ model ExportPackage {
 
   @@unique([episodeId, version, format])
   @@index([episodeId])
+}
+
+model User {
+  id           String    @id @default(cuid())
+  username     String    @unique
+  passwordHash String
+  createdAt    DateTime  @default(now())
+  sessions     Session[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  expiresAt DateTime
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model Conversation {
+  id        String    @id @default(cuid())
+  projectId String    @unique
+  project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  messages  Message[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  role           String
+  kind           String       @default("text")
+  content        String
+  meta           Json?
+  createdAt      DateTime     @default(now())
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+}
+
+model ProjectAsset {
+  id         String   @id @default(cuid())
+  projectId  String
+  kind       String
+  name       String
+  data       Json
+  version    Int      @default(1)
+  sourceType String   @default("agent")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, kind, name])
+  @@index([projectId])
+}
+
+model EpisodeAssetOverride {
+  id        String   @id @default(cuid())
+  episodeId String
+  kind      String
+  name      String
+  data      Json
+  createdAt DateTime @default(now())
+
+  @@unique([episodeId, kind, name])
+}
+
+model AssetVersion {
+  id         String   @id @default(cuid())
+  targetType String
+  targetId   String
+  version    Int
+  before     Json?
+  after      Json?
+  reason     String?
+  source     String   @default("user")
+  createdAt  DateTime @default(now())
+
+  @@unique([targetType, targetId, version])
+  @@index([targetType, targetId])
+}
+
+model Issue {
+  id         String    @id @default(cuid())
+  episodeId  String
+  targetType String
+  targetId   String
+  kind       String
+  rule       String?
+  severity   String    @default("medium")
+  issue      String
+  suggestion String?
+  status     String    @default("open")
+  ignoredAt  DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([episodeId, status])
+  @@index([targetType, targetId])
+}
+
+model Event {
+  id        String   @id @default(cuid())
+  projectId String
+  seq       Int
+  type      String
+  payload   Json
+  createdAt DateTime @default(now())
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, seq])
+  @@index([projectId, seq])
+}
+
+model ProjectExport {
+  id        String   @id @default(cuid())
+  projectId String
+  fileName  String
+  path      String
+  manifest  Json
+  createdAt DateTime @default(now())
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
 }

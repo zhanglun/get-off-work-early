@@ -1,0 +1,34 @@
+/* 场记日志令牌（DESIGN.md） */
+:root {
+  --paper: #f7f6f1; --paper-2: #f1efe8; --card: #ffffff;
+  --ink: #22242c; --ink-2: #565a66; --ink-3: #666b78;
+  --rule: #d9dcd4; --rule-2: #e7e9e2;
+  --blue: #1f5f8b; --blue-deep: #175076; --blue-wash: #e3edf4;
+  --red: #c0392b; --red-wash: #f6e7e4;
+  --gold: #b8860b; --gold-deep: #8a6508; --gold-wash: #f5edd8;
+  --mono: "SF Mono", ui-monospace, Menlo, monospace;
+  --kai: "Kaiti SC", "STKaiti", serif;
+  --sans: "Noto Sans SC", -apple-system, "PingFang SC", sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { color-scheme: light; }
+body { font-family: var(--sans); background: var(--paper); color: var(--ink); font-size: 14px; line-height: 1.6; }
+::selection { background: var(--blue-wash); color: var(--blue-deep); }
+:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; border-radius: 2px; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: var(--rule); border: 3px solid var(--paper); border-radius: 6px; }
+
+.btn { display: inline-block; border: 1px solid var(--ink); background: transparent; color: var(--ink); border-radius: 2px; padding: 5px 13px; font-size: 13px; cursor: pointer; font-family: inherit; transition: background .15s; }
+.btn:hover { background: var(--paper-2); }
+.btn:active { transform: translateY(1px); }
+.btn.primary { background: var(--blue); border-color: var(--blue); color: #fff; font-weight: 600; }
+.btn.primary:hover { background: var(--blue-deep); }
+.stamp { display: inline-block; font-family: var(--mono); font-size: 12px; letter-spacing: 1px; color: var(--red); border: 1.5px solid var(--red); border-radius: 3px; padding: 2px 8px; transform: rotate(-2deg); user-select: none; }
+.mark { font-family: var(--mono); font-size: 12px; border-radius: 2px; padding: 1px 8px; border: 1px solid var(--rule); color: var(--ink-2); background: var(--card); }
+.mark.run { color: var(--gold-deep); border-color: var(--gold); background: var(--gold-wash); }
+.mark.ok { color: var(--ink); border-color: var(--ink-3); }
+.mark.warn { color: var(--red); border-color: #e5c4bd; background: var(--red-wash); }
+.lnk { color: var(--blue); cursor: pointer; text-underline-offset: 3px; }
+.lnk:hover { color: var(--blue-deep); }
+input[type='text'], input[type='password'] { font-family: inherit; font-size: 14px; color: var(--ink); background: var(--card); border: 1px solid var(--rule); border-radius: 2px; padding: 8px 12px; }
+input:focus { outline: none; border-color: var(--blue); }

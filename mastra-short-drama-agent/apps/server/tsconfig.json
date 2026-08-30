@@ -11,7 +11,13 @@
     "allowImportingTsExtensions": true,
     "types": [
       "node"
-    ]
+    ],
+    "paths": {
+      "@short-drama/shared": [
+        "../../packages/shared/src/index.ts"
+      ]
+    },
+    "experimentalDecorators": true
   },
   "include": [
     "src/**/*",

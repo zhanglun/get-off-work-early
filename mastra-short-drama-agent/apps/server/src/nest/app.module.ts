@@ -1,0 +1,15 @@
+import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
+import { AuthModule } from './auth/auth.module.js';
+import { AuthGuard } from './auth/auth.service.js';
+import { EventsModule } from './events/events.module.js';
+import { ProjectsModule } from './projects/projects.module.js';
+import { AdminModule } from './admin/admin.module.js';
+import { HealthController } from './health.controller.js';
+
+@Module({
+  imports: [AuthModule, EventsModule, ProjectsModule, AdminModule],
+  controllers: [HealthController],
+  providers: [{ provide: APP_GUARD, useClass: AuthGuard }],
+})
+export class AppModule {}

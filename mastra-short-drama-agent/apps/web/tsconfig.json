@@ -9,7 +9,12 @@
     "noEmit": true,
     "types": [
       "vite/client"
-    ]
+    ],
+    "paths": {
+      "@short-drama/shared": [
+        "../../packages/shared/src/index.ts"
+      ]
+    }
   },
   "include": [
     "src"
