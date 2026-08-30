@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>短剧分镜制作助手 · 对话形态视觉稿（评审用）</title>
+<style>
+  /* ─────────────────────────────────────────────
+     设计令牌 ·「凌晨片场」× 对话即产品
+     画布=审片室墨青 / 主色=钨丝灯琥珀 / 数据=时间码等宽
+     展示字=剧本宋体 / 正文=苹方
+  ───────────────────────────────────────────── */
+  :root {
+    --ink-0: #0d1119; --ink-1: #131926; --ink-2: #1a2233; --ink-3: #212b40;
+    --line: #293349; --line-soft: #202a3e;
+    --fg: #e9edf4; --fg-2: #a4aec1; --fg-3: #6d7890;
+    --amber: #e2a54a; --amber-deep: #c98f38; --amber-wash: rgba(226,165,74,.12);
+    --steel: #74aac4; --steel-wash: rgba(116,170,196,.13);
+    --ok: #58b486; --ok-wash: rgba(88,180,134,.13);
+    --err: #d96a6a; --err-wash: rgba(217,106,106,.12);
+    --mono: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+    --serif: "Songti SC", "Noto Serif SC", serif;
+    --sans: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    --radius: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { color-scheme: dark; }
+  body { font-family: var(--sans); background: var(--ink-0); color: var(--fg); font-size: 14px; line-height: 1.6; }
+  ::selection { background: var(--amber-wash); color: var(--amber); }
+  :focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; border-radius: 4px; }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+
+  /* ── 评审工具条（非产品 UI）── */
+  .review-bar {
+    background: #080b12; border-bottom: 1px solid var(--line-soft);
+    padding: 9px 18px; display: flex; gap: 7px; align-items: center; flex-wrap: wrap;
+    font-size: 12.5px; position: sticky; top: 0; z-index: 50;
+  }
+  .review-bar strong { color: var(--fg); font-family: var(--serif); font-size: 14px; margin-right: 8px; letter-spacing: 1px; }
+  .review-bar button {
+    background: transparent; color: var(--fg-2); border: 1px solid var(--line);
+    border-radius: 6px; padding: 4px 13px; cursor: pointer; font-size: 12.5px; font-family: inherit;
+    transition: color .15s, border-color .15s;
+  }
+  .review-bar button:hover { color: var(--fg); border-color: var(--fg-3); }
+  .review-bar button.active { background: var(--amber); border-color: var(--amber); color: #17120a; font-weight: 600; }
+  .review-note { margin-left: auto; color: var(--fg-3); font-family: var(--mono); font-size: 11.5px; }
+
+  .view { display: none; height: calc(100vh - 42px); }
+  .view.active { display: flex; }
+
+  /* ── 会话历史栏 ── */
+  .rail {
+    width: 236px; flex: none; background: var(--ink-1); border-right: 1px solid var(--line-soft);
+    display: flex; flex-direction: column; padding: 16px 12px;
+  }
+  .rail .logo { font-family: var(--serif); font-weight: 700; letter-spacing: 1px; font-size: 15px; padding: 2px 8px 14px; }
+  .rail .logo em { font-style: normal; color: var(--amber); }
+  .rail .new-chat {
+    border: 1px solid var(--line); background: transparent; color: var(--fg-2);
+    border-radius: 8px; padding: 8px 12px; text-align: left; cursor: pointer;
+    font-family: inherit; font-size: 13.5px; margin-bottom: 16px; transition: border-color .15s, color .15s;
+  }
+  .rail .new-chat:hover { border-color: var(--amber); color: var(--amber); }
+  .rail h5 { font-family: var(--mono); font-weight: 400; font-size: 11px; letter-spacing: 2px; color: var(--fg-3); padding: 0 8px 8px; }
+  .rail .session {
+    padding: 9px 10px; border-radius: 7px; cursor: pointer; margin-bottom: 2px;
+    display: flex; justify-content: space-between; align-items: center; gap: 8px;
+    transition: background .15s;
+  }
+  .rail .session:hover { background: var(--ink-2); }
+  .rail .session.on { background: var(--amber-wash); }
+  .rail .session .t { font-size: 13px; color: var(--fg-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rail .session.on .t { color: var(--amber); }
+  .rail .session .s { font-family: var(--mono); font-size: 10.5px; flex: none; }
+  .rail .session .s.run { color: var(--amber); }
+  .rail .session .s.ok { color: var(--ok); }
+  .rail .session .s.warn { color: var(--err); }
+  .rail .me { margin-top: auto; border-top: 1px solid var(--line-soft); padding: 12px 8px 2px; color: var(--fg-3); font-size: 12px; font-family: var(--mono); }
+
+  /* ── 对话主区 ── */
+  .convo { flex: 1; overflow-y: auto; scroll-behavior: smooth; }
+  .convo-inner { max-width: 780px; margin: 0 auto; padding: 40px 28px 140px; }
+  .home-inner { max-width: 640px; margin: 0 auto; padding: 96px 28px 40px; }
+
+  /* 用户消息 */
+  .msg-user {
+    background: var(--ink-2); border-radius: 10px; padding: 12px 16px; margin-bottom: 20px;
+    border-left: 3px solid var(--amber);
+  }
+  .msg-user .who { font-family: var(--mono); font-size: 11px; color: var(--fg-3); letter-spacing: 2px; margin-bottom: 4px; }
+  .msg-user .txt { font-size: 14px; }
+  .msg-user .txt .fold { color: var(--fg-3); font-family: var(--mono); font-size: 12px; }
+
+  /* 活动流 */
+  .run {
+    background: var(--ink-1); border: 1px solid var(--line-soft); border-radius: 10px;
+    padding: 14px 18px; margin-bottom: 20px; font-size: 13px;
+  }
+  .run .row { display: flex; align-items: center; gap: 10px; padding: 4px 0; color: var(--fg-2); font-family: var(--mono); font-size: 12.5px; }
+  .run .row .mark { width: 14px; text-align: center; flex: none; }
+  .run .row.done { color: var(--fg-3); }
+  .run .row.done .mark { color: var(--ok); }
+  .run .row.now { color: var(--amber); }
+  .run .row.now .mark { color: var(--amber); }
+  .run .row.wait { color: var(--fg-3); }
+  .run .row .t { margin-left: auto; color: var(--fg-3); font-size: 11.5px; }
+  .run .bar { height: 4px; background: var(--ink-3); border-radius: 999px; overflow: hidden; margin: 10px 0 8px; }
+  .run .bar i { display: block; height: 100%; width: 62%; border-radius: 999px; background: linear-gradient(90deg, var(--steel), #93c6dd); position: relative; overflow: hidden; }
+  .run .bar i::after {
+    content: ""; position: absolute; inset: 0; width: 40%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.35), transparent);
+    animation: sheen 2.4s linear infinite;
+  }
+  @keyframes sheen { from { transform: translateX(-120%); } to { transform: translateX(320%); } }
+  .run .foot { border-top: 1px dashed var(--line-soft); margin-top: 10px; padding-top: 9px; color: var(--fg-3); font-family: var(--mono); font-size: 11.5px; display: flex; justify-content: space-between; }
+  .run .folded { color: var(--fg-2); font-family: var(--mono); font-size: 12.5px; }
+  .run .folded b { color: var(--ok); font-weight: 400; }
+  .run .folded .lnk { color: var(--steel); cursor: pointer; margin-left: 10px; }
+
+  /* 工件 */
+  .artifact { border: 1px solid var(--line-soft); border-radius: 10px; background: var(--ink-1); margin-bottom: 20px; overflow: hidden; }
+  .artifact > .head {
+    display: flex; align-items: center; gap: 10px; padding: 11px 16px;
+    font-size: 13.5px; color: var(--fg); cursor: pointer;
+  }
+  .artifact > .head:hover { background: var(--ink-2); }
+  .artifact > .head .caret { color: var(--fg-3); font-family: var(--mono); font-size: 11px; }
+  .artifact > .head .k { font-family: var(--mono); font-size: 11px; letter-spacing: 2px; color: var(--fg-3); }
+  .artifact > .head .n { margin-left: auto; font-family: var(--mono); font-size: 11.5px; color: var(--fg-3); }
+  .artifact .body { padding: 4px 16px 16px; border-top: 1px solid var(--line-soft); }
+
+  .asset-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin-top: 12px; }
+  .asset {
+    background: var(--ink-2); border: 1px solid var(--line-soft); border-radius: 8px; padding: 12px 14px; font-size: 12.5px;
+  }
+  .asset h4 { font-family: var(--serif); font-size: 14px; letter-spacing: .5px; margin-bottom: 4px; }
+  .asset p { color: var(--fg-2); font-size: 12.5px; }
+  .asset .conf { margin-top: 8px; font-family: var(--mono); font-size: 11px; color: var(--fg-3); }
+
+  .scene-title { font-family: var(--serif); font-size: 14.5px; letter-spacing: .5px; margin: 14px 0 10px; }
+  .scene-title span { color: var(--fg-3); font-family: var(--mono); font-size: 11.5px; font-weight: 400; margin-left: 8px; }
+
+  /* 场记板编号芯片（签名元素） */
+  .slate {
+    position: relative; display: inline-flex; align-items: center;
+    background: #090d15; border: 1px solid var(--line); border-radius: 6px;
+    padding: 3px 12px 3px 6px; font-family: var(--mono); font-size: 12.5px;
+    color: var(--fg); letter-spacing: .5px; white-space: nowrap;
+  }
+  .slate::before {
+    content: ""; align-self: stretch; width: 14px; margin-right: 9px; border-radius: 3px;
+    background: repeating-linear-gradient(-55deg, #dfe4ec 0 3.5px, #090d15 3.5px 7px);
+    border: 1px solid var(--line-soft);
+  }
+
+  .shot {
+    background: var(--ink-2); border: 1px solid var(--line-soft); border-radius: 8px;
+    padding: 13px 15px; margin-bottom: 10px; font-size: 13px;
+  }
+  .shot .top { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .shot .top .specs { display: flex; gap: 5px; flex-wrap: wrap; }
+  .spec { background: var(--ink-3); border-radius: 5px; padding: 1px 8px; font-size: 11.5px; color: var(--fg-2); font-family: var(--mono); }
+  .shot .top .acts { margin-left: auto; display: flex; gap: 6px; }
+  .shot .desc { color: var(--fg-2); margin-bottom: 8px; }
+  .pb { border-left: 2px solid var(--line); padding: 1px 0 1px 11px; margin-bottom: 7px; }
+  .pb h5 { font-family: var(--mono); font-weight: 400; font-size: 10.5px; letter-spacing: 2px; color: var(--fg-3); margin-bottom: 2px; }
+  .pb p { font-size: 12.5px; color: var(--fg-2); }
+  .shot .ver { font-family: var(--mono); font-size: 11px; color: var(--amber); }
+
+  .skeleton {
+    border: 1.5px dashed var(--line); border-radius: 8px; padding: 13px 15px;
+    color: var(--fg-3); font-family: var(--mono); font-size: 12.5px;
+  }
+  .skeleton b { color: var(--amber); font-weight: 400; }
+
+  /* 摘要/问题/生产包 */
+  .summary { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 12px; }
+  .stat { background: var(--ink-2); border: 1px solid var(--line-soft); border-radius: 8px; padding: 10px 16px; min-width: 88px; }
+  .stat b { display: block; font-family: var(--mono); font-size: 19px; font-variant-numeric: tabular-nums; }
+  .stat span { font-size: 11.5px; color: var(--fg-3); letter-spacing: 1px; }
+  .stat.alert b { color: var(--amber); }
+
+  .issue { border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-top: 10px; }
+  .issue.word { background: var(--amber-wash); color: var(--amber); }
+  .issue.fact { background: var(--err-wash); color: var(--err); }
+  .issue .ih { display: flex; align-items: center; gap: 9px; margin-bottom: 3px; }
+  .issue .tag { font-family: var(--mono); font-size: 10.5px; border: 1px solid currentColor; border-radius: 4px; padding: 0 6px; opacity: .85; }
+  .issue b { font-weight: 600; }
+  .issue .ia { margin-left: auto; }
+
+  .pkg .files { font-family: var(--mono); font-size: 12px; color: var(--fg-2); line-height: 2; margin-top: 10px; }
+  .pkg .files b { color: var(--steel); font-weight: 400; margin-right: 10px; }
+
+  .agent-note { color: var(--fg-2); font-size: 13.5px; margin-bottom: 20px; }
+  .agent-note b { color: var(--fg); }
+
+  /* 按钮 */
+  .btn {
+    display: inline-block; border: 1px solid var(--line); background: transparent;
+    color: var(--fg-2); border-radius: 7px; padding: 5px 13px; font-size: 12.5px;
+    cursor: pointer; font-family: inherit; transition: border-color .15s, color .15s, background .15s;
+  }
+  .btn:hover { color: var(--fg); border-color: var(--fg-3); }
+  .btn.primary { background: var(--amber); border-color: var(--amber); color: #1a130a; font-weight: 600; }
+  .btn.primary:hover { background: var(--amber-deep); border-color: var(--amber-deep); }
+
+  /* 输入框（常驻） */
+  .composer-wrap { position: sticky; bottom: 0; padding: 14px 28px 22px; background: linear-gradient(transparent, var(--ink-0) 34%); }
+  .composer {
+    max-width: 780px; margin: 0 auto; background: var(--ink-1);
+    border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px 10px;
+    transition: border-color .15s;
+  }
+  .composer:focus-within { border-color: var(--amber); }
+  .composer .hint { font-family: var(--mono); font-size: 11px; color: var(--fg-3); margin-bottom: 7px; letter-spacing: 1px; }
+  .composer .line { display: flex; align-items: flex-end; gap: 10px; }
+  .composer textarea {
+    flex: 1; background: transparent; border: none; resize: none; outline: none;
+    color: var(--fg); font-family: inherit; font-size: 14px; min-height: 22px; max-height: 140px;
+  }
+  .composer textarea::placeholder { color: var(--fg-3); }
+  .composer .send {
+    background: var(--amber); color: #1a130a; border: none; border-radius: 8px;
+    padding: 6px 14px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit;
+  }
+  .composer .send:hover { background: var(--amber-deep); }
+  .composer .under { display: flex; gap: 12px; margin-top: 8px; color: var(--fg-3); font-size: 11.5px; font-family: var(--mono); }
+  .composer .under .attach { cursor: pointer; }
+  .composer .under .attach:hover { color: var(--steel); }
+
+  /* 首页空态 */
+  .home-brand { font-family: var(--serif); font-size: 30px; font-weight: 700; letter-spacing: 2px; text-align: center; }
+  .home-brand em { font-style: normal; color: var(--amber); }
+  .home-invite { text-align: center; color: var(--fg-2); margin: 10px 0 30px; font-size: 15px; }
+  .home-hints { text-align: center; color: var(--fg-3); font-size: 12px; font-family: var(--mono); margin-top: 16px; letter-spacing: .5px; }
+
+  @media (max-width: 900px) { .rail { display: none; } }
+</style>
+</head>
+<body>
+
+<!-- 评审切换条：非产品 UI -->
+<div class="review-bar">
+  <strong>视觉稿评审 · 对话形态</strong>
+  <button data-v="v-home" class="active">① 首屏空态</button>
+  <button data-v="v-run">② 运行态</button>
+  <button data-v="v-done">③ 完成态</button>
+  <button data-v="v-edit">④ 打字修改</button>
+  <span class="review-note">product-form.md v2 · Q1B 已被吸收 · G1A/G2A/Q2A 保留 · 「凌晨片场」</span>
+</div>
+
+<!-- ═══════════ ① 首屏空态 ═══════════ -->
+<div class="view active" id="v-home">
+  <div class="rail">
+    <div class="logo">短剧<em>分镜</em>助手</div>
+    <button class="new-chat">＋ 新的制作</button>
+    <h5>SESSIONS · 最近项目</h5>
+    <div class="session"><span class="t">《她的第二幕》· 第2集</span><span class="s ok">已完成</span></div>
+    <div class="session"><span class="t">《午夜便利店》· 第1集</span><span class="s warn">3 问题</span></div>
+    <div class="me">个人操作者 · 本地模式</div>
+  </div>
+  <div class="convo">
+    <div class="home-inner">
+      <div class="home-brand">把一集剧本，<em>贴进来</em>。</div>
+      <p class="home-invite">它会变成故事资产、场次、分镜卡片和生产 Prompt。</p>
+      <div class="composer">
+        <div class="hint">NEW PRODUCTION</div>
+        <div class="line">
+          <textarea placeholder="粘贴一集已完成的剧本，或拖入 .md / .txt 文件…"></textarea>
+          <button class="send">开始生成</button>
+        </div>
+        <div class="under">
+          <span class="attach">⎘ 上传 .md / .txt</span>
+          <span>项目名称与集数可在发送后确认</span>
+        </div>
+      </div>
+      <div class="home-hints">自动连续生成 · 生成中可离开 · 问题不中断整集任务</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ ② 运行态 ═══════════ -->
+<div class="view" id="v-run">
+  <div class="rail">
+    <div class="logo">短剧<em>分镜</em>助手</div>
+    <button class="new-chat">＋ 新的制作</button>
+    <h5>SESSIONS · 最近项目</h5>
+    <div class="session on"><span class="t">《她的第二幕》· 第3集</span><span class="s run">62%</span></div>
+    <div class="session"><span class="t">《她的第二幕》· 第2集</span><span class="s ok">已完成</span></div>
+    <div class="session"><span class="t">《午夜便利店》· 第1集</span><span class="s warn">3 问题</span></div>
+    <div class="me">个人操作者 · 本地模式</div>
+  </div>
+  <div class="convo">
+    <div class="convo-inner">
+      <div class="msg-user">
+        <div class="who">你 · 刚刚</div>
+        <div class="txt">《她的第二幕》第 3 集 · 剧本 <span class="fold">8,412 字 · 已存为剧本版本 v1 ▾</span></div>
+      </div>
+
+      <div class="run">
+        <div class="row done"><span class="mark">✓</span>剧本解析<span class="t">3.2s</span></div>
+        <div class="row done"><span class="mark">✓</span>故事资产 · 6 角色 · 4 场景 · 5 道具<span class="t">18.6s</span></div>
+        <div class="row done"><span class="mark">✓</span>场次规划 · 8 场<span class="t">22.1s</span></div>
+        <div class="bar"><i></i></div>
+        <div class="row now"><span class="mark">●</span>分镜生成 26 / 42<span class="t">进行中</span></div>
+        <div class="row wait"><span class="mark">○</span>连续性检查</div>
+        <div class="row wait"><span class="mark">○</span>整理生产包</div>
+        <div class="foot"><span>已用时 00:01:12</span><span>可随时离开 · 后台继续 · 回来接着看</span></div>
+      </div>
+
+      <div class="artifact">
+        <div class="head"><span class="caret">▾</span><span class="k">ASSETS</span>故事资产<span class="n">6 角色 · 4 场景 · 5 道具</span></div>
+        <div class="body">
+          <div class="asset-row">
+            <div class="asset"><h4>林小雨</h4><p>实习律师 · 黑色长发、米色风衣</p><div class="conf">置信度 0.92</div></div>
+            <div class="asset"><h4>周成远</h4><p>律所合伙人 · 灰白短发、金丝眼镜</p><div class="conf">置信度 0.88</div></div>
+            <div class="asset"><h4>写字楼门口</h4><p>夜 · 旋转门、玻璃幕墙 · 相关镜头 4</p><div class="conf">场景卡</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="artifact">
+        <div class="head"><span class="caret">▾</span><span class="k">STORYBOARD</span>分镜 · 第 1 场 · 律所夜谈<span class="n">4 / 6 已生成</span></div>
+        <div class="body">
+          <div class="shot">
+            <div class="top"><span class="slate">场1 · 镜3</span><span class="specs"><span class="spec">中近景</span><span class="spec">缓慢推近</span><span class="spec">4s</span></span></div>
+            <div class="desc">林小雨站在工位旁，盯着屏幕上的合同条款，手指无意识地攥紧风衣衣角。</div>
+            <div class="pb"><h5>IMAGE</h5><p>夜景写字楼内部，中近景，米色风衣女性角色，冷白荧光灯，浅景深</p></div>
+          </div>
+          <div class="shot">
+            <div class="top"><span class="slate">场1 · 镜4</span><span class="specs"><span class="spec">全景</span><span class="spec">固定</span><span class="spec">3s</span></span></div>
+            <div class="desc">周成远从会议室走出，神情凝重。</div>
+            <div class="pb"><h5>IMAGE</h5><p>办公区全景，深夜，玻璃隔断会议室，男性角色剪影</p></div>
+          </div>
+          <div class="skeleton"><b>●</b> 镜 5 正在生成……</div>
+        </div>
+      </div>
+    </div>
+    <div class="composer-wrap">
+      <div class="composer">
+        <div class="hint">EP.03 · 生成中 — 可以继续输入，会排队处理</div>
+        <div class="line">
+          <textarea placeholder="例如：镜 5 的情绪再压低一点…"></textarea>
+          <button class="send">发送</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ ③ 完成态 ═══════════ -->
+<div class="view" id="v-done">
+  <div class="rail">
+    <div class="logo">短剧<em>分镜</em>助手</div>
+    <button class="new-chat">＋ 新的制作</button>
+    <h5>SESSIONS · 最近项目</h5>
+    <div class="session on"><span class="t">《她的第二幕》· 第3集</span><span class="s ok">已完成</span></div>
+    <div class="session"><span class="t">《她的第二幕》· 第2集</span><span class="s ok">已完成</span></div>
+    <div class="me">个人操作者 · 本地模式</div>
+  </div>
+  <div class="convo">
+    <div class="convo-inner">
+      <div class="msg-user">
+        <div class="who">你 · 今天 14:30</div>
+        <div class="txt">《她的第二幕》第 3 集 · 剧本 <span class="fold">8,412 字 · 剧本版本 v1 ▾</span></div>
+      </div>
+
+      <div class="run">
+        <div class="folded"><b>✓ 生成完成</b> · 全部 6 个阶段 · 用时 00:01:48 · Mock 模式<span class="lnk">展开过程</span></div>
+      </div>
+
+      <div class="artifact">
+        <div class="head"><span class="caret">▾</span><span class="k">SUMMARY</span>制作摘要<span class="n">42 镜 · 8 场</span></div>
+        <div class="body">
+          <div class="summary">
+            <div class="stat"><b>6</b><span>角色</span></div>
+            <div class="stat"><b>4</b><span>场景</span></div>
+            <div class="stat"><b>8</b><span>场次</span></div>
+            <div class="stat"><b>42</b><span>分镜</span></div>
+            <div class="stat alert"><b>3</b><span>待处理问题</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="artifact">
+        <div class="head"><span class="caret">▾</span><span class="k">ISSUES</span>问题汇总<span class="n">3 个 · 1 个可自动修订</span></div>
+        <div class="body">
+          <div class="issue word">
+            <div class="ih"><span class="tag">措辞类</span><b>"表情严肃"不够具体</b><span class="ia"><button class="btn primary">自动修订 · 4 处</button></span></div>
+            影响：镜 7 等 4 个镜头 · 一键修订后存入新版本
+          </div>
+          <div class="issue fact">
+            <div class="ih"><span class="tag">事实类</span><b>角色外观不一致</b><span class="ia"><button class="btn">定位资产</button> <button class="btn">忽略</button></span></div>
+            第 1 场描述为米色风衣，第 5 场未延续服装状态 · 事实内容系统不自动修改（G1A）
+          </div>
+          <div class="issue fact">
+            <div class="ih"><span class="tag">事实类</span><b>道具状态连续性</b><span class="ia"><button class="btn">定位资产</button> <button class="btn">忽略</button></span></div>
+            合同在镜 22 已被撕毁，镜 30 又完整出现
+          </div>
+        </div>
+      </div>
+
+      <div class="artifact">
+        <div class="head"><span class="caret">▸</span><span class="k">STORYBOARD</span>分镜 · 按场次分组<span class="n">8 场 · 42 镜</span></div>
+      </div>
+
+      <div class="artifact pkg">
+        <div class="head"><span class="caret">▾</span><span class="k">PACKAGE</span>生产包<span class="n">9 文件 · v4</span></div>
+        <div class="body">
+          <div class="files">
+            <div><b>MD</b>original-script.md · story-bible.md · scenes.md · storyboard.md</div>
+            <div><b>JSON</b>prompts.json · reviews.json · issues.json · versions.json · manifest.json</div>
+          </div>
+          <div style="margin-top:12px"><button class="btn primary">导出完整生产包</button> <span style="color:var(--fg-3);font-size:12px;margin-left:10px">被忽略的问题会记录在 manifest.json（Q2A）</span></div>
+        </div>
+      </div>
+
+      <div class="agent-note">第 3 集已就绪。可以直接打字修改，比如<b>"把林小雨的风衣改成深灰大衣"</b>，我会先算影响范围再重生成。</div>
+    </div>
+    <div class="composer-wrap">
+      <div class="composer">
+        <div class="hint">EP.03 · 已完成 — 继续对话即可修改</div>
+        <div class="line">
+          <textarea placeholder="把镜 3 改成俯拍… / 只看第 2 场 / 导出"></textarea>
+          <button class="send">发送</button>
+        </div>
+        <div class="under"><span>/ 导出</span><span>/ 只看第 N 场</span><span>/ 重试镜 N</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ ④ 打字修改 ═══════════ -->
+<div class="view" id="v-edit">
+  <div class="rail">
+    <div class="logo">短剧<em>分镜</em>助手</div>
+    <button class="new-chat">＋ 新的制作</button>
+    <h5>SESSIONS · 最近项目</h5>
+    <div class="session on"><span class="t">《她的第二幕》· 第3集</span><span class="s ok">v5</span></div>
+    <div class="session"><span class="t">《她的第二幕》· 第2集</span><span class="s ok">已完成</span></div>
+    <div class="me">个人操作者 · 本地模式</div>
+  </div>
+  <div class="convo">
+    <div class="convo-inner">
+      <div class="run">
+        <div class="folded"><b>✓ 生成完成</b> · 用时 00:01:48 · Mock 模式<span class="lnk">展开过程</span></div>
+      </div>
+
+      <div class="msg-user">
+        <div class="who">你 · 刚刚</div>
+        <div class="txt">把林小雨的风衣改成深灰大衣</div>
+      </div>
+
+      <div class="run">
+        <div class="row now"><span class="mark">●</span>影响分析完成：3 场 · 12 镜 · 24 个 Prompt</div>
+        <div class="row done"><span class="mark">✓</span>自动重生成受影响内容（G2A · 后台执行）<span class="t">41.7s</span></div>
+        <div class="row done"><span class="mark">✓</span>已生成新版本 <b style="color:var(--amber)">v5</b> · 旧版本保留<span class="t">刚刚</span></div>
+      </div>
+
+      <div class="agent-note">已按新外观重生成 12 个镜头。这是其中之一，<b>查看 diff</b> 可对比修改前后：</div>
+
+      <div class="artifact">
+        <div class="head"><span class="caret">▾</span><span class="k">SHOT</span>已更新 · 场1 · 镜3<span class="n">v5 · 原 v4</span></div>
+        <div class="body">
+          <div class="shot">
+            <div class="top">
+              <span class="slate">场1 · 镜3</span>
+              <span class="specs"><span class="spec">中近景</span><span class="spec">缓慢推近</span><span class="spec">4s</span></span>
+              <span class="acts"><span class="ver">v5</span><button class="btn">查看 diff</button></span>
+            </div>
+            <div class="desc">林小雨站在工位旁，盯着屏幕上的合同条款，手指无意识地攥紧<span style="color:var(--amber)">深灰大衣</span>衣角。</div>
+            <div class="pb"><h5>IMAGE</h5><p>夜景写字楼内部，中近景，<span style="color:var(--amber)">深灰大衣</span>女性角色，冷白荧光灯，浅景深</p></div>
+          </div>
+          <div class="skeleton" style="border-style:solid;color:var(--fg-3)">还有 11 个受影响镜头已原位更新 · <span style="color:var(--steel);cursor:pointer">展开查看</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="composer-wrap">
+      <div class="composer">
+        <div class="hint">EP.03 · v5 — 继续对话即可修改</div>
+        <div class="line">
+          <textarea placeholder="把镜 7 的景别改成特写… / 回退这次修改 / 导出"></textarea>
+          <button class="send">发送</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll('.review-bar button').forEach(function (b) {
+    b.addEventListener('click', function () {
+      document.querySelectorAll('.review-bar button').forEach(function (x) { x.classList.remove('active'); });
+      document.querySelectorAll('.view').forEach(function (v) { v.classList.remove('active'); });
+      b.classList.add('active');
+      document.getElementById(b.dataset.v).classList.add('active');
+      window.scrollTo(0, 0);
+    });
+  });
+</script>
+</body>
+</html>
