@@ -78,7 +78,8 @@ docs/implementation-plan.md     M0 产出（待创建）
 
 ## 7. 进度记录
 
-- 2026-08-30：产品定案（18 轮问答 → product-design.md）；视觉定案（场记日志 + comp-c，review ship）；技术定案（NestJS + Mastra + React/Vite + PG + SSE + monorepo）；双路线图落盘。**M0 未启动。**
+- 2026-08-30：产品/视觉/技术定案 + 双路线图落盘（见上文）。
+- 2026-08-30：**M0 完成**——implementation-plan.md 四张清单（复用/重构/新增/淘汰）+ monorepo 原地重组提交；`pnpm -r check` 通过、server 测试 10/10。下一步 M1。
 
 ## 8. 下一步
 
