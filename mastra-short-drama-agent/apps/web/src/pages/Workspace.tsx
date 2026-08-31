@@ -158,6 +158,18 @@ export function Workspace(): JSX.Element {
     onError: (err) => setError(err instanceof Error ? err.message : '发送失败'),
   });
 
+  const exportZip = async (): Promise<void> => {
+    const res = await fetch(`/api/exports/${id}`, { method: 'POST', credentials: 'same-origin' });
+    if (!res.ok) return;
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `${snapshot?.project.name ?? '短剧'}-生产包.zip`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  };
+
   const submit = (): void => {
     const content = draft.trim();
     if (!content) return;
@@ -192,7 +204,7 @@ export function Workspace(): JSX.Element {
           </span>
         ) : null}
         <div style={{ flex: 1 }} />
-        <button className="btn">导出项目 ZIP</button>
+        <button className="btn" onClick={() => void exportZip()}>导出项目 ZIP</button>
       </div>
       <div style={{ flex: 1, display: 'flex', minHeight: 0 }}>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', borderRight: '1.5px solid var(--ink)', minWidth: 0 }}>

@@ -6,10 +6,11 @@ import { EventsModule } from './events/events.module.js';
 import { ProjectsModule } from './projects/projects.module.js';
 import { AdminModule } from './admin/admin.module.js';
 import { ChatModule } from './chat/chat.module.js';
+import { ExportModule } from './exports/export.module.js';
 import { HealthController } from './health.controller.js';
 
 @Module({
-  imports: [AuthModule, EventsModule, ProjectsModule, ChatModule, AdminModule],
+  imports: [AuthModule, EventsModule, ProjectsModule, ChatModule, ExportModule, AdminModule],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: AuthGuard }],
 })
