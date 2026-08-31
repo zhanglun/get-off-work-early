@@ -15,10 +15,10 @@ NestJS + React/Vite + PostgreSQL/Prisma + Redis 的真实模型开发 Demo。
 
 ```bash
 pnpm install
-cp config/.local.env.example config/.local.env
+cp config/.env.local.example config/.env.local
 ```
 
-编辑 `config/.local.env`：
+编辑 `config/.env.local`：
 
 ```env
 MODEL_BASE_URL=https://api.openai.com/v1
@@ -63,17 +63,17 @@ docs/本地开发.md
 ## 环境模板
 
 ```text
-config/.local.env.example       本地开发
-config/.test.env.example        测试环境
-config/.production.env.example  生产环境
+config/.env.local.example       本地开发
+config/.env.test.example        测试环境
+config/.env.production.example  生产环境
 ```
 
 真实环境文件不会提交到 Git：
 
 ```text
-config/.local.env
-config/.test.env
-config/.production.env
+config/.env.local
+config/.env.test
+config/.env.production
 ```
 
 测试环境真实模型冒烟：

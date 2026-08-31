@@ -1,10 +1,10 @@
-import type { z } from 'zod';
+import { z, type ZodType } from 'zod';
 
 export interface StructuredAgent {
   id: string;
   name: string;
   instructions: string;
-  schema: z.ZodType<unknown>;
+  schema: ZodType<unknown>;
 }
 
 export interface GenerationResult<T> {
@@ -58,6 +58,7 @@ function delay(ms: number): Promise<void> {
 /** 调用 OpenAI 兼容结构化接口；失败只重试并抛错，不生成替代数据。 */
 export async function generateStructured<T>(agent: StructuredAgent, prompt: string): Promise<GenerationResult<T>> {
   const config = getModelConfig();
+  const schema = z.toJSONSchema(agent.schema);
   let lastError: unknown;
   const startedAt = Date.now();
 
@@ -75,7 +76,7 @@ export async function generateStructured<T>(agent: StructuredAgent, prompt: stri
           max_tokens: 4000,
           response_format: { type: 'json_object' },
           messages: [
-            { role: 'system', content: `${agent.instructions}\n\n只输出 JSON，不要输出 Markdown 或解释文字。输出必须满足业务 Schema。` },
+            { role: 'system', content: `${agent.instructions}\n\n只输出 JSON，不要输出 Markdown 或解释文字。输出必须满足以下 JSON Schema：\n${JSON.stringify(schema)}` },
             { role: 'user', content: prompt },
           ],
         }),

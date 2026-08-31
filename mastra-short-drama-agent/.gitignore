@@ -7,7 +7,7 @@ config/.test.env
 config/.production.env
 config/*.env
 !.env.example
-!config/*.env.example
+!config/.env.*.example
 mastra.db
 *.log
 .mastra/

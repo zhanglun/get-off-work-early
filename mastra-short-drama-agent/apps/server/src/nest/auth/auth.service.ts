@@ -5,7 +5,9 @@ import { PrismaService } from '../prisma.service.js';
 
 export const SESSION_COOKIE = 'sd_session';
 const SESSION_TTL_MS = 7 * 24 * 3600 * 1000;
-const SECRET = process.env.SESSION_SECRET ?? 'dev-only-session-secret';
+function sessionSecret(): string {
+  return process.env.SESSION_SECRET ?? 'dev-only-session-secret';
+}
 
 export function hashPassword(password: string): string {
   const salt = randomBytes(16).toString('hex');
@@ -22,7 +24,7 @@ export function verifyPassword(password: string, stored: string): boolean {
 }
 
 function sign(value: string): string {
-  return createHmac('sha256', SECRET).update(value).digest('hex').slice(0, 32);
+  return createHmac('sha256', sessionSecret()).update(value).digest('hex').slice(0, 32);
 }
 
 @Injectable()

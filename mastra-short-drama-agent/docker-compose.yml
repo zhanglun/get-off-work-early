@@ -34,7 +34,7 @@ services:
     ports:
       - "4120:4120"
     env_file:
-      - config/.local.env
+      - config/.env.local
     environment:
       DATABASE_URL: postgresql://short_drama:short_drama@postgres:5432/short_drama
       REDIS_URL: redis://redis:6379
@@ -51,7 +51,7 @@ services:
     build: .
     command: pnpm --filter server exec tsx src/worker.ts
     env_file:
-      - config/.local.env
+      - config/.env.local
     environment:
       DATABASE_URL: postgresql://short_drama:short_drama@postgres:5432/short_drama
       REDIS_URL: redis://redis:6379
