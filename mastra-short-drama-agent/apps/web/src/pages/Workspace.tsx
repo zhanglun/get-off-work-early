@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Snapshot, MessageDto } from '@short-drama/shared';
 import { api } from '../api';
 import { subscribeEvents } from '../sse';
+import { WorkspaceBoard } from './WorkspaceBoard';
 
 function MessageBubble({ message }: { message: MessageDto }): JSX.Element {
   if (message.role === 'user') {
@@ -50,6 +51,7 @@ export function Workspace(): JSX.Element {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [draft, setDraft] = useState('');
+  const [tick, setTick] = useState(0);
   const [error, setError] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -65,9 +67,12 @@ export function Workspace(): JSX.Element {
     if (!snapshot || !id) return;
     const unsubscribe = subscribeEvents(id, snapshot.lastSeq, () => {
       void queryClient.invalidateQueries({ queryKey: ['snapshot', id] });
+      setTick((value) => value + 1);
     });
     return unsubscribe;
   }, [id, snapshot?.lastSeq, queryClient, snapshot]);
+
+  const activeEpisodeId = snapshot?.episodes.at(-1)?.id ?? null;
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -170,20 +175,7 @@ export function Workspace(): JSX.Element {
             {error ? <div style={{ color: 'var(--red)', fontSize: 12, marginTop: 6 }}>{error}</div> : null}
           </div>
         </div>
-        <div style={{ width: '44%', display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, padding: '14px 26px 10px', borderBottom: '1.5px solid var(--ink)' }}>
-            <b style={{ fontSize: 15 }}>图版区</b>
-            <span style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--ink-2)', letterSpacing: 1 }}>M3 起实时生长</span>
-          </div>
-          <div style={{ flex: 1, padding: '18px 26px', overflowY: 'auto', color: 'var(--ink-3)', fontFamily: 'var(--kai)' }}>
-            分镜图版、资产、穿帮记录将在制作开始后逐件出现。
-            {(snapshot?.episodes.length ?? 0) > 0 ? (
-              <div style={{ marginTop: 12, fontFamily: 'var(--mono)', fontSize: 12 }}>
-                已登记 {snapshot?.episodes.length} 集 · 目标 {snapshot?.episodes.reduce((sum, ep) => sum + (ep.shotTarget ?? 0), 0)} 镜
-              </div>
-            ) : null}
-          </div>
-        </div>
+        <WorkspaceBoard projectId={id ?? ''} activeEpisodeId={activeEpisodeId} invalidateKey={tick} />
       </div>
     </div>
   );

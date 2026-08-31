@@ -172,6 +172,16 @@ export class ChatService {
       },
     });
     await this.prisma.project.update({ where: { id: projectId }, data: { updatedAt: new Date() } });
+    await this.prisma.domainTask.create({
+      data: {
+        kind: 'production',
+        status: 'queued',
+        progress: { stage: 'parse', stages: {}, shotsDone: 0, shotsTotal: 0, mock: false },
+        projectId,
+        episodeId: episode.id,
+        inputRef: JSON.stringify({ scriptVersionId: scriptVersion.id, scriptText: content, shotTarget: target }),
+      },
+    });
     await this.events.append(projectId, 'episode_created', { episodeId: episode.id, episodeNo, shotTarget: target });
     await this.events.append(projectId, 'artifact_created', { artifact: 'script_version', episodeId: episode.id, scriptVersionId: scriptVersion.id, chars: content.length });
     const note = await this.append(projectId, conversationId, 'assistant', 'note',
