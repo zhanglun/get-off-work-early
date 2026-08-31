@@ -6,6 +6,72 @@ import { api } from '../api';
 import { subscribeEvents } from '../sse';
 import { WorkspaceBoard } from './WorkspaceBoard';
 
+function ImpactCard({ message }: { message: MessageDto }): JSX.Element {
+  const { id } = useParams<{ id: string }>();
+  const queryClient = useQueryClient();
+  const meta = (message.meta ?? {}) as unknown as {
+    assetName: string; before: string; after: string;
+    impact: { episodeNo: number; shots: number; prompts: number }[];
+    mode?: string;
+  };
+  const [busy, setBusy] = useState(false);
+  const confirm = async (mode: 'regenerate' | 'setting_only' | 'cancel'): Promise<void> => {
+    if (mode === 'cancel') {
+      setBusy(true);
+      setTimeout(() => setBusy(false), 300);
+      return;
+    }
+    setBusy(true);
+    try {
+      await api(`/projects/${id}/asset-changes/confirm`, {
+        method: 'POST',
+        body: JSON.stringify({ messageId: message.id, mode }),
+      });
+      void queryClient.invalidateQueries({ queryKey: ['snapshot', id] });
+    } finally {
+      setBusy(false);
+    }
+  };
+  const decided = meta.mode && meta.mode !== 'pending';
+  return (
+    <div style={{ border: '1.5px solid var(--ink)', borderRadius: 2, background: 'var(--card)', margin: '14px 0', overflow: 'hidden' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 14px', borderBottom: '1px solid var(--rule)', fontWeight: 700, fontSize: 13.5 }}>
+        勘误范围 · 待确认
+        <span style={{ marginLeft: 'auto', fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink-2)', fontWeight: 400 }}>跨集</span>
+      </div>
+      <div style={{ padding: '12px 14px' }}>
+        <div style={{ background: 'var(--paper)', borderRadius: 2, padding: '7px 10px', marginBottom: 9, fontSize: 13.5 }}>
+          <span style={{ fontFamily: 'var(--mono)', fontSize: 10.5, color: 'var(--ink-2)', display: 'block', marginBottom: 3 }}>
+            项目级设定 · {meta.assetName} · 服装
+          </span>
+          <del style={{ color: 'var(--red)', background: 'var(--red-wash)', borderRadius: 2, padding: '0 3px' }}>{String(meta.before).slice(0, 20)}</del>
+          {' → '}
+          <ins style={{ color: 'var(--blue-deep)', background: 'var(--blue-wash)', borderRadius: 2, padding: '0 3px', fontWeight: 600, textDecoration: 'none' }}>{String(meta.after)}</ins>
+        </div>
+        <div style={{ fontFamily: 'var(--mono)', fontSize: 11.5, color: 'var(--ink-2)', lineHeight: 2 }}>
+          {(meta.impact ?? []).map((row) => (
+            <div key={row.episodeNo}>
+              <b style={{ fontWeight: 400, marginRight: 8 }}>第 {row.episodeNo} 集</b>
+              <span style={{ color: 'var(--gold-deep)' }}>{row.shots} 镜</span> · {row.prompts} Prompt
+            </div>
+          ))}
+        </div>
+        {!decided ? (
+          <div style={{ display: 'flex', gap: 8, marginTop: 11, flexWrap: 'wrap' }}>
+            <button className="btn primary" disabled={busy} onClick={() => void confirm('regenerate')}>确认全部重生成</button>
+            <button className="btn" disabled={busy} onClick={() => void confirm('setting_only')}>仅修改设定</button>
+            <button className="btn" disabled={busy} onClick={() => void confirm('cancel')}>取消</button>
+          </div>
+        ) : (
+          <div style={{ marginTop: 10, fontFamily: 'var(--mono)', fontSize: 11.5, color: 'var(--ink-3)' }}>
+            {meta.mode === 'regenerate' ? '✓ 已确认并触发重生成' : meta.mode === 'setting_only' ? '✓ 仅更新设定' : '已取消'}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function MessageBubble({ message }: { message: MessageDto }): JSX.Element {
   if (message.role === 'user') {
     const meta = (message.meta ?? {}) as { content?: string };
@@ -29,6 +95,9 @@ function MessageBubble({ message }: { message: MessageDto }): JSX.Element {
         </div>
       </div>
     );
+  }
+  if (message.kind === 'impact_confirm') {
+    return <ImpactCard message={message} />;
   }
   const isQuestion = message.kind === 'question';
   const meta = (message.meta ?? {}) as { kind?: string };

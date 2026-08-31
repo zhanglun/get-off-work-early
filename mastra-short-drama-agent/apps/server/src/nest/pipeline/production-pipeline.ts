@@ -174,6 +174,86 @@ export class ProductionPipeline {
     return { status: finalStatus, mock, shotsDone, shotsTotal };
   }
 
+  /** 局部重生成：按新资产设定刷新受影响镜头（逐集顺序，事件实时推）。 */
+  async regenerate(taskId: string, projectId: string, input: {
+    assetId: string; assetName: string; fieldKey: string; before: string; after: string;
+    episodes: { episodeNo: number; episodeId: string; scenes: number; shots: number; prompts: number }[];
+  }): Promise<{ status: string; shotsDone: number }> {
+    await this.emit({ taskId, projectId, episodeId: input.episodes[0]!.episodeId, scriptVersionId: '', scriptText: '', shotTarget: 0 }, 'run_started', { kind: 'regeneration', episodes: input.episodes.length });
+    let done = 0;
+    let total = 0;
+    for (const row of input.episodes) {
+      const bible = await this.prisma.storyBible.findFirst({ where: { episodeId: row.episodeId }, orderBy: { version: 'desc' } });
+      if (!bible) continue;
+      // 更新 bible 中的角色字段（内存态，供生成上下文）
+      const bibleDraft = {
+        summary: bible.summary, logline: bible.logline,
+        characters: (bible.characters as unknown[]).map((character) => {
+          const record = character as Record<string, unknown>;
+          if (record.name === input.assetName) record[input.fieldKey] = input.after;
+          return record;
+        }),
+        locations: bible.locations, props: bible.props, relationships: bible.relationships,
+        timeline: bible.timeline, ambiguities: bible.ambiguities, conflicts: bible.conflicts,
+      } as unknown as import('../../domain/story-schemas.ts').StoryBibleDraft;
+      const scenes = await this.prisma.scene.findMany({
+        where: { episodeId: row.episodeId },
+        orderBy: { sceneNo: 'asc' },
+        include: { shots: { orderBy: { sequence: 'asc' } } },
+      });
+      for (const scene of scenes) {
+        const inScene = ((scene.characters ?? []) as string[]).includes(input.assetName);
+        const affected = scene.shots.filter((shot) => {
+          const payload = shot.payload as Record<string, unknown>;
+          return inScene || JSON.stringify(payload).includes(input.assetName);
+        });
+        total += affected.length;
+        for (const shot of affected) {
+          if (await this.isCancelled(taskId)) {
+            await this.prisma.domainTask.update({ where: { id: taskId }, data: { status: 'cancelled', finishedAt: new Date() } });
+            return { status: 'cancelled', shotsDone: done };
+          }
+          const beats = (scene.beats ?? []) as string[];
+          const scenePlan = {
+            sceneNo: scene.sceneNo, heading: scene.heading,
+            timeLabel: scene.timeLabel, locationLabel: scene.locationLabel,
+            characters: (scene.characters ?? []) as string[],
+            objective: scene.objective, conflict: scene.conflict,
+            beats: beats.length ? beats : [scene.objective], emotionalArc: scene.emotionalArc,
+            continuityNotes: (scene.continuityNotes ?? []) as string[],
+          };
+          const draft = (await generateShot(scenePlan, shot.sequence, scenePlan.beats[(shot.sequence - 1) % scenePlan.beats.length], bibleDraft)).value;
+          const nextVersion = Math.floor((await this.prisma.promptVersion.count({ where: { shotId: shot.id } })) / 2) + 1;
+          await this.prisma.$transaction([
+            this.prisma.shot.update({ where: { id: shot.id }, data: { payload: draft as object } }),
+            this.prisma.promptVersion.create({ data: { shotId: shot.id, kind: 'image', version: nextVersion, content: draft.imagePrompt, rationale: `资产更新：${input.assetName}`, status: 'done' } }),
+            this.prisma.promptVersion.create({ data: { shotId: shot.id, kind: 'video', version: nextVersion, content: draft.videoPrompt, rationale: `资产更新：${input.assetName}`, status: 'done' } }),
+          ]);
+          done++;
+          await this.prisma.domainTask.update({
+            where: { id: taskId },
+            data: { progress: { stage: 'shots', stages: { shots: 'running' }, shotsDone: done, shotsTotal: total, mock: false } as object },
+          });
+          await this.events.append(projectId, 'artifact_updated', { artifact: 'shot', episodeId: row.episodeId, sceneNo: scene.sceneNo, sequence: shot.sequence, change: 'regenerated' });
+        }
+      }
+      await this.prisma.episode.update({ where: { id: row.episodeId }, data: { status: 'completed', updatedAt: new Date() } });
+    }
+    await this.prisma.domainTask.update({
+      where: { id: taskId },
+      data: { status: 'completed', finishedAt: new Date(), progress: { stage: 'done', stages: { shots: 'completed' }, shotsDone: done, shotsTotal: total, mock: false } as object },
+    });
+    await this.events.append(projectId, 'done', { kind: 'regeneration', shotsDone: done, shotsTotal: total });
+    const conversation = await this.prisma.conversation.findUnique({ where: { projectId } });
+    if (conversation) {
+      const note = await this.prisma.message.create({
+        data: { conversationId: conversation.id, role: 'assistant', kind: 'note', content: `重生成完成：${input.assetName} 的修改已应用到 ${input.episodes.length} 集 / ${done} 镜，新版本已存档。`, meta: {} as object },
+      });
+      await this.events.append(projectId, 'message', { messageId: note.id, role: 'assistant', kind: 'note' });
+    }
+    return { status: 'completed', shotsDone: done };
+  }
+
   private cancelled(ctx: PipelineContext, stages: StageProgress['stages'], mock: boolean) {
     void this.emit(ctx, 'done', { status: 'cancelled' });
     void this.appendAssistantNote(ctx, '制作已取消：已完成内容保留，可继续制作或重新开始。');

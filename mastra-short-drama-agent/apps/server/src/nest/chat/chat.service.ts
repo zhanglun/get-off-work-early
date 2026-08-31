@@ -3,6 +3,7 @@ import { SHOT_COUNT_RANGE, type QuestionKind, type MessageDto } from '@short-dra
 import { PrismaService } from '../prisma.service.js';
 import { EventsService } from '../events/events.service.js';
 import { parseScriptMarkdown } from '../../domain/markdown-script-parser.ts';
+import { ImpactService } from '../projects/impact.service.js';
 
 const SCRIPT_MIN_CHARS = 160;
 
@@ -25,6 +26,7 @@ export class ChatService {
   constructor(
     @Inject(PrismaService) private readonly prisma: PrismaService,
     @Inject(EventsService) private readonly events: EventsService,
+    @Inject(ImpactService) private readonly impact: ImpactService,
   ) {}
 
   /** 对话统一入口：意图路由（导入 / 回答补问 / 普通文本）。 */
@@ -45,6 +47,10 @@ export class ChatService {
     if (looksLikeScript(content)) {
       return { messages: await this.acceptScript(projectId, conversation.id, content, typeof meta?.fileName === 'string' ? meta.fileName : null) };
     }
+
+    // 修改意图：命中资产 → 影响分析确认卡
+    const impactMessage = await this.impact.analyze(projectId, content);
+    if (impactMessage) return { messages: [impactMessage] };
 
     const guidance = await this.append(projectId, conversation.id, 'assistant', 'note', this.guidanceText(history));
     return { messages: [guidance] };

@@ -39,7 +39,7 @@ export class TaskLeaseService {
           error: null,
         },
       });
-      if (task.kind !== 'production' || !task.projectId || !task.episodeId || !task.inputRef) return null;
+      if ((task.kind !== 'production' && task.kind !== 'regeneration') || !task.projectId || !task.episodeId || !task.inputRef) return null;
       const input = JSON.parse(task.inputRef) as {
         scriptVersionId: string; scriptText: string; shotTarget: number;
       };
@@ -49,6 +49,7 @@ export class TaskLeaseService {
         scriptVersionId: input.scriptVersionId,
         scriptText: input.scriptText,
         shotTarget: input.shotTarget,
+        inputRef: task.inputRef,
       };
     });
   }

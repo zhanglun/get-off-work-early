@@ -9,6 +9,19 @@ process.on('unhandledRejection', (reason) => {
 });
 process.on('exit', (code) => console.log(`[worker] 进程退出 code=${code}`));
 
+interface ClaimedTask {
+  id: string; kind: string; projectId: string; episodeId: string;
+  scriptVersionId: string; scriptText: string; shotTarget: number;
+  inputRef?: string;
+}
+
+function regenInputOf(task: ClaimedTask): {
+  assetId: string; assetName: string; fieldKey: string; before: string; after: string;
+  episodes: { episodeNo: number; episodeId: string; scenes: number; shots: number; prompts: number }[];
+} {
+  return JSON.parse(task.inputRef ?? '{}');
+}
+
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.createApplicationContext(PipelineModule, { logger: ['error', 'warn'] });
   const lease = app.get(TaskLeaseService);
@@ -28,19 +41,21 @@ async function bootstrap(): Promise<void> {
         return;
       }
       idleTicks = 0;
-      console.log(`[worker] 领取任务 ${task.id}（episode ${task.episodeId}，目标 ${task.shotTarget} 镜）`);
+      console.log(`[worker] 领取任务 ${task.id}（${task.kind}，episode ${task.episodeId}${task.kind === 'production' ? `，目标 ${task.shotTarget} 镜` : ''}）`);
       const heartbeat = setInterval(() => void lease.heartbeat(task.id), 30_000);
       try {
-        const result = await pipeline.run({
-          taskId: task.id,
-          projectId: task.projectId,
-          episodeId: task.episodeId,
-          scriptVersionId: task.scriptVersionId,
-          scriptText: task.scriptText,
-          shotTarget: task.shotTarget,
-        });
+        const result = task.kind === 'regeneration'
+          ? await pipeline.regenerate(task.id, task.projectId, regenInputOf(task))
+          : await pipeline.run({
+              taskId: task.id,
+              projectId: task.projectId,
+              episodeId: task.episodeId,
+              scriptVersionId: task.scriptVersionId,
+              scriptText: task.scriptText,
+              shotTarget: task.shotTarget,
+            });
         await lease.finish(task.id, result.status === 'cancelled' ? 'cancelled' : result.status);
-        console.log(`[worker] 任务完成 ${task.id}: ${result.status}（${result.shotsDone}/${result.shotsTotal}）`);
+        console.log(`[worker] 任务完成 ${task.id}: ${result.status}（${result.shotsDone} 镜）`);
       } catch (error) {
         await lease.finish(task.id, 'failed', String(error));
         console.error(`[worker] 任务失败 ${task.id}:`, error);
