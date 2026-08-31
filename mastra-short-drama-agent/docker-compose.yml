@@ -9,6 +9,43 @@ services:
       - "5434:5432"
     volumes:
       - short-drama-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U short_drama"]
+      interval: 3s
+      timeout: 3s
+      retries: 15
+
+  api:
+    build: .
+    command: sh -c "pnpm --filter server exec prisma migrate deploy --schema prisma/schema.prisma && pnpm --filter server exec tsx src/nest/main.ts"
+    ports:
+      - "4120:4120"
+    environment:
+      DATABASE_URL: postgresql://short_drama:short_drama@postgres:5432/short_drama
+      MODEL_BASE_URL: ${MODEL_BASE_URL:-}
+      MODEL_API_KEY: ${MODEL_API_KEY:-}
+      MODEL_NAME: ${MODEL_NAME:-}
+      SESSION_SECRET: ${SESSION_SECRET:-change-me}
+      ADMIN_TOKEN: ${ADMIN_TOKEN:-demo-admin}
+      EXPORT_ROOT: /data/exports
+    volumes:
+      - short-drama-exports:/data/exports
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  worker:
+    build: .
+    command: pnpm --filter server exec tsx src/worker.ts
+    environment:
+      DATABASE_URL: postgresql://short_drama:short_drama@postgres:5432/short_drama
+      MODEL_BASE_URL: ${MODEL_BASE_URL:-}
+      MODEL_API_KEY: ${MODEL_API_KEY:-}
+      MODEL_NAME: ${MODEL_NAME:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
 
 volumes:
   short-drama-postgres:
+  short-drama-exports:
