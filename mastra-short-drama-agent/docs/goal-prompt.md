@@ -22,7 +22,7 @@
 - PostgreSQL 16 + Prisma（Spike schema 迁移扩展，任务租约 SKIP LOCKED）
 - SSE + 事件表 journal（afterSeq 续传，刷新先快照）
 - 原地改造为 pnpm monorepo：apps/server（现 src/ 迁入）+ apps/web + packages/shared
-- 模型：OpenAI 兼容接口，开发即配真实 Key（真实模型先行）；失败自动 Mock 并以红色 MOCK 印章披露
+- 模型：OpenAI 兼容接口，开发即配真实 Key（真实模型先行）；失败显式报错 并以红色 错误印章披露
 - 认证：demo/demo123，HttpOnly 签名 cookie 7 天；管理口令重置
 
 ## 第一步：实现规划（先审后写）
@@ -57,7 +57,7 @@ P0-G Docker API + Worker 分离部署，任务持久化可恢复
 3. 打字修改"把林小雨的风衣改成深灰大衣"→ 显示跨集影响 → 确认 → 重生成出新版本
 4. 单镜失败可单项重试；被忽略穿帮出现在导出 manifest
 5. 一键下载整项目 ZIP，目录结构与 product-design.md §12 一致
-6. 真实模型配置后全链路使用真实输出；未配 Key 时 Mock 兜底可跑通 1–5 并标注 MOCK
+6. 真实模型配置后全链路使用真实输出；未配 Key 时 真实模型失败路径可跑通 1–5 并标注 ERROR
 7. pnpm check 与测试通过；Docker Compose 启动 postgres + api + worker，重启后任务与数据可恢复
 
 ## 边界

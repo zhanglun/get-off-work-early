@@ -7,14 +7,14 @@
 
 | 层 | 选型 | 决策依据 |
 |---|---|---|
-| 后端运行时 | Node 22 + TypeScript + Mastra | 复用 Spike 的 Workflow/Agent/结构化输出 |
+| 后端运行时 | Node 22 + TypeScript + NestJS | API、Worker 和真实模型 Agent 编排 |
 | API 框架 | NestJS | 用户熟悉栈（agent-base 同款）；模块/Guard/DI 结构强制力；SSE 用 @nestjs/common Sse |
 | 前端 | React 18 + Vite（SPA） | 生态成熟；视觉稿转组件直接 |
 | 服务端状态 | TanStack Query + 少量 Zustand | SSE/缓存/表单编辑均有现成模式 |
 | 数据库 | PostgreSQL 16 | 任务租约（SKIP LOCKED）、事件 journal、双进程并发写 |
 | ORM | Prisma（Spike schema 迁移扩展） | 迁移零成本复用 |
 | 实时通道 | SSE + 事件表 journal + `afterSeq` 续传 | 单向推送足够；刷新先快照再续订 |
-| 模型接入 | OpenAI 兼容接口（`MODEL_BASE_URL`/`MODEL_API_KEY`/`MODEL_NAME`） | 开发顺序：**真实模型先行**，Mock 仅作兜底 |
+| 模型接入 | OpenAI 兼容接口（`MODEL_BASE_URL`/`MODEL_API_KEY`/`MODEL_NAME`） | 真实模型 only；失败显式报错并支持重试 |
 | 仓库结构 | pnpm monorepo（原地改造本目录） | apps/web + apps/server + packages/shared |
 
 ## 2. Monorepo 结构（原地改造）
@@ -28,12 +28,12 @@ mastra-short-drama-agent/
 │   │   │   ├── projects/  # module + controller + service（项目/剧集/对话）
 │   │   │   ├── events/    # SSE module（journal 读取 + afterSeq 续传）
 │   │   │   ├── exports/   # 整项目 ZIP module
-│   │   │   ├── mastra/    # Mastra 实例 provider（agents/workflows 装配）
-│   │   │   ├── agents/    # Mastra Agents（沿用 Spike + 扩展）
-│   │   │   ├── workflows/ # 自动连续生成管线（去确认门槛）
-│   │   │   ├── worker/    # Worker 入口（Nest 独立应用，无 HTTP）
+│   │   │   ├── llm/       # 真实模型 Agent 与结构化 Provider
+│   │   │   ├── pipeline/  # 自动连续生成管线（去确认门槛）
+│   │   │   ├── infrastructure/ # Redis 与运行时依赖
+│   │   │   ├── worker.ts  # Worker 入口（Nest 独立应用，无 HTTP）
 │   │   │   ├── domain/    # 影响分析 / 版本 / 导出 / 会话服务
-│   │   │   └── llm/       # Provider：real（OpenAI 兼容）→ mock 兜底
+│   │   │   └── config.ts  # local/test/production 配置加载与校验
 │   │   └── prisma/        # schema + migrations（从 Spike 迁移）
 │   └── web/               # React + Vite
 │       └── src/
@@ -95,16 +95,14 @@ POST /api/admin/reset         管理口令 → 清空 Demo 数据
 - 取消 = 停止后续阶段，已完成资产保留，可"继续制作"（从第一个未完成阶段续跑）；
 - 服务器重启后 lease 过期任务可重新入队，不丢已完成结果。
 
-## 6. 模型层（真实先行，Mock 兜底）
+## 6. 模型层（真实模型 only）
 
 ```text
-ModelProvider
-├── RealProvider（OpenAI 兼容：chat + 结构化 JSON 输出）
-└── MockProvider（固定/规则化输出，仅兜底）
+RealProvider（OpenAI 兼容：chat + 结构化 JSON 输出 + Zod 校验 + 有限重试）
 ```
 
 - 开发环境即配置真实 Key，输出质量从第一天验证；
-- 真实调用失败或未配 Key → 自动切 Mock，**继续生成**，但对话、结果卡、manifest 均标注 `MOCK`（红色印章）；
+- 未配置 Key、网络失败、HTTP 错误或 Zod 校验失败 → 任务显式失败，记录结构化错误并支持重试；
 - 前端永不接触 API Key。
 
 ## 7. 前端架构
@@ -125,7 +123,7 @@ docker-compose.yml
 
 - 首次部署自动跑 `prisma migrate deploy`；
 - 导出目录 `/data/exports` 挂 volume；
-- 环境变量：`DATABASE_URL` / `MODEL_*` / `ADMIN_TOKEN` / `SESSION_SECRET` / `EXPORT_ROOT`。
+- 环境变量：`DATABASE_URL` / `REDIS_URL` / `MODEL_*` / `ADMIN_TOKEN` / `SESSION_SECRET` / `EXPORT_ROOT`。
 
 ## 9. 配图
 
@@ -135,4 +133,4 @@ docker-compose.yml
 
 ## 10. 明确不做
 
-WebSocket、Redis/BullMQ（PG 任务表够用）、微服务拆分、K8s、CDN、多区域、真实图像/视频生成接入。
+WebSocket、BullMQ、微服务拆分、K8s、CDN、多区域、真实图像/视频生成接入。Redis 仅作为本地运行时依赖和事件通知，不承担任务队列。

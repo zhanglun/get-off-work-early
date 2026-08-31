@@ -7,10 +7,3 @@ allowBuilds:
   '@prisma/engines': true
   esbuild: true
   prisma: true
-minimumReleaseAgeExclude:
-  - '@mastra/core@1.63.2'
-  - '@mastra/deployer@1.63.2'
-  - '@mastra/server@1.63.2'
-  - mastra@1.27.2
-  - '@mastra/memory@1.28.1'
-  - '@mastra/pg@1.22.2'

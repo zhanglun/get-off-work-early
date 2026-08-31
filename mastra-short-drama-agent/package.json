@@ -7,9 +7,16 @@
   "scripts": {
     "check": "pnpm -r check",
     "test": "pnpm --filter server test",
-    "dev:server": "pnpm --filter server dev",
+    "dev:server": "APP_ENV=local pnpm --filter server dev",
+    "dev:worker": "APP_ENV=local pnpm --filter server dev:worker",
     "dev:web": "pnpm --filter web dev",
-    "db:migrate": "pnpm --filter server db:migrate",
-    "db:deploy": "pnpm --filter server db:deploy"
+    "db:migrate": "APP_ENV=local pnpm --filter server db:migrate",
+    "db:deploy": "APP_ENV=local pnpm --filter server db:deploy",
+    "db:reset-local": "APP_ENV=local pnpm --filter server db:reset-local",
+    "infra:up": "docker compose up -d postgres redis",
+    "infra:down": "docker compose stop postgres redis",
+    "db:create-test": "docker compose exec -T postgres createdb -U short_drama short_drama_test || true",
+    "db:reset-test": "DATABASE_URL=postgresql://short_drama:short_drama@localhost:5434/short_drama_test pnpm --filter server db:reset-local",
+    "db:deploy-test": "DATABASE_URL=postgresql://short_drama:short_drama@localhost:5434/short_drama_test pnpm --filter server db:deploy"
   }
 }

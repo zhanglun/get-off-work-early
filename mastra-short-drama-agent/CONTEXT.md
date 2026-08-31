@@ -26,7 +26,7 @@
 
 Demo 账号登录（demo / demo123，7 天会话）→ 共享项目列表（隐藏管理重置）→ 项目主对话导入剧本（依次补问项目名→集数→镜头数，建议 20–40 默认 30）→ 一键自动连续生成（无确认门槛）→ 边栏阶段账 + 图版区实时生长（资产/分镜卡/穿帮）→ 打字修改（跨集影响分析 → 确认 → 局部重生成）→ 版本（保留 5 版/diff/回退）→ 穿帮处理（措辞自动修订、事实只标记）→ 整项目 ZIP 导出。
 
-关键产品决策：项目级资产 + 本集覆盖；冲突三选；同项目一次只制作一集；单镜失败隔离可重试；取消保留已完成；真实模型失败自动 Mock 并以红色 MOCK 印章披露；被忽略穿帮写入 manifest。
+关键产品决策：项目级资产 + 本集覆盖；冲突三选；同项目一次只制作一集；单镜失败隔离可重试；取消保留已完成；真实模型失败显式报错 并以红色 错误印章披露；被忽略穿帮写入 manifest。
 
 ### 视觉基线 `DESIGN.md` + `docs/mockups/ui-visual-draft.html`
 
@@ -36,7 +36,7 @@ Demo 账号登录（demo / demo123，7 天会话）→ 共享项目列表（隐�
 
 ### 技术基线 `docs/architecture.md`
 
-NestJS（API 层：module/guard/controller/service）+ Mastra 作为库（agents/workflows/结构化输出）+ Worker 独立进程；React 18 + Vite + TanStack Query；PostgreSQL 16 + Prisma（任务租约 SKIP LOCKED）；SSE + 事件表 journal（afterSeq 续传）；原地改造为 pnpm monorepo（apps/server + apps/web + packages/shared）；真实模型先行（OpenAI 兼容接口），Mock 仅兜底。
+NestJS（API 层：module/guard/controller/service）+ Mastra 作为库（agents/workflows/结构化输出）+ Worker 独立进程；React 18 + Vite + TanStack Query；PostgreSQL 16 + Prisma（任务租约 SKIP LOCKED）；SSE + 事件表 journal（afterSeq 续传）；原地改造为 pnpm monorepo（apps/server + apps/web + packages/shared）；真实模型 only（OpenAI 兼容接口），失败显式报错。
 
 ## 3. 路线图
 
@@ -82,11 +82,12 @@ docs/implementation-plan.md     M0 产出（待创建）
 - 2026-08-30：**M0 完成**——implementation-plan.md 四张清单（复用/重构/新增/淘汰）+ monorepo 原地重组提交；`pnpm -r check` 通过、server 测试 10/10。
 - 2026-08-30：**M1 完成**——NestJS auth/projects/events(SSE)/admin 四模块 + shared 契约包 + 前端登录/列表/工作区骨架；m1_baseline 迁移落库；curl 与浏览器双验收通过。
 - 2026-08-30：**M2 完成**——chat 补问状态机（集数→镜头数）+ ScriptVersion 只读登记 + 前端对话流（SSE 实时）；m2_episode_meta 迁移。
-- 2026-08-30：**M3 完成**——自动连续管线（无门槛）+ Worker SKIP LOCKED 租约 + SSE 阶段事件 + 前端阶段账/图版区/MOCK 印章；失败注入与取消验证通过（mock 路径；真实 Key 待用户提供后同链路复验）。
+- 2026-08-30：**M3 完成**——自动连续管线（无门槛）+ Worker SKIP LOCKED 租约 + SSE 阶段事件 + 前端阶段账/图版区/错误印章；失败注入与取消验证通过（错误路径；真实 Key 待用户提供后同链路复验）。
 - 2026-08-30：**M4 完成**——穿帮三操作（忽略/措辞自动修订/单镜重试）+ Prompt 版本留痕。
 - 2026-08-30：**M5 完成**——修改意图→影响卡→确认→Worker 局部重生成 + AssetVersion（5 版封顶/diff/回退）。
 - 2026-08-30：**M6 完成**——整项目 ZIP（7 文件 + manifest，被忽略穿帮入册）+ 前端一键下载。
-- 2026-08-31：**M7 完成，v1.0 全部里程碑（M0–M7）收官**——Docker 三容器部署、迁移自启、重启数据与任务恢复验证通过；`pnpm -r check` + server 测试全绿。真实模型路径已就绪（MODEL_* 配齐即走真实输出），Mock 链路全程可跑并披露。
+- 2026-08-31：**M7 完成，v1.0 全部里程碑（M0–M7）收官**——Docker 三容器部署、迁移自启、重启数据与任务恢复验证通过；`pnpm -r check` + server 测试全绿。
+- 2026-08-31：**真实模型本地开发改造完成**——删除当前生产代码中的 Mock Provider、Mock 生成器、旧 Spike Workflow/内存存储、MOCK 字段和 UI；Provider 改为真实模型 only + Zod 校验 + 3 次重试 + 结构化错误日志。新增 local/test/production 环境模板、本地 PostgreSQL + Redis 依赖、三进程开发命令、真实 1 集/4 镜冒烟脚本；本地数据库已清空。真实模型链路需配置 Key 后运行。
 
 ## 8. 下一步
 

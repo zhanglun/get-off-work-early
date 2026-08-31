@@ -1,12 +1,12 @@
 # 图表资产索引
 
 > 由 fireworks-tech-graph 流程生成（2026-08-30），配色对齐 DESIGN.md「场记日志」世界：
-> 米纸底 `#f7f6f1` · 墨线 `#22242c` · 工作蓝=主流程 · 校对红=失败/Mock · 圈码金=实时/当前。
+> 米纸底 `#f7f6f1` · 墨线 `#22242c` · 工作蓝=主流程 · 校对红=失败/错误 · 圈码金=实时/当前。
 > SVG 为源文件（全部通过 XML/标记/碰撞/语义/构图五项校验），PNG 为 2x 导出副本。
 
 | 图 | 内容 | 引用位置 |
 |---|---|---|
-| `系统架构图` | 客户端 / NestJS API / Mastra 编排 / Worker 与数据 四层架构；REST、SSE（金）、模型调用、Mock 兜底（红） | `architecture.md` §10 |
+| `系统架构图` | 客户端 / NestJS API / Mastra 编排 / Worker 与数据 四层架构；REST、SSE（金）、模型调用、真实模型失败路径（红） | `architecture.md` §10 |
 | `生成流程图` | 登录→导入→补问→自动连续管线（六阶段横带）→穿帮处理→导出；单镜失败重试旁路（红）、取消虚线 | `product-design.md` §6 |
 | `修改重生成时序图` | 打字修改→意图路由→影响分析→确认→Worker 局部重生成（loop 每集一次）→SSE 原位更新 | `product-design.md` §9 |
 | `数据模型图` | 14 实体 ER：项目域 / 制作域 / 运行域（右轨挂载 DomainTask·Event·ExportPackage） | `architecture.md` §3 |

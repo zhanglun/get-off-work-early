@@ -1,0 +1,11 @@
+node_modules
+**/node_modules
+.git
+.env
+config/*.env
+.mastra
+.archify
+.impeccable
+apps/web/dist
+/tmp
+*.log

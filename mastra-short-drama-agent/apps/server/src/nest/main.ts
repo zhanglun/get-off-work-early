@@ -1,4 +1,5 @@
 import 'reflect-metadata';
+import { loadEnvironment, requireRuntimeConfig } from '../config.js';
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { existsSync } from 'node:fs';
@@ -9,6 +10,8 @@ import { PrismaService } from './prisma.service.js';
 import { AuthService } from './auth/auth.service.js';
 
 async function bootstrap(): Promise<void> {
+  loadEnvironment();
+  requireRuntimeConfig('api');
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   app.enableCors({ origin: true, credentials: true });
   app.use(cookieParser());

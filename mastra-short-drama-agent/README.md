@@ -1,285 +1,140 @@
-# Mastra Short Drama Agent
+# 短剧分镜制作助手
 
-面向短剧内容制作团队的 AI 制作协作系统。当前主线不是单纯的分镜提示词优化，而是：
+NestJS + React/Vite + PostgreSQL/Prisma + Redis 的真实模型开发 Demo。
 
-```text
-剧本 → StoryBible → Scene → Shot → Image/Video Prompt → Review → Refine → Export
-```
+当前代码只有真实模型生成路径：
 
-## 项目定位
+- 未配置完整的 `MODEL_BASE_URL`、`MODEL_API_KEY`、`MODEL_NAME` 时，API/Worker 启动失败；
+- 模型请求失败、超时或 Zod 结构化校验失败时，任务显式失败并记录错误；
+- 单镜失败不会污染其它镜头，可单独重试；
+- 没有伪造模型资产；分镜中的“预览占位帧”只是尚未接入图片/视频生成服务的 UI 占位，不是模型输出。
 
-这是仓库中唯一活跃的短剧业务主线：
+## 快速开始
 
-- `agent-base/`：历史工作背景、业务决策和 NestJS 分镜提示词优化基线，冻结参考，不并行扩展。
-- `mastra-playground/`：Mastra 通用 API 学习实验，不新增短剧业务。
-- `mastra-short-drama-agent/`：当前唯一主项目，使用 Mastra Workflow、Agent、Tool、Memory 和 PostgreSQL 业务存储。
-
-产品形态：
-
-```text
-聊天入口 + 结构化资产工作区
-                 ↓
-        Story World Model / 生产资产
-                 ↓
-     Workflow + Agent + Tool + Review
-```
-
-结构化业务资产是事实来源；聊天记录只作为交互上下文和审计信息。
-
-## 当前已实现
-
-### 领域和解析
-
-- Project / Episode / ScriptVersion
-- StoryBible / Character / Location / Prop / Relationship / TimelineEvent
-- Scene / Shot / PromptVersion / Review / Feedback / ExportPackage
-- DomainTask 异步任务记录
-- 约定式 Markdown 基础场次格式
-- 接近行业剧本的 `INT./EXT.` 格式
-- 确定性 Markdown 预解析 + Agent 补充分析
-- sourceRef、confidence、version、status 基础字段
-- 原始剧本追加版本，不覆盖历史内容
-
-### Agent
-
-- Script Analyst
-- Scene Planner
-- Storyboard Director
-- Continuity Reviewer
-- Prompt Refiner
-- Short Drama Chat Agent
-
-每个需要模型判断的环节使用结构化输出 Schema；确定性读写通过 Repository/Service 完成。
-
-### Workflow
-
-- `storyUnderstandingWorkflow`
-- `scenePlanningWorkflow`
-- `storyboardProductionWorkflow`
-- 现有 `storyboardWorkflow` 作为历史分镜 Spike 保留
-
-核心确认门槛：
-
-```text
-StoryBible 草稿 → 用户确认 → Scene 草稿 → 用户确认 → Shot 生产
-```
-
-高风险冲突阻断 StoryBible 确认；低置信度信息可以保留为待确认项。
-
-### 业务 API
-
-```text
-POST /projects
-POST /projects/:projectId/episodes
-POST /story-understandings
-GET  /story-understandings/:runId
-GET  /episodes/:episodeId/story-bible
-POST /episodes/:episodeId/story-bible/confirm
-POST /episodes/:episodeId/scenes
-GET  /scene-plannings/:runId
-GET  /episodes/:episodeId/scenes
-POST /episodes/:episodeId/scenes/confirm
-POST /episodes/:episodeId/production
-GET  /storyboard-productions/:runId
-GET  /episodes/:episodeId/shots
-POST /episodes/:episodeId/shots/:sceneNo/:sequence/regenerate
-GET  /episodes/:episodeId/shots/:sceneNo/:sequence/versions
-GET  /episodes/:episodeId/shots/:sceneNo/:sequence/reviews
-POST /episodes/:episodeId/export
-POST /change-proposals
-GET  /change-proposals/:id
-POST /change-proposals/:id/approve
-POST /change-proposals/:id/reject
-POST /feedback
-POST /chat
-```
-
-长任务接口返回 `202` 和 `runId`，任务状态写入 `DomainTask`；PostgreSQL 模式下任务状态不会只依赖进程内 Map。
-
-## 启动
-
-### Mock 模式
-
-无需 API Key，可验证完整业务链路：
+要求：Node.js >= 22.13、pnpm 11+、Docker Desktop、可用的 OpenAI 兼容模型接口。
 
 ```bash
-cd mastra-short-drama-agent
 pnpm install
-pnpm run check
-pnpm test
-pnpm run run:full
+cp config/.local.env.example config/.local.env
 ```
 
-### PostgreSQL 模式
-
-```bash
-cd mastra-short-drama-agent
-cp .env.example .env
-docker compose up -d
-pnpm run db:deploy
-STORAGE_MODE=postgres pnpm run run:full
-```
-
-默认数据库：
-
-```text
-postgresql://short_drama:short_drama@localhost:5434/short_drama
-```
-
-### Mastra Studio
-
-```bash
-pnpm run dev
-```
-
-访问 <http://localhost:4111>：
-
-- `storyUnderstandingWorkflow`：调试剧本解析和 StoryBible
-- `scenePlanningWorkflow`：调试场次规划
-- `storyboardProductionWorkflow`：调试分镜生产
-
-### 业务 API 和资产工作区
-
-```bash
-pnpm run api
-```
-
-默认地址：
-
-```text
-http://localhost:4120
-```
-
-浏览器打开 `http://localhost:4120/` 可以使用最小结构化资产工作区：导入剧本、确认 StoryBible/Scene、生成分镜、查看资产、发送聊天请求和导出 JSON。
-
-提交 Story Understanding：
-
-```bash
-curl -X POST http://127.0.0.1:4120/story-understandings \
-  -H 'content-type: application/json' \
-  -d '{"projectName":"我的短剧","episodeNo":1,"scriptText":"## 第1场 夜 / 天台\n【人物】林小雨、陈默\n【动作】林小雨看向陈默。\n【对白】陈默：你终于来了。"}'
-```
-
-提交聊天请求：
-
-```bash
-curl -X POST http://127.0.0.1:4120/chat \
-  -H 'content-type: application/json' \
-  -d '{"message":"询问人物动机","episodeId":"episode-id"}'
-```
-
-## 模型配置
-
-默认使用 Mock。Real 模式使用 Mastra model router 和结构化输出：
+编辑 `config/.local.env`：
 
 ```env
-LLM_MODE=real
-LLM_MODEL=openai/gpt-5.6-sol
-OPENAI_API_KEY=...
+MODEL_BASE_URL=https://api.openai.com/v1
+MODEL_API_KEY=你的Key
+MODEL_NAME=你的模型名
 ```
 
-当前已验证 Mock 和构建链路；真实模型调用需要用户配置有效 Provider Key。模型名称应以当前 Mastra provider registry 为准，不能把 Mock 结果当成真实模型质量证明。
+启动本地 PostgreSQL 和 Redis：
 
-## 存储分层
+```bash
+pnpm infra:up
+pnpm db:deploy
+```
+
+分别启动三个进程：
+
+```bash
+pnpm dev:server   # API http://localhost:4120
+pnpm dev:worker   # 异步真实模型任务
+pnpm dev:web      # Vite http://localhost:5173
+```
+
+浏览器打开 `http://localhost:5173`：
 
 ```text
-业务事实：PostgreSQL + Prisma
-  Project / Episode / StoryBible / Scene / Shot / Version / Review
-
-Agent 对话记忆：Mastra Memory
-  Thread / Resource / Message
-
-Workflow 和 Runtime 状态：Mastra PostgresStore
-  Workflow snapshot / messages / traces / thread state
+账号：demo
+密码：demo123
 ```
 
-当前业务 Repository 支持 `memory` 和 `postgres` 两种模式；生产验收必须使用 PostgreSQL，不允许把内存降级误认为持久化成功。
+健康检查：
+
+```bash
+curl http://localhost:4120/api/health
+```
+
+需要完整步骤、环境模板、清库、真实模型冒烟测试和故障排查时，阅读：
+
+```text
+docs/本地开发.md
+```
+
+## 环境模板
+
+```text
+config/.local.env.example       本地开发
+config/.test.env.example        测试环境
+config/.production.env.example  生产环境
+```
+
+真实环境文件不会提交到 Git：
+
+```text
+config/.local.env
+config/.test.env
+config/.production.env
+```
+
+测试环境真实模型冒烟：
+
+```bash
+APP_ENV=test pnpm --filter server test:real
+```
+
+该命令验证 1 集 / 4 镜：
+
+```text
+真实 StoryBible → Scene → Shot → Reviewer
+```
+
+## 数据库和 Redis
+
+本地端口：
+
+```text
+PostgreSQL：localhost:5434
+Redis：localhost:6380
+```
+
+启动和停止：
+
+```bash
+pnpm infra:up
+pnpm infra:down
+```
+
+清空本地数据库：
+
+```bash
+pnpm db:reset-local
+pnpm db:deploy
+```
+
+清库会删除本地业务数据。不要执行 `docker compose down -v`，除非要删除数据库和 Redis 数据卷。
+
+## 质量检查
+
+```bash
+pnpm check
+pnpm test
+```
+
+Docker 部署仍可用于集成验证，但本地开发推荐使用上面的 API、Worker、Web 三进程模式：
+
+```bash
+docker compose up -d postgres redis
+```
 
 ## 目录
 
 ```text
-src/
-├── agents/
-│   ├── chat-agent.ts
-│   ├── script-analyst-agent.ts
-│   ├── scene-planner-agent.ts
-│   ├── production-agents.ts
-│   └── storyboard-agents.ts          # 历史 Spike Agent
-├── domain/
-│   ├── markdown-script-parser.ts
-│   ├── story-schemas.ts
-│   ├── scene-schemas.ts
-│   ├── production-schemas.ts
-│   ├── chat-schemas.ts
-│   ├── project-repository.ts
-│   ├── story-repository.ts
-│   ├── scene-repository.ts
-│   ├── production-repository.ts
-│   ├── task-repository.ts
-│   ├── export-service.ts
-│   └── chat-service.ts
-├── workflows/
-│   ├── story-understanding-workflow.ts
-│   ├── scene-planning-workflow.ts
-│   ├── storyboard-production-workflow.ts
-│   └── storyboard-workflow.ts          # 历史 Spike
-├── mastra/
-│   ├── index.ts
-│   └── runtime-storage.ts
-├── api.ts
-├── run-full-pipeline.ts
-└── ...
-prisma/schema.prisma
-prisma/migrations/
-test/
+apps/server/                  Nest API、真实模型 Provider、Worker、Prisma
+apps/web/                     React/Vite 前端
+packages/shared/              跨端 Zod 契约和 DTO
+config/                       local/test/production 环境模板
+docs/本地开发.md               本地开发与调试说明
+docs/architecture.md          技术基线
+docs/product-design.md        产品基线
+DESIGN.md                     视觉基线
 ```
-
-## 测试和验收
-
-```bash
-pnpm run check
-pnpm test
-pnpm run build
-pnpm run db:validate
-pnpm run db:generate
-pnpm run run:full
-```
-
-API Smoke Test 需要先启动 API：
-
-```bash
-pnpm run api
-node test/api-smoke.mjs
-```
-
-真实 PostgreSQL 验收：
-
-```bash
-docker compose up -d
-pnpm run db:deploy
-STORAGE_MODE=postgres pnpm run run:full
-```
-
-## 设计文档
-
-- `CONTEXT.md`：下次会话必须优先读取的项目上下文和工作规则
-
-### 当前产品与设计基线
-
-- `docs/product-design.md`：Demo 产品设计（18 轮问答确认）
-- `DESIGN.md`：「场记日志」视觉世界（方向与构图均经用户选定）
-- `docs/mockups/ui-visual-draft.html`：视觉稿（登录/列表/工作区制作中/完成/修改确认 5 状态）
-
-> `src/` 为冻结的技术 Spike，M0 时按 `docs/implementation-plan.md` 四张清单处置。当前产品/视觉/技术依据以基线文档为准；历史方案文档已删（git 历史可恢复）。
-
-## 当前明确出界
-
-暂不实现：
-
-- 真实图像/视频生成服务
-- 配音、字幕、剪辑和发布
-- 多租户和复杂权限
-- 团队实时协作
-- 插件市场和 MCP 平台
-
-这些属于后续能力，不影响当前 v1 的“剧本 → 生产资产包”闭环。

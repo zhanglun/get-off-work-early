@@ -1,7 +1,6 @@
 import { Controller, Get, Param, Query, Res, Req, Inject } from '@nestjs/common';
 import type { Response } from 'express';
 import { EventsService } from './events.service.js';
-import { PrismaService } from '../prisma.service.js';
 
 @Controller('api/projects/:projectId/events')
 export class EventsController {
@@ -40,8 +39,8 @@ export class EventsController {
           })}\n\n`);
         }
         if (rows.length === 0) res.write(': hb\n\n');
-      } catch {
-        // 数据库抖动：下轮重试
+      } catch (error) {
+        console.error(JSON.stringify({ event: 'sse_poll_failed', projectId, error: String(error) }));
       }
     }, 800);
 

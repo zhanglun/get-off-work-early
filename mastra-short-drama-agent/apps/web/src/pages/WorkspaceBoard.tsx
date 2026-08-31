@@ -6,7 +6,7 @@ import { api } from '../api';
 
 export interface BoardData {
   episode: { id: string; episodeNo: number; status: string; shotTarget: number | null };
-  stages: { stage: string; stages: Partial<Record<PipelineStage, string>>; shotsDone: number; shotsTotal: number; mock: boolean };
+  stages: { stage: string; stages: Partial<Record<PipelineStage, string>>; shotsDone: number; shotsTotal: number };
   taskStatus: string | null;
   scenes: {
     sceneNo: number; heading: string; timeLabel: string | null; locationLabel: string | null; objective: string;
@@ -113,7 +113,6 @@ export function WorkspaceBoard({ projectId, activeEpisodeId, invalidateKey }: { 
             {board ? `第 ${board.episode.episodeNo} 集 · ${board.scenes.reduce((sum, scene) => sum + scene.shots.length, 0)} 镜` : '…'}
           </span>
           <div style={{ flex: 1 }} />
-          {board?.stages.mock ? <span className="stamp">MOCK</span> : null}
         </div>
         <div style={{ flex: 1, overflowY: 'auto', padding: '14px 20px 40px' }}>
           {/* 项目级资产 */}
@@ -145,7 +144,7 @@ export function WorkspaceBoard({ projectId, activeEpisodeId, invalidateKey }: { 
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
                       <Slate n={String(shot.sequence).padStart(2, '0')} />
                       <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink-2)' }}>{draft.shotSize ?? '—'} · {draft.cameraMove ?? '—'}</span>
-                      <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--ink-3)', border: '1px solid var(--rule)', borderRadius: 2, padding: '0 4px', marginLeft: 'auto' }}>模拟帧</span>
+                      <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--ink-3)', border: '1px solid var(--rule)', borderRadius: 2, padding: '0 4px', marginLeft: 'auto' }}>预览占位帧</span>
                       {shot.status !== 'done' ? <span className="mark warn">{shot.status === 'failed' ? '失败' : '待审'}</span> : null}
                     </div>
                     {draft.imagePrompt ? (

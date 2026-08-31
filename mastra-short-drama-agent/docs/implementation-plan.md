@@ -6,7 +6,7 @@
 ## 0. Spike 现状速览
 
 - **代码量**：src/ 3112 行（30 文件）+ prisma（13 模型 4 迁移）+ test（5 文件）
-- **可用资产**：Markdown 解析器（纯函数、有测试）、Zod 领域 Schema 全套、8 个 Mastra Agent（指令完备）、3 条正式 Workflow（理解/场次/生产，带 Mock 分支与结构化输出）、Prisma 双态 Repository（内存+PG）、版本 diff、导出渲染
+- **可用资产**：Markdown 解析器（纯函数、有测试）、Zod 领域 Schema、真实模型 Agent 指令、Prisma 业务存储、版本 diff、导出渲染
 - **核心偏差**（对新基线）：确认门槛贯穿全流程；api.ts 是裸 node:http + 内存 Job Map；无会话/事件/影响分析/项目级资产；无前端；导出是单集内联而非项目 ZIP
 
 ## 1. 复用清单（改动 ≤ 20%）
@@ -19,7 +19,7 @@
 | `src/domain/{story,scene,production,project}-repository.ts` | `apps/server/src/domain/` | Prisma 路径复用；内存实现保留为测试替身 |
 | `src/domain/version-diff.ts` | `apps/server/src/domain/` | collectDiff 原样，接入 5 版保留策略 |
 | `prisma/schema.prisma` + migrations | `apps/server/prisma/` | 迁移链保留，追加新模型（见 §3） |
-| workflow 内 Mock 函数（mockDraft/mockReview/mockRefine） | `apps/server/src/llm/mock-provider.ts` | 抽出为 MockProvider，保留可复现失败注入（MOCK_FAIL_SHOT） |
+| workflow 内固定输出函数 | 不进入新运行时 | 旧 Spike 代码删除，真实模型失败由任务错误和单镜重试处理 |
 | `test/markdown-script-parser.spec.ts` `domain-schemas.spec.ts` | `apps/server/test/` | 原样 |
 
 ## 2. 重构清单（保留职责，重写实现）
@@ -31,7 +31,7 @@
 | `src/api.ts`（345 行裸 http） | NestJS 模块组 | auth / projects / events / exports / admin / mastra 六模块（见 architecture §2） |
 | `src/domain/chat-service.ts` | `apps/server/src/services/chat-router.ts` | 意图路由 + 依次补问状态机（项目名→集数→镜头数）+ 影响确认挂起态 |
 | `src/domain/export-service.ts` | `apps/server/src/exports/` | 单集内联 → 整项目 ZIP（project-assets.md + 每集 5 文件 + manifest 含忽略穿帮） |
-| LLM_MODE 环境双分支 | `apps/server/src/llm/provider.ts` | OpenAI 兼容 Real → 失败自动 Mock，结果标注 MOCK（对话/卡片/manifest 三处披露） |
+| LLM_MODE 环境双分支 | `apps/server/src/llm/provider.ts` | 删除模式分支；统一 OpenAI 兼容真实模型，失败显式记录并重试 |
 | Prisma 模型状态机 | schema 扩展 | `status: confirmed` 门槛语义删除；新增自动流程状态 |
 
 ## 3. 新增清单
@@ -57,7 +57,7 @@
 | `src/api.ts` 整体 | 裸 http + 内存 Job Map + 确认端点，被 NestJS 模块组取代 |
 | `src/run-sample.ts` `run-story-understanding.ts` `run-scene-planning.ts` `run-full-pipeline.ts` | Spike 验证脚本；worker 入口取代 |
 | `test/api-smoke.mjs` `production-workflow.spec.ts` `story-understanding-and-scene-planning.spec.ts` | 面向旧 API/确认门槛；新测试随各里程碑补 |
-| `LLM_MODE` 直读逻辑 | 并入 Provider 抽象 |
+| `LLM_MODE` 直读逻辑 | 删除 | 不再存在运行时模式开关 |
 
 ## 5. Monorepo 重组方案（一次 git mv，独立提交）
 

@@ -41,7 +41,7 @@ export class BoardController {
         status: episode.status,
         shotTarget: episode.shotTarget,
       },
-      stages: task?.progress ?? { stage: 'parse', stages: {}, shotsDone: 0, shotsTotal: 0, mock: false },
+      stages: task?.progress ?? { stage: 'parse', stages: {}, shotsDone: 0, shotsTotal: 0 },
       taskStatus: task?.status ?? null,
       scenes: scenes.map((scene) => ({
         sceneNo: scene.sceneNo,

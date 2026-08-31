@@ -69,8 +69,8 @@ export class RetryController {
       await this.prisma.promptVersion.create({ data: { shotId: created.id, kind: 'video', version: 1, content: draft.videoPrompt, rationale: '单镜重试', status: 'done' } });
     }
     await this.events.append((await this.prisma.episode.findUnique({ where: { id: episodeId } }))!.projectId, 'artifact_updated', {
-      artifact: 'shot', sceneNo: input.scope.sceneNo, sequence: input.scope.sequence, change: 'retry', mock: result.mock,
+      artifact: 'shot', sceneNo: input.scope.sceneNo, sequence: input.scope.sequence, change: 'retry',
     });
-    return { ok: true, mock: result.mock };
+    return { ok: true };
   }
 }

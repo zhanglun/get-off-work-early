@@ -143,7 +143,7 @@ export class ImpactService {
         data: {
           kind: 'regeneration',
           status: 'queued',
-          progress: { stage: 'shots', stages: {}, shotsDone: 0, shotsTotal: 0, mock: false },
+          progress: { stage: 'shots', stages: {}, shotsDone: 0, shotsTotal: 0 },
           projectId,
           episodeId: meta.impact[0].episodeId,
           inputRef: JSON.stringify({

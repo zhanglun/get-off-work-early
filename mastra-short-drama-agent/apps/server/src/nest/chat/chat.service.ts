@@ -182,7 +182,7 @@ export class ChatService {
       data: {
         kind: 'production',
         status: 'queued',
-        progress: { stage: 'parse', stages: {}, shotsDone: 0, shotsTotal: 0, mock: false },
+        progress: { stage: 'parse', stages: {}, shotsDone: 0, shotsTotal: 0 },
         projectId,
         episodeId: episode.id,
         inputRef: JSON.stringify({ scriptVersionId: scriptVersion.id, scriptText: content, shotTarget: target }),

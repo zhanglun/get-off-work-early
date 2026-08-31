@@ -70,8 +70,8 @@ export class IssuesController {
         before: before as object, after: result.value.draft as object,
         reason: `措辞自动修订：${issue.issue}`, source: 'agent',
       },
-    }).catch(() => undefined);
-    await this.events.append(issue.episodeId, 'artifact_updated', { artifact: 'shot', sceneNo, sequence, change: 'auto_fix', mock: result.mock });
-    return { ok: true, changes: result.value.changes, mock: result.mock };
+    });
+    await this.events.append(issue.episodeId, 'artifact_updated', { artifact: 'shot', sceneNo, sequence, change: 'auto_fix' });
+    return { ok: true, changes: result.value.changes };
   }
 }

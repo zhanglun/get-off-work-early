@@ -8,7 +8,6 @@ import {
   generateShot,
   reviewShot,
   refineShot,
-  shouldFailShotMock,
 } from '../llm/agents.ts';
 import type { StoryBibleDraft } from '../../domain/story-schemas.ts';
 import type { ScenePlan } from '../llm/scene-schemas.ts';
@@ -30,7 +29,6 @@ export interface StageProgress {
   stages: Partial<Record<PipelineStage, 'running' | 'completed' | 'failed'>>;
   shotsDone: number;
   shotsTotal: number;
-  mock: boolean;
 }
 
 const MAX_ROUNDS = 3;
@@ -51,7 +49,6 @@ export class ProductionPipeline {
           stages: { ...stages, ...(patch.stages ?? {}) },
           shotsDone: patch.shotsDone ?? 0,
           shotsTotal: patch.shotsTotal ?? 0,
-          mock: patch.mock ?? false,
         } as object,
         status: patch.stage === 'done' ? 'completed' : 'running',
       },
@@ -68,9 +65,8 @@ export class ProductionPipeline {
   }
 
   /** 自动连续生成：parse → assets → scenes → shots → review → package，无确认门槛。 */
-  async run(ctx: PipelineContext): Promise<{ status: 'completed' | 'partial_failed' | 'cancelled'; mock: boolean; shotsDone: number; shotsTotal: number }> {
+  async run(ctx: PipelineContext): Promise<{ status: 'completed' | 'partial_failed' | 'cancelled'; shotsDone: number; shotsTotal: number }> {
     const stages: StageProgress['stages'] = {};
-    let mock = false;
     await this.emit(ctx, 'run_started', { stages: PIPELINE_STAGES, shotTarget: ctx.shotTarget });
 
     // ── 剧本解析（确定性，无 LLM）──
@@ -91,22 +87,20 @@ export class ProductionPipeline {
     // ── 故事资产 ──
     await this.progress(ctx.taskId, { stage: 'assets' }, stages);
     const bibleResult = await generateStoryBible(parsed, ctx.scriptText);
-    mock = mock || bibleResult.mock;
     const bible = bibleResult.value;
     await this.saveStoryBible(ctx, parsed, bible);
     await this.upsertProjectAssets(ctx, bible);
     stages.assets = 'completed';
-    await this.emit(ctx, 'stage_completed', { stage: 'assets', characters: bible.characters.length, locations: bible.locations.length, mock: bibleResult.mock });
+    await this.emit(ctx, 'stage_completed', { stage: 'assets', characters: bible.characters.length, locations: bible.locations.length });
 
     // ── 场次规划 ──
-    if (await this.isCancelled(ctx.taskId)) return this.cancelled(ctx, stages, mock);
+    if (await this.isCancelled(ctx.taskId)) return this.cancelled(ctx, stages);
     await this.progress(ctx.taskId, { stage: 'scenes' }, stages);
     const sceneResult = await generateScenePlans(parsed, bible);
-    mock = mock || sceneResult.mock;
     const scenePlans = sceneResult.value;
     await this.saveScenePlans(ctx, scenePlans);
     stages.scenes = 'completed';
-    await this.emit(ctx, 'stage_completed', { stage: 'scenes', scenes: scenePlans.length, mock: sceneResult.mock });
+    await this.emit(ctx, 'stage_completed', { stage: 'scenes', scenes: scenePlans.length });
 
     // ── 分镜生成（镜头级并发、单镜失败隔离）──
     await this.progress(ctx.taskId, { stage: 'shots' }, stages);
@@ -123,7 +117,6 @@ export class ProductionPipeline {
         if (!item) return;
         try {
           const result = await this.produceShot(ctx, item.scene, item.sequence, item.beat, bible);
-          mock = mock || result.mock;
           await this.saveShot(ctx, item.scene, item.sequence, result.draft, result.status);
           if (result.status === 'failed') {
             shotsFailed++;
@@ -157,7 +150,7 @@ export class ProductionPipeline {
     await this.emit(ctx, 'stage_completed', { stage: 'shots', done: shotsDone, failed: shotsFailed, total: shotsTotal });
 
     // ── 连续性检查（review）──
-    if (await this.isCancelled(ctx.taskId)) return this.cancelled(ctx, stages, mock);
+    if (await this.isCancelled(ctx.taskId)) return this.cancelled(ctx, stages);
     await this.progress(ctx.taskId, { stage: 'review' }, stages);
     const issueCount = await this.runContinuityReview(ctx, bible, scenePlans);
     stages.review = 'completed';
@@ -168,10 +161,10 @@ export class ProductionPipeline {
     await this.prisma.episode.update({ where: { id: ctx.episodeId }, data: { status: shotsFailed > 0 ? 'partial_failed' : 'completed' } });
     stages.package = 'completed';
     const finalStatus = shotsFailed > 0 ? 'partial_failed' : 'completed';
-    await this.progress(ctx.taskId, { stage: 'done', mock, shotsDone, shotsTotal }, stages);
-    await this.emit(ctx, 'done', { status: finalStatus, shotsDone, shotsTotal, failedShots, mock });
-    await this.appendAssistantNote(ctx, `制作完成：${shotsDone}/${shotsTotal} 镜${shotsFailed > 0 ? ` · ${shotsFailed} 镜失败可重试` : ''} · 用时见任务记录${mock ? ' · 本轮为 Mock 输出（红色印章）' : ''}。`);
-    return { status: finalStatus, mock, shotsDone, shotsTotal };
+    await this.progress(ctx.taskId, { stage: 'done', shotsDone, shotsTotal }, stages);
+    await this.emit(ctx, 'done', { status: finalStatus, shotsDone, shotsTotal, failedShots });
+    await this.appendAssistantNote(ctx, `制作完成：${shotsDone}/${shotsTotal} 镜${shotsFailed > 0 ? ` · ${shotsFailed} 镜失败可重试` : ''} · 用时见任务记录。`);
+    return { status: finalStatus, shotsDone, shotsTotal };
   }
 
   /** 局部重生成：按新资产设定刷新受影响镜头（逐集顺序，事件实时推）。 */
@@ -182,7 +175,6 @@ export class ProductionPipeline {
     await this.emit({ taskId, projectId, episodeId: input.episodes[0]!.episodeId, scriptVersionId: '', scriptText: '', shotTarget: 0 }, 'run_started', { kind: 'regeneration', episodes: input.episodes.length });
     let done = 0;
     let total = 0;
-    let mock = false;
     for (const row of input.episodes) {
       const bible = await this.prisma.storyBible.findFirst({ where: { episodeId: row.episodeId }, orderBy: { version: 'desc' } });
       if (!bible) continue;
@@ -224,7 +216,6 @@ export class ProductionPipeline {
             continuityNotes: (scene.continuityNotes ?? []) as string[],
           };
           const draftResult = await generateShot(scenePlan, shot.sequence, scenePlan.beats[(shot.sequence - 1) % scenePlan.beats.length], bibleDraft);
-          mock = mock || draftResult.mock;
           const draft = draftResult.value;
           const nextVersion = Math.floor((await this.prisma.promptVersion.count({ where: { shotId: shot.id } })) / 2) + 1;
           await this.prisma.$transaction([
@@ -235,7 +226,7 @@ export class ProductionPipeline {
           done++;
           await this.prisma.domainTask.update({
             where: { id: taskId },
-            data: { progress: { stage: 'shots', stages: { shots: 'running' }, shotsDone: done, shotsTotal: total, mock } as object },
+            data: { progress: { stage: 'shots', stages: { shots: 'running' }, shotsDone: done, shotsTotal: total } as object },
           });
           await this.events.append(projectId, 'artifact_updated', { artifact: 'shot', episodeId: row.episodeId, sceneNo: scene.sceneNo, sequence: shot.sequence, change: 'regenerated' });
         }
@@ -244,23 +235,23 @@ export class ProductionPipeline {
     }
     await this.prisma.domainTask.update({
       where: { id: taskId },
-      data: { status: 'completed', finishedAt: new Date(), progress: { stage: 'done', stages: { shots: 'completed' }, shotsDone: done, shotsTotal: total, mock } as object },
+      data: { status: 'completed', finishedAt: new Date(), progress: { stage: 'done', stages: { shots: 'completed' }, shotsDone: done, shotsTotal: total } as object },
     });
-    await this.events.append(projectId, 'done', { kind: 'regeneration', shotsDone: done, shotsTotal: total, mock });
+    await this.events.append(projectId, 'done', { kind: 'regeneration', shotsDone: done, shotsTotal: total });
     const conversation = await this.prisma.conversation.findUnique({ where: { projectId } });
     if (conversation) {
       const note = await this.prisma.message.create({
-        data: { conversationId: conversation.id, role: 'assistant', kind: 'note', content: `重生成完成：${input.assetName} 的修改已应用到 ${input.episodes.length} 集 / ${done} 镜，新版本已存档。${mock ? ' 本轮为 Mock 输出（红色印章）。' : ''}`, meta: {} as object },
+        data: { conversationId: conversation.id, role: 'assistant', kind: 'note', content: `重生成完成：${input.assetName} 的修改已应用到 ${input.episodes.length} 集 / ${done} 镜，新版本已存档。`, meta: {} as object },
       });
       await this.events.append(projectId, 'message', { messageId: note.id, role: 'assistant', kind: 'note' });
     }
     return { status: 'completed', shotsDone: done };
   }
 
-  private cancelled(ctx: PipelineContext, stages: StageProgress['stages'], mock: boolean) {
+  private cancelled(ctx: PipelineContext, stages: StageProgress['stages']) {
     void this.emit(ctx, 'done', { status: 'cancelled' });
     void this.appendAssistantNote(ctx, '制作已取消：已完成内容保留，可继续制作或重新开始。');
-    return { status: 'cancelled' as const, mock, shotsDone: 0, shotsTotal: 0 };
+    return { status: 'cancelled' as const, shotsDone: 0, shotsTotal: 0 };
   }
 
   /** 单镜生产：director → reviewer → (refiner → reviewer) 循环。 */
@@ -270,30 +261,23 @@ export class ProductionPipeline {
     sequence: number,
     beat: string,
     bible: StoryBibleDraft,
-  ): Promise<{ draft: ShotDraftV1 | null; status: 'done' | 'needs_review' | 'failed'; error?: string; mock: boolean }> {
-    let mock = false;
+  ): Promise<{ draft: ShotDraftV1 | null; status: 'done' | 'needs_review' | 'failed'; error?: string }> {
     try {
-      if (!process.env.MODEL_BASE_URL && shouldFailShotMock(scene.sceneNo, sequence)) {
-        throw new Error(`mock shot failure: ${scene.sceneNo}/${sequence}`);
-      }
       const draftResult = await generateShot(scene, sequence, beat, bible);
-      mock = mock || draftResult.mock;
       let draft = draftResult.value;
       for (let round = 1; round <= MAX_ROUNDS; round++) {
         const reviewResult = await reviewShot(scene, bible, draft);
-        mock = mock || reviewResult.mock;
         const review = reviewResult.value;
         if (!review.passed && round < MAX_ROUNDS) {
           const refineResult = await refineShot(scene, bible, draft);
-          mock = mock || refineResult.mock;
           draft = refineResult.value.draft;
           continue;
         }
-        return { draft, status: review.passed ? 'done' : 'needs_review', mock };
+        return { draft, status: review.passed ? 'done' : 'needs_review' };
       }
-      return { draft, status: 'needs_review', mock };
+      return { draft, status: 'needs_review' };
     } catch (error) {
-      return { draft: null, status: 'failed', error: String(error), mock };
+      return { draft: null, status: 'failed', error: String(error) };
     }
   }
 
@@ -335,22 +319,22 @@ export class ProductionPipeline {
     };
     const bibleRecord = await this.prisma.storyBible.create({ data: record });
     for (const character of bible.characters) {
-      await this.prisma.character.create({
-        data: {
-          storyBibleId: bibleRecord.id,
-          name: character.name,
-          aliases: character.aliases,
-          age: character.age,
-          appearance: character.appearance,
-          clothing: character.clothing,
-          personality: character.personality,
-          speakingStyle: character.speakingStyle,
-          canonicalDescription: character.canonicalDescription,
-          sourceRefs: character.sourceRefs,
-          confidence: character.confidence,
-          status: 'confirmed',
-        },
-      }).catch(() => undefined);
+      const existing = await this.prisma.character.findFirst({ where: { storyBibleId: bibleRecord.id, name: character.name } });
+      const data = {
+        name: character.name,
+        aliases: character.aliases,
+        age: character.age,
+        appearance: character.appearance,
+        clothing: character.clothing,
+        personality: character.personality,
+        speakingStyle: character.speakingStyle,
+        canonicalDescription: character.canonicalDescription,
+        sourceRefs: character.sourceRefs,
+        confidence: character.confidence,
+        status: 'confirmed',
+      };
+      if (existing) await this.prisma.character.update({ where: { id: existing.id }, data });
+      else await this.prisma.character.create({ data: { storyBibleId: bibleRecord.id, ...data } });
     }
   }
 
@@ -371,7 +355,7 @@ export class ProductionPipeline {
         where: { projectId_kind_name: { projectId: ctx.projectId, kind: 'character', name: character.name } },
         create: { projectId: ctx.projectId, ...data },
         update: { data: data.data, updatedAt: new Date() },
-      }).catch(() => undefined);
+      });
     }
   }
 
@@ -468,18 +452,20 @@ export class ProductionPipeline {
         await this.emit(ctx, 'issue_reported', { kind: 'wording', sceneNo: shot.scene.sceneNo, sequence: shot.sequence });
         continue;
       }
-      // 事实类：跨镜头道具/服装一致性抽查（Mock 规则：每集固定报 1 条演示事实类穿帮）
-      if (count === 0 && shots.indexOf(shot) === Math.min(2, shots.length - 1)) {
+      const scenePlan = scenePlans.find((plan) => plan.sceneNo === shot.scene.sceneNo);
+      if (!scenePlan) continue;
+      const review = await reviewShot(scenePlan, bible, payload as ShotDraftV1);
+      for (const finding of review.value.findings) {
         await this.prisma.issue.create({
           data: {
             episodeId: ctx.episodeId, targetType: 'shot', targetId: `${shot.scene.sceneNo}:${shot.sequence}`,
-            kind: 'fact', rule: 'character-consistency', severity: 'high',
-            issue: '角色外观在前后的镜头描述存在不一致（连续性检查）',
-            suggestion: '定位资产核对设定；事实内容系统不自动修改',
+            kind: finding.rule === 'prompt-specificity' ? 'wording' : 'fact',
+            rule: finding.rule, severity: finding.severity,
+            issue: finding.issue, suggestion: finding.suggestion,
           },
         });
         count++;
-        await this.emit(ctx, 'issue_reported', { kind: 'fact', sceneNo: shot.scene.sceneNo, sequence: shot.sequence });
+        await this.emit(ctx, 'issue_reported', { kind: finding.rule === 'prompt-specificity' ? 'wording' : 'fact', sceneNo: scenePlan.sceneNo, sequence: shot.sequence });
       }
     }
     return count;

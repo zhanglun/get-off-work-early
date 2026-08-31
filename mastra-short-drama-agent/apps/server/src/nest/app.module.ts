@@ -8,10 +8,12 @@ import { AdminModule } from './admin/admin.module.js';
 import { ChatModule } from './chat/chat.module.js';
 import { ExportModule } from './exports/export.module.js';
 import { HealthController } from './health.controller.js';
+import { RedisModule } from './infrastructure/redis.module.js';
+import { PrismaService } from './prisma.service.js';
 
 @Module({
-  imports: [AuthModule, EventsModule, ProjectsModule, ChatModule, ExportModule, AdminModule],
+  imports: [RedisModule, AuthModule, EventsModule, ProjectsModule, ChatModule, ExportModule, AdminModule],
   controllers: [HealthController],
-  providers: [{ provide: APP_GUARD, useClass: AuthGuard }],
+  providers: [PrismaService, { provide: APP_GUARD, useClass: AuthGuard }],
 })
 export class AppModule {}

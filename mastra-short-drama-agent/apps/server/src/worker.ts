@@ -1,4 +1,5 @@
 import 'reflect-metadata';
+import { loadEnvironment, requireRuntimeConfig } from './config.js';
 import { NestFactory } from '@nestjs/core';
 import { PipelineModule } from './nest/pipeline/pipeline.module.js';
 import { ProductionPipeline } from './nest/pipeline/production-pipeline.js';
@@ -23,6 +24,8 @@ function regenInputOf(task: ClaimedTask): {
 }
 
 async function bootstrap(): Promise<void> {
+  loadEnvironment();
+  requireRuntimeConfig('worker');
   const app = await NestFactory.createApplicationContext(PipelineModule, { logger: ['error', 'warn'] });
   const lease = app.get(TaskLeaseService);
   const pipeline = app.get(ProductionPipeline);
