@@ -13,7 +13,7 @@ export class TaskLeaseService {
   /** 领取一个 queued 任务：行锁 + 租约；同项目存在 running 任务时跳过（项目互斥）。 */
   async claim(): Promise<{
     id: string; kind: string; projectId: string; episodeId: string;
-    scriptVersionId: string; scriptText: string; shotTarget: number;
+    scriptVersionId: string; scriptText: string; shotTarget: number; inputRef: string;
   } | null> {
     return this.prisma.$transaction(async (tx) => {
       const candidates = await tx.$queryRaw<Array<{ id: string }>>`

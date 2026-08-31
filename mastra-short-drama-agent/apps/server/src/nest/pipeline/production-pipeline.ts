@@ -182,6 +182,7 @@ export class ProductionPipeline {
     await this.emit({ taskId, projectId, episodeId: input.episodes[0]!.episodeId, scriptVersionId: '', scriptText: '', shotTarget: 0 }, 'run_started', { kind: 'regeneration', episodes: input.episodes.length });
     let done = 0;
     let total = 0;
+    let mock = false;
     for (const row of input.episodes) {
       const bible = await this.prisma.storyBible.findFirst({ where: { episodeId: row.episodeId }, orderBy: { version: 'desc' } });
       if (!bible) continue;
@@ -222,7 +223,9 @@ export class ProductionPipeline {
             beats: beats.length ? beats : [scene.objective], emotionalArc: scene.emotionalArc,
             continuityNotes: (scene.continuityNotes ?? []) as string[],
           };
-          const draft = (await generateShot(scenePlan, shot.sequence, scenePlan.beats[(shot.sequence - 1) % scenePlan.beats.length], bibleDraft)).value;
+          const draftResult = await generateShot(scenePlan, shot.sequence, scenePlan.beats[(shot.sequence - 1) % scenePlan.beats.length], bibleDraft);
+          mock = mock || draftResult.mock;
+          const draft = draftResult.value;
           const nextVersion = Math.floor((await this.prisma.promptVersion.count({ where: { shotId: shot.id } })) / 2) + 1;
           await this.prisma.$transaction([
             this.prisma.shot.update({ where: { id: shot.id }, data: { payload: draft as object } }),
@@ -232,7 +235,7 @@ export class ProductionPipeline {
           done++;
           await this.prisma.domainTask.update({
             where: { id: taskId },
-            data: { progress: { stage: 'shots', stages: { shots: 'running' }, shotsDone: done, shotsTotal: total, mock: false } as object },
+            data: { progress: { stage: 'shots', stages: { shots: 'running' }, shotsDone: done, shotsTotal: total, mock } as object },
           });
           await this.events.append(projectId, 'artifact_updated', { artifact: 'shot', episodeId: row.episodeId, sceneNo: scene.sceneNo, sequence: shot.sequence, change: 'regenerated' });
         }
@@ -241,13 +244,13 @@ export class ProductionPipeline {
     }
     await this.prisma.domainTask.update({
       where: { id: taskId },
-      data: { status: 'completed', finishedAt: new Date(), progress: { stage: 'done', stages: { shots: 'completed' }, shotsDone: done, shotsTotal: total, mock: false } as object },
+      data: { status: 'completed', finishedAt: new Date(), progress: { stage: 'done', stages: { shots: 'completed' }, shotsDone: done, shotsTotal: total, mock } as object },
     });
-    await this.events.append(projectId, 'done', { kind: 'regeneration', shotsDone: done, shotsTotal: total });
+    await this.events.append(projectId, 'done', { kind: 'regeneration', shotsDone: done, shotsTotal: total, mock });
     const conversation = await this.prisma.conversation.findUnique({ where: { projectId } });
     if (conversation) {
       const note = await this.prisma.message.create({
-        data: { conversationId: conversation.id, role: 'assistant', kind: 'note', content: `重生成完成：${input.assetName} 的修改已应用到 ${input.episodes.length} 集 / ${done} 镜，新版本已存档。`, meta: {} as object },
+        data: { conversationId: conversation.id, role: 'assistant', kind: 'note', content: `重生成完成：${input.assetName} 的修改已应用到 ${input.episodes.length} 集 / ${done} 镜，新版本已存档。${mock ? ' 本轮为 Mock 输出（红色印章）。' : ''}`, meta: {} as object },
       });
       await this.events.append(projectId, 'message', { messageId: note.id, role: 'assistant', kind: 'note' });
     }
