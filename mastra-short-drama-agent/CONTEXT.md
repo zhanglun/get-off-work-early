@@ -83,7 +83,8 @@ docs/implementation-plan.md     M0 产出（待创建）
 - 2026-08-30：**M1 完成**——NestJS auth/projects/events(SSE)/admin 四模块 + shared 契约包 + 前端登录/列表/工作区骨架；m1_baseline 迁移落库；curl 与浏览器双验收通过。
 - 2026-08-30：**M2 完成**——chat 补问状态机（集数→镜头数）+ ScriptVersion 只读登记 + 前端对话流（SSE 实时）；m2_episode_meta 迁移。
 - 2026-08-30：**M3 完成**——自动连续管线（无门槛）+ Worker SKIP LOCKED 租约 + SSE 阶段事件 + 前端阶段账/图版区/MOCK 印章；失败注入与取消验证通过（mock 路径；真实 Key 待用户提供后同链路复验）。
-- 2026-08-30：**M4 完成**——穿帮三操作（忽略/措辞自动修订/单镜重试）+ Prompt 版本留痕。下一步 M5。
+- 2026-08-30：**M4 完成**——穿帮三操作（忽略/措辞自动修订/单镜重试）+ Prompt 版本留痕。
+- 2026-08-30：**M5 完成**——修改意图→影响卡→确认→Worker 局部重生成 + AssetVersion（5 版封顶/diff/回退）。下一步 M6。
 
 ## 8. 下一步
 
