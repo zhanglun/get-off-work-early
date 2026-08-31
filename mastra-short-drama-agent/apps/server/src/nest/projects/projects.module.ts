@@ -6,11 +6,13 @@ import { ProjectsController } from './projects.controller.js';
 import { EpisodesController } from './episodes.controller.js';
 import { BoardController } from './board.controller.js';
 import { TasksController } from './tasks.controller.js';
+import { IssuesController } from './issues.controller.js';
+import { RetryController } from './retry.controller.js';
 
 @Module({
   imports: [EventsModule],
   providers: [PrismaService, ProjectsService],
-  controllers: [ProjectsController, EpisodesController, BoardController, TasksController],
+  controllers: [ProjectsController, EpisodesController, BoardController, TasksController, IssuesController, RetryController],
   exports: [ProjectsService],
 })
 export class ProjectsModule {}

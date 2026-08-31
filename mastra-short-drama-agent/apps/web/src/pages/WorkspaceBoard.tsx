@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { PipelineStage } from '@short-drama/shared';
 import { api } from '../api';
 
@@ -33,6 +34,25 @@ function Slate({ n, gold }: { n: string; gold?: boolean }): JSX.Element {
 
 export function WorkspaceBoard({ projectId, activeEpisodeId, invalidateKey }: { projectId: string; activeEpisodeId: string | null; invalidateKey: number }): JSX.Element {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [, setLocalTick] = useState(0);
+  const refresh = (): void => {
+    void queryClient.invalidateQueries({ queryKey: ['board', activeEpisodeId] });
+    setLocalTick((value) => value + 1);
+  };
+  const retryShot = useMutation({
+    mutationFn: (scope: { sceneNo: number; sequence: number }) =>
+      api(`/episodes/${activeEpisodeId}/retry`, { method: 'POST', body: JSON.stringify({ scope }) }),
+    onSuccess: () => refresh(),
+  });
+  const ignoreIssue = useMutation({
+    mutationFn: (issueId: string) => api(`/issues/${issueId}/ignore`, { method: 'POST' }),
+    onSuccess: () => refresh(),
+  });
+  const autoFix = useMutation({
+    mutationFn: (issueId: string) => api(`/issues/${issueId}/auto-fix`, { method: 'POST' }),
+    onSuccess: () => refresh(),
+  });
   const { id } = useParams<{ id: string }>();
   const { data: board } = useQuery({
     queryKey: ['board', activeEpisodeId, invalidateKey],
@@ -153,19 +173,34 @@ export function WorkspaceBoard({ projectId, activeEpisodeId, invalidateKey }: { 
           {(board?.issues.length ?? 0) > 0 ? (
             <>
               <div style={{ fontSize: 12, color: 'var(--ink-2)', letterSpacing: 1, borderBottom: '1px solid var(--ink)', paddingBottom: 5, margin: '16px 0 9px' }}>穿帮记录 · {board!.issues.length}</div>
-              {board!.issues.map((issue) => (
-                <div key={issue.id} style={{
-                  background: issue.kind === 'fact' || issue.kind === 'failure' ? 'var(--red-wash)' : 'var(--gold-wash)',
-                  border: `1px solid ${issue.kind === 'fact' || issue.kind === 'failure' ? '#e5c4bd' : '#e3d4a8'}`,
-                  borderRadius: 2, padding: '8px 12px', fontSize: 12.5, marginBottom: 7,
-                  color: issue.kind === 'fact' || issue.kind === 'failure' ? 'var(--red)' : 'var(--gold-deep)',
-                }}>
-                  <span style={{ fontFamily: 'var(--mono)', fontSize: 10, border: '1px solid currentColor', borderRadius: 2, padding: '0 5px', marginRight: 7 }}>
-                    {issue.kind === 'wording' ? '措辞' : issue.kind === 'fact' ? '事实' : '失败'}
-                  </span>
-                  {issue.issue}
-                </div>
-              ))}
+              {board!.issues.map((issue) => {
+                const [sn, sq] = issue.targetId.split(':').map(Number);
+                const open = issue.status === 'open';
+                return (
+                  <div key={issue.id} style={{
+                    background: issue.kind === 'fact' || issue.kind === 'failure' ? 'var(--red-wash)' : 'var(--gold-wash)',
+                    border: `1px solid ${issue.kind === 'fact' || issue.kind === 'failure' ? '#e5c4bd' : '#e3d4a8'}`,
+                    borderRadius: 2, padding: '8px 12px', fontSize: 12.5, marginBottom: 7,
+                    color: issue.kind === 'fact' || issue.kind === 'failure' ? 'var(--red)' : 'var(--gold-deep)',
+                    opacity: open ? 1 : 0.62,
+                  }}>
+                    <span style={{ fontFamily: 'var(--mono)', fontSize: 10, border: '1px solid currentColor', borderRadius: 2, padding: '0 5px', marginRight: 7 }}>
+                      {issue.kind === 'wording' ? '措辞' : issue.kind === 'fact' ? '事实' : '失败'}
+                    </span>
+                    {issue.issue}
+                    <span style={{ marginLeft: 8, float: 'right', display: 'flex', gap: 6 }}>
+                      {!open ? <span style={{ fontFamily: 'var(--mono)', fontSize: 10.5 }}>{issue.status === 'ignored' ? '已忽略' : issue.status === 'auto_fixed' ? '已修订' : '已解决'}</span> : (
+                        <>
+                          {issue.kind === 'failure' ? <button className="btn" style={{ padding: '1px 9px', fontSize: 11.5 }} onClick={() => retryShot.mutate({ sceneNo: sn, sequence: sq })}>重试镜 {sn}-{sq}</button> : null}
+                          {issue.kind === 'wording' ? <button className="btn primary" style={{ padding: '1px 9px', fontSize: 11.5 }} onClick={() => autoFix.mutate(issue.id)}>自动修订</button> : null}
+                          {issue.kind === 'fact' ? <button className="btn" style={{ padding: '1px 9px', fontSize: 11.5 }} onClick={() => autoFix.mutate(issue.id)} disabled>需人工</button> : null}
+                          {issue.kind !== 'failure' ? <button className="btn" style={{ padding: '1px 9px', fontSize: 11.5 }} onClick={() => ignoreIssue.mutate(issue.id)}>忽略</button> : null}
+                        </>
+                      )}
+                    </span>
+                  </div>
+                );
+              })}
             </>
           ) : null}
 
