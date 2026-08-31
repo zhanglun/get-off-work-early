@@ -11,7 +11,7 @@ import {
   type ContinuityReview,
 } from '../../domain/production-schemas.ts';
 import { scenePlanListSchema, type ScenePlan } from './scene-schemas.ts';
-import type { StructuredAgent, GenerationResult } from './provider.ts';
+import { ModelRequestError, type StructuredAgent, type GenerationResult } from './provider.ts';
 import { generateStructured } from './provider.ts';
 
 export const scriptAnalystAgent: StructuredAgent = {
@@ -75,6 +75,9 @@ export async function generateScenePlans(parsed: ParsedScript, bible: StoryBible
 }
 
 export function generateShot(scene: ScenePlan, sequence: number, beat: string, bible: StoryBibleDraft): Promise<GenerationResult<ShotDraftV1>> {
+  if (process.env.DEV_FAIL_SHOT === `${scene.sceneNo}:${sequence}`) {
+    throw new ModelRequestError(`开发故障注入：镜 ${scene.sceneNo}-${sequence} 模型请求失败`);
+  }
   return generateStructured<ShotDraftV1>(
     storyboardDirectorAgent,
     `【StoryBible】${JSON.stringify(bible)}\n【Scene】${JSON.stringify(scene)}\n【当前镜头序号】${sequence}\n【当前节拍】${beat}`,
