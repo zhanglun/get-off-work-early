@@ -28,7 +28,7 @@
   <text x="150.0" y="270" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#565a66" text-anchor="middle">Guard · 签名 Cookie</text>
   <rect x="258" y="226" width="200" height="54" rx="2" fill="#ffffff" stroke="#22242c" stroke-width="2"/>
   <text x="358.0" y="248" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="13.5" font-weight="600" fill="#22242c" text-anchor="middle">对话路由</text>
-  <text x="358.0" y="270" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#565a66" text-anchor="middle">意图识别 · 依次补问</text>
+  <text x="358.0" y="270" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#565a66" text-anchor="middle">意图识别 · 拆分与补问</text>
   <rect x="476" y="226" width="150" height="54" rx="2" fill="#f5edd8" stroke="#22242c" stroke-width="1.5"/>
   <text x="551.0" y="248" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="13.5" font-weight="600" fill="#22242c" text-anchor="middle">SSE 活动流</text>
   <text x="551.0" y="270" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#565a66" text-anchor="middle">afterSeq 续传</text>
@@ -43,11 +43,11 @@
   <text x="180.0" y="456" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#565a66" text-anchor="middle">剧本→资产→场次→分镜→检查→包 · 无确认门槛</text>
   <rect x="322" y="394" width="226" height="72" rx="2" fill="#e3edf4" stroke="#22242c" stroke-width="1.5"/>
   <text x="435.0" y="416" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="13.5" font-weight="600" fill="#22242c" text-anchor="middle">Agents</text>
-  <text x="435.0" y="456" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#565a66" text-anchor="middle">解析 · 场次 · 分镜 · 审查</text>
+  <text x="435.0" y="456" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#565a66" text-anchor="middle">解析 · 拆集 · 场次 · 分镜 · 审查</text>
   <rect x="570" y="394" width="290" height="72" rx="2" fill="#e3edf4" stroke="#22242c" stroke-width="1.5"/>
   <text x="715.0" y="416" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="13.5" font-weight="600" fill="#22242c" text-anchor="middle">模型 Provider</text>
-  <text x="715.0" y="456" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#565a66" text-anchor="middle">OpenAI 兼容 → Mock 兜底</text>
-  <text x="715" y="486" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10" fill="#c0392b" text-anchor="middle">失败自动切 Mock · 前端不接触 Key</text>
+  <text x="715.0" y="456" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#565a66" text-anchor="middle">OpenAI 兼容 · 仅真实模型</text>
+  <text x="715" y="486" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10" fill="#c0392b" text-anchor="middle">失败显式报错 · 前端不接触 Key</text>
   <rect x="40" y="528" width="880" height="200" rx="2" fill="none" stroke="#666b78" stroke-width="1.2" stroke-dasharray="5,4"/>
   <text x="52" y="548" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="12" font-weight="700" fill="#565a66" letter-spacing="1">执行与数据</text>
   <rect x="60" y="586" width="200" height="64" rx="2" fill="#ffffff" stroke="#22242c" stroke-width="2"/>
@@ -77,5 +77,5 @@
     <line x1="60" y1="762" x2="96" y2="762" stroke="#1f5f8b" stroke-width="2"/><text x="102" y="765">主调用</text>
     <line x1="170" y1="762" x2="206" y2="762" stroke="#565a66" stroke-width="1.5"/><text x="212" y="765">读写 / 触发</text>
     <line x1="310" y1="762" x2="346" y2="762" stroke="#b8860b" stroke-width="2"/><text x="352" y="765">SSE 实时</text>
-    <text x="450" y="765" fill="#c0392b">红 = Mock 兜底 / 失败路径</text>
+    <text x="450" y="765" fill="#c0392b">红 = 失败路径</text>
   </g></svg>

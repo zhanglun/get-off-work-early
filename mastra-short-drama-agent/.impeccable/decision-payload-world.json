@@ -1,0 +1,140 @@
+{
+  "title": "选择新的视觉世界 — 短剧分镜制作助手",
+  "question": "掷骰指派「分镜连载页（漫画分格）」为本次全站重设计的构建方向。保留它、选一个备选，或 re-roll。本次环境无图像生成，构建为 code-led：落选与备选卡片以线框示意呈现。",
+  "options": [
+    {
+      "id": "assigned",
+      "label": "分镜连载页（漫画分格）",
+      "kicker": "THE ROLL",
+      "lineage": "漫画刊内页的分格语法：panel gutter、页顶连载栏、对白气泡、印刷网点（CMYK 印刷色系）",
+      "thesis": "分镜生产的一切——一集、一场、一镜——本来就是一个还没拍出来的分格；整个工作区是一本正在被上墨的连载刊。",
+      "palette": ["#F7F8F4", "#1A1B20", "#2AA8C4", "#E0442E", "#F5D428"],
+      "materials": ["粗墨格线与沟槽 gutter", "印刷网点 halftone 状态填充", "对白气泡 + 旁白框", "套印偏移 = 错误印章"],
+      "viewport": "首屏双主轴：页顶「连载进度条」横贯全宽，每集一格——空心=已登记、青网点=制作中、实心墨=完成、红套印框=失败；下方左侧为气泡对话流（用户右气泡、助手旁白框），右侧为分格画廊，每镜一格、镜号在格角、速度线表示生成中。",
+      "risk": "漫画气质容易滑向卡通玩具感：Operate 密度下必须保持出版级克制，墨线与网点承担结构，禁用爆炸框与拟声词堆砌。",
+      "raised": [
+        { "from": "challenger-darkroom", "raise": "阶段账获得暗房的不可逆纪律：确认即永久上墨、配计时数字，进度过了就不再回头。" },
+        { "from": "challenger-acetate-rail", "raise": "集数导航采用阶梯 tab rail：前缘阶梯每集一档、高度按集内镜数比例，90ms 步进切换。" },
+        { "from": "challenger-ascii", "raise": "密度勇气：分格内的数据密度不因留白稀释，一格装下一场戏的全部事实。" },
+        { "from": "challenger-quarry", "raise": "格间沟槽露出底色，分格如块状堆叠——gutter 本身承担页面呼吸。" }
+      ],
+      "wireframe": { "cols": 12, "rows": 9, "regions": [
+        { "label": "连载进度条 · 每集一格（状态即上墨）", "x": 0, "y": 0, "w": 12, "h": 1, "accent": true },
+        { "label": "对话气泡流（用户右泡 / 助手旁白框）", "x": 0, "y": 1, "w": 7, "h": 7 },
+        { "label": "输入框", "x": 0, "y": 8, "w": 7, "h": 1 },
+        { "label": "分格画廊 · 每镜一格 + 镜号角标", "x": 7, "y": 1, "w": 5, "h": 8, "accent": true }
+      ] }
+    },
+    {
+      "id": "model-pick",
+      "label": "当日通告单（Call Sheet）",
+      "kicker": "IMPECCABLE’S PICK",
+      "lineage": "制片办公室的每日通告单与拍摄日程表：紧凑时间块、荧光笔高亮、当日页签",
+      "thesis": "把每一集的制作当作一天的通告：时间块从上到下排满，每一行就是一个要完成的镜。",
+      "palette": ["#FCFCFA", "#141519", "#F2E91D", "#D8332A"],
+      "materials": ["白纸黑表格线", "荧光黄高亮条", "页签式集数", "日期橡皮章"],
+      "viewport": "工作区是一张当日通告：页头项目名+日期章，主表从上到下每场一行块（行内镜号、状态、操作），右侧窄栏放对话。",
+      "risk": "它是制片工具类别的正路——最安全、最容易被猜到；且与刚被替换的场记日志同属纸上文书，气质近似，可能被视为换汤不换药。",
+      "wireframe": { "cols": 12, "rows": 9, "regions": [
+        { "label": "页头：项目名 + 日期章 + 页签集数", "x": 0, "y": 0, "w": 12, "h": 1, "accent": true },
+        { "label": "当日通告主表：每场一行块（镜号/状态/操作）", "x": 0, "y": 1, "w": 9, "h": 8 },
+        { "label": "对话窄栏", "x": 9, "y": 1, "w": 3, "h": 8 }
+      ] }
+    },
+    {
+      "id": "challenger-acetate-rail",
+      "label": "活页手册 tab rail",
+      "verdict": "competitive",
+      "lineage": "盒装软件活页参考手册：阶梯 tab rail、打孔活页、板块色轮、90ms 步进",
+      "thesis": "多集项目就是一本翻开在当前集的手册：前缘阶梯 rail 每集一档，高度按集内镜数比例，当前档即当前页色板。",
+      "palette": ["#F2EFE6", "#1D1E24", "#E8A21B", "#2E6F8E"],
+      "materials": ["全强度板块色", "打孔活页 + 硬阴影", "阶梯 tab rail", "两帧步进运动"],
+      "viewport": "工作区：前缘 tab rail 每集一档；当前档色板页承载对话与进度；打孔活页图版列。",
+      "case": "多集导航最清晰的原语（阶梯 rail + 板块色），出版文档世界与制片的规程气质吻合。",
+      "risk": "手册是说明书语法——创作感弱于分格页；底色仍偏纸面，与旧世界血统过近。",
+      "board": "https://impeccable.style/worlds/cards/rw-manual-acetate-tab-board.webp",
+      "wireframe": { "cols": 12, "rows": 9, "regions": [
+        { "label": "阶梯 tab rail · 每集一档（高度∝镜数）", "x": 0, "y": 0, "w": 12, "h": 1, "accent": true },
+        { "label": "当前档色板页：对话 + 阶段账", "x": 0, "y": 1, "w": 7, "h": 8 },
+        { "label": "打孔活页图版列", "x": 7, "y": 1, "w": 5, "h": 8 }
+      ] }
+    },
+    {
+      "id": "challenger-darkroom",
+      "label": "琥珀暗房",
+      "verdict": "competitive",
+      "lineage": "琥珀安全灯下的印相暗房：固定站点序、不可逆药浴、试条、计时器数字",
+      "thesis": "制作管线是一次冲洗：解析→资产→场次→分镜→检查→打包，六个站点依次走过，进度是化学的、过了就不可逆。",
+      "palette": ["#FFB000", "#3B2A12", "#8B8B8B", "#F0F0E6"],
+      "materials": ["琥珀安全灯底色", "油脂铅笔字", "印相试条", "荧光计时数字"],
+      "viewport": "工作区：页顶站点序（六站当前站高亮），左为当前站点工作面（对话），右为试条式图版。",
+      "case": "阶段账的站点序完美映射管线，生成如显影浮现的隐喻与真实模型工作方式同构。",
+      "risk": "暗房属于摄影后期人群，与短剧前期制作者隔一层；琥珀暗场与盯图版的明亮工作面冲突。",
+      "board": "https://impeccable.style/worlds/cards/signals-instruments-darkroom-safelight-bay.webp",
+      "wireframe": { "cols": 12, "rows": 9, "regions": [
+        { "label": "站点序：解析→资产→场次→分镜→检查→打包", "x": 0, "y": 0, "w": 12, "h": 1, "accent": true },
+        { "label": "当前站点工作面（对话）", "x": 0, "y": 1, "w": 7, "h": 8 },
+        { "label": "试条式图版列", "x": 7, "y": 1, "w": 5, "h": 8 }
+      ] }
+    },
+    {
+      "id": "challenger-ascii",
+      "label": "字符现场",
+      "verdict": "declined",
+      "lineage": "ASCII 字符网格实时渲染",
+      "thesis": "整个界面是一个字符网格，密度即光影。",
+      "palette": ["#000000", "#33FF66"],
+      "materials": ["单色荧光", "等宽网格"],
+      "viewport": "阶段账与图版以字符密度呈现。",
+      "risk": "短剧制作者不是终端人群；分镜是画面产品，字符化画面削弱产品本质。",
+      "kept": "极端信息密度的勇气：分格内数据密度不因留白稀释。"
+    },
+    {
+      "id": "challenger-zoo",
+      "label": "动物园导览图",
+      "verdict": "declined",
+      "lineage": "动物园/花园导览地图：色块 lobe、海岸线分割、胶囊控件",
+      "thesis": "项目结构是一张膨胀色块地图。",
+      "palette": ["#F5F1E4", "#8ED462", "#FF705D", "#2BA0FF"],
+      "materials": ["平面色块", "胶囊按钮"],
+      "viewport": "每集一个色块 lobe。",
+      "risk": "与制片世界的认同弱；Operate 密度差。",
+      "kept": "整块色域的面积勇气：网点填充可以是整片区域而非点缀。"
+    },
+    {
+      "id": "challenger-cape",
+      "label": "抽绳斗篷",
+      "verdict": "declined",
+      "lineage": "可变形丝绸服装的一绳变形",
+      "thesis": "界面如布料：一根拉绳把平面收成体量。",
+      "palette": ["#141414", "#C9A227", "#3A3F4A"],
+      "materials": ["哑光黑丝", "金绳"],
+      "viewport": "装饰性隐喻界面。",
+      "risk": "与生产工具的事实距离最远。",
+      "kept": "一根连续墨线贯穿全页的结构纪律：格线唯一化，线即结构。"
+    },
+    {
+      "id": "challenger-quarry",
+      "label": "云石采石场",
+      "verdict": "declined",
+      "lineage": "超现实云朵采石场",
+      "thesis": "切开云块、搭建临时建筑。",
+      "palette": ["#EAF2F8", "#2E6F9E", "#5A6472"],
+      "materials": ["云块体量", "深蓝间隙"],
+      "viewport": "分块堆叠构图。",
+      "risk": "超现实世界无法承载 Operate 事实。",
+      "kept": "格间沟槽露出底色、分格如块状堆叠的构图呼吸。"
+    }
+  ],
+  "reroll": { "registers": ["safer", "bolder"] },
+  "buildPath": { "value": "code", "toggle": false },
+  "canon": true,
+  "canonCard": {
+    "label": "制片 SaaS 标准形态",
+    "thesis": "这个类别默认出货的样子：浅色卡片、蓝色主按钮、缩略图网格与阶段 stepper，执行得无可挑剔。",
+    "palette": ["#FFFFFF", "#2563EB", "#F4F5F7", "#111827"],
+    "materials": ["干净网格", "圆角卡片", "轻投影"],
+    "viewport": "访客预期的标准排布，工艺拉满。",
+    "risk": "刻意与竞品无从区分：演示时没有人会记住它。"
+  }
+}

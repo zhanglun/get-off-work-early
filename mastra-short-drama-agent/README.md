@@ -38,10 +38,10 @@ pnpm db:deploy
 ```bash
 pnpm dev:server   # API http://localhost:4120
 pnpm dev:worker   # 异步真实模型任务
-pnpm dev:web      # Vite http://localhost:5173
+pnpm dev:web      # Vite http://localhost:5180（被占用时自动递增，以终端输出为准）
 ```
 
-浏览器打开 `http://localhost:5173`：
+浏览器打开终端输出的地址（默认 `http://localhost:5180`）：
 
 ```text
 账号：demo

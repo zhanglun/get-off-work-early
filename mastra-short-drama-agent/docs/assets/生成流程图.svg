@@ -17,14 +17,14 @@
   <path d="M 480,186,480,214" fill="none" stroke="#1f5f8b" stroke-width="2" marker-end="url(#arrB)"/>
   <rect x="340" y="214" width="280" height="46" rx="2" fill="#ffffff" stroke="#22242c" stroke-width="1.5"/>
   <text x="480.0" y="233" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="13" font-weight="600" fill="#22242c" text-anchor="middle">粘贴或上传剧本</text>
-  <text x="480.0" y="251" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10" fill="#565a66" text-anchor="middle">.md / .txt · 原文只读存档</text>
+  <text x="480.0" y="251" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10" fill="#565a66" text-anchor="middle">.md / .txt · 可一份含多集</text>
   <path d="M 480,260,480,288" fill="none" stroke="#1f5f8b" stroke-width="2" marker-end="url(#arrB)"/>
   <path d="M 480 288 L 560 326 L 480 364 L 400 326 Z" fill="#f5edd8" stroke="#22242c" stroke-width="1.5"/>
   <text x="480" y="331" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="12.5" font-weight="600" fill="#22242c" text-anchor="middle">信息齐全？</text>
   <rect x="700" y="288" width="220" height="76" rx="2" fill="#e3edf4" stroke="#22242c" stroke-width="1.5"/>
-  <text x="810" y="312" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="13" font-weight="600" fill="#22242c" text-anchor="middle">依次补问</text>
-  <text x="810" y="330" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#565a66" text-anchor="middle">项目名 → 集数 → 镜头数</text>
-  <text x="810" y="348" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#565a66" text-anchor="middle">建议 20–40 · 默认 30</text>
+  <text x="810" y="312" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="13" font-weight="600" fill="#22242c" text-anchor="middle">拆分与补问</text>
+  <text x="810" y="330" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#565a66" text-anchor="middle">多集拆分 · 预览确认</text>
+  <text x="810" y="348" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#565a66" text-anchor="middle">镜头数由模型规划</text>
   <path d="M 560,326,700,326" fill="none" stroke="#1f5f8b" stroke-width="2" marker-end="url(#arrB)"/>
   
   <path d="M 700,316,566,316" fill="none" stroke="#1f5f8b" stroke-width="2" marker-end="url(#arrB)"/>

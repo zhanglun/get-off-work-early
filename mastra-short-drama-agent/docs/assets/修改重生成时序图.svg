@@ -50,7 +50,7 @@
   <line x1="560" y1="568" x2="860" y2="568" stroke="#1f5f8b" stroke-width="1.8" marker-end="url(#arrB)"/>
   <text x="710.0" y="561" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#565a66" text-anchor="middle">局部重生成受影响镜头</text>
   <line x1="860" y1="616" x2="560" y2="616" stroke="#c0392b" stroke-width="1.8" stroke-dasharray="5,3" marker-end="url(#arrR)"/>
-  <text x="710.0" y="609" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#565a66" text-anchor="middle">新内容（失败→Mock·红）</text>
+  <text x="710.0" y="609" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#565a66" text-anchor="middle">新内容（失败→显式报错·红）</text>
   <line x1="560" y1="664" x2="710" y2="664" stroke="#565a66" stroke-width="1.8" marker-end="url(#arrI)"/>
   <text x="635.0" y="657" font-family="PingFang SC, Noto Sans SC, sans-serif" font-size="10.5" fill="#565a66" text-anchor="middle">写新版本 v5 + 事件 journal</text>
   <line x1="710" y1="716" x2="240" y2="716" stroke="#b8860b" stroke-width="2" marker-end="url(#arrG)"/>

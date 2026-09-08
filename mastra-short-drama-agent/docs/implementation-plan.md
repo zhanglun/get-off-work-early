@@ -84,3 +84,34 @@ mastra-short-drama-agent/
 ## 6. 里程碑对齐
 
 M0 = 本文 + 重组提交；M1-M7 按 `docs/tech-roadmap.md` 执行，每步验收信号以该文档为准。
+
+## 7. 增量：完整剧本拆集导入（v1.x，2026-09-06 定案）
+
+背景：M2 验收把「导入多集剧本」实现为一次一贴、一贴一集；用户确认预期是上传完整剧本由 agent 拆集。决策已录入 `product-design.md` §5.1 与 §6。
+
+### 复用
+
+- `markdown-script-parser.ts`（场次解析）、`generateStructured`（结构化输出 + 3 次重试）、Worker 单进程串行租约（天然满足一次制作一集）、Episode/ScriptVersion/DomainTask 模型。
+
+### 重构
+
+- chat 导入流：`acceptScript` 支持多集拆分预览确认，`shot_count` 补问退役；
+- `PipelineContext.shotTarget` 改为可选：有值走旧按目标分配路径（兼容在途任务），无值走模型镜头规划。
+
+### 新增
+
+- 解析器场次记录 `startLine` 行号，支撑按行切片原文；
+- `domain/episode-splitter.ts`：规则拆分（第X集/EP/Episode 标题）+ 分组结构校验（完整划分、不重不漏、集数递增）；
+- LLM agent：`episode-splitter`（按场次索引分组）、`episode-split-reviewer`（边界剧情审查 + 修正分组）、`shot-planner`（每场镜头数规划）；均带「校验失败携反馈重试（≤2 次）→ 显式报错」loop；
+- chat 新消息：拆分预览（含审查提示）+ `split_confirm` 确认补问；确认后批量登记各集并逐集入队制作。
+
+### 淘汰
+
+- 对话中的镜头数补问（`shot_count`）与「目标 20–40 默认 30」人工指定路径（保留常量作校验区间）。
+
+### 验收
+
+- 规则拆分单元测试（多集标题、EP、前置序章、单集不拆）；分组校验测试（重复/遗漏/乱序拒绝）；
+- 粘贴完整多集剧本 → 预览 → 确认 → 各集登记并依次制作（Worker 串行）；
+- 单集剧本行为回归：登记第 N 集 → 直接自动制作；
+- `pnpm -r check` + server 测试全绿。
