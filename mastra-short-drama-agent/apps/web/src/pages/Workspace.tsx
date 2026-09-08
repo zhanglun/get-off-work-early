@@ -2,9 +2,11 @@ import { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Snapshot, MessageDto } from '@short-drama/shared';
+import { PIPELINE_STAGES, STAGE_LABELS, type PipelineStage } from '@short-drama/shared';
 import { api } from '../api';
 import { subscribeEvents } from '../sse';
 import { WorkspaceBoard } from './WorkspaceBoard';
+import { Circ } from '../Circ';
 
 function ImpactCard({ message }: { message: MessageDto }): JSX.Element {
   const { id } = useParams<{ id: string }>();
@@ -34,30 +36,26 @@ function ImpactCard({ message }: { message: MessageDto }): JSX.Element {
   };
   const decided = meta.mode && meta.mode !== 'pending';
   return (
-    <div style={{ border: '1.5px solid var(--ink)', borderRadius: 2, background: 'var(--card)', margin: '14px 0', overflow: 'hidden' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 14px', borderBottom: '1px solid var(--rule)', fontWeight: 700, fontSize: 13.5 }}>
-        勘误范围 · 待确认
-        <span style={{ marginLeft: 'auto', fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink-2)', fontWeight: 400 }}>跨集</span>
-      </div>
-      <div style={{ padding: '12px 14px' }}>
-        <div style={{ background: 'var(--paper)', borderRadius: 2, padding: '7px 10px', marginBottom: 9, fontSize: 13.5 }}>
+    <div className="impact">
+      <div className="hd">勘误范围{decided ? '' : ' · 待确认'}<span className="st">跨集</span></div>
+      <div className="bd">
+        <div style={{ fontSize: 14, padding: '8px 10px', background: 'var(--paper)', borderRadius: 2, marginBottom: 10 }}>
           <span style={{ fontFamily: 'var(--mono)', fontSize: 10.5, color: 'var(--ink-2)', display: 'block', marginBottom: 3 }}>
             项目级设定 · {meta.assetName} · 服装
           </span>
-          <del style={{ color: 'var(--red)', background: 'var(--red-wash)', borderRadius: 2, padding: '0 3px' }}>{String(meta.before).slice(0, 20)}</del>
+          <del style={{ color: 'var(--red)', background: 'var(--red-wash)', borderRadius: 2, padding: '0 3px', textDecorationThickness: 1.5 }}>{String(meta.before).slice(0, 20)}</del>
           {' → '}
           <ins style={{ color: 'var(--blue-deep)', background: 'var(--blue-wash)', borderRadius: 2, padding: '0 3px', fontWeight: 600, textDecoration: 'none' }}>{String(meta.after)}</ins>
         </div>
-        <div style={{ fontFamily: 'var(--mono)', fontSize: 11.5, color: 'var(--ink-2)', lineHeight: 2 }}>
+        <div className="scope">
           {(meta.impact ?? []).map((row) => (
             <div key={row.episodeNo}>
-              <b style={{ fontWeight: 400, marginRight: 8 }}>第 {row.episodeNo} 集</b>
-              <span style={{ color: 'var(--gold-deep)' }}>{row.shots} 镜</span> · {row.prompts} Prompt
+              <b>第 {row.episodeNo} 集</b><span className="n">{row.shots} 镜</span> · {row.prompts} Prompt
             </div>
           ))}
         </div>
         {!decided ? (
-          <div style={{ display: 'flex', gap: 8, marginTop: 11, flexWrap: 'wrap' }}>
+          <div className="acts">
             <button className="btn primary" disabled={busy} onClick={() => void confirm('regenerate')}>确认全部重生成</button>
             <button className="btn" disabled={busy} onClick={() => void confirm('setting_only')}>仅修改设定</button>
             <button className="btn" disabled={busy} onClick={() => void confirm('cancel')}>取消</button>
@@ -72,22 +70,115 @@ function ImpactCard({ message }: { message: MessageDto }): JSX.Element {
   );
 }
 
-function MessageBubble({ message }: { message: MessageDto }): JSX.Element {
+interface SplitSegment {
+  episodeNo: number;
+  title: string | null;
+  scenes: number;
+  summary?: string | null;
+}
+
+/** 拆分确认卡（视觉稿 ⑤ impact 卡语言）。 */
+function SplitPreviewCard({ message, pending, onDecide }: { message: MessageDto; pending: boolean; onDecide: (text: string) => void }): JSX.Element {
+  const meta = (message.meta ?? {}) as {
+    source?: string;
+    reviewIssues?: { episodeNo: number | null; issue: string; suggestion: string }[];
+    segments?: SplitSegment[];
+  };
+  const segments = meta.segments ?? [];
+  const issues = meta.reviewIssues ?? [];
+  return (
+    <div className="impact">
+      <div className="hd">拆分确认 · 共 {segments.length} 集<span className="st">{meta.source === 'rules' ? '规则拆分' : '模型拆分'}</span></div>
+      <div className="bd">
+        {segments.map((segment) => (
+          <div key={segment.episodeNo} className="ep-line">
+            <span className="no">第 {segment.episodeNo} 集</span>
+            {segment.title ? <b>{segment.title}</b> : null}
+            <span className="cnt">{segment.scenes} 场</span>
+            {segment.summary ? <span className="sum">{segment.summary}</span> : null}
+          </div>
+        ))}
+        {issues.length > 0 ? (
+          <div className="issue" style={{ marginTop: 10 }}>
+            {issues.map((issue, index) => (
+              <div key={index}>⚠ {issue.episodeNo ? `第 ${issue.episodeNo} 集：` : ''}{issue.issue}（建议：{issue.suggestion}）</div>
+            ))}
+          </div>
+        ) : null}
+        {pending ? (
+          <div className="acts">
+            <button className="btn primary" onClick={() => onDecide('确认')}>确认开始制作</button>
+            <button className="btn" onClick={() => onDecide('取消')}>取消</button>
+          </div>
+        ) : (
+          <div style={{ marginTop: 10, fontFamily: 'var(--mono)', fontSize: 11.5, color: 'var(--ink-3)' }}>✓ 已处理</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+interface TaskProgress {
+  stage: PipelineStage | 'done';
+  stages: Partial<Record<PipelineStage, string>>;
+  shotsDone: number;
+  shotsTotal: number;
+}
+
+/** 制作进度卡（视觉稿 ③ 的 prog 卡：圈码当前阶段 + 进度条 + 取消）。 */
+function ProgressCard({ taskId, progress }: { taskId: string; progress: TaskProgress }): JSX.Element {
+  const queryClient = useQueryClient();
+  const { id } = useParams<{ id: string }>();
+  const [cancelling, setCancelling] = useState(false);
+  const stageIndex = PIPELINE_STAGES.indexOf(progress.stage as PipelineStage);
+  const isShots = progress.stage === 'shots';
+  const percent = isShots && progress.shotsTotal > 0
+    ? Math.round((progress.shotsDone / progress.shotsTotal) * 100)
+    : Math.round(((stageIndex + 1) / PIPELINE_STAGES.length) * 100);
+  const label = isShots && progress.shotsTotal > 0
+    ? `分镜生成 ${progress.shotsDone} / ${progress.shotsTotal}`
+    : `${STAGE_LABELS[progress.stage as PipelineStage] ?? '制作中'} · 阶段 ${stageIndex + 1}/${PIPELINE_STAGES.length}`;
+
+  const cancel = async (): Promise<void> => {
+    setCancelling(true);
+    try {
+      await api(`/tasks/${taskId}/cancel`, { method: 'POST' });
+      void queryClient.invalidateQueries({ queryKey: ['snapshot', id] });
+    } finally {
+      setCancelling(false);
+    }
+  };
+
+  return (
+    <div className="prog">
+      <div className="row">
+        <Circ n={String(stageIndex + 1)} cur />
+        <b>{label}</b>
+        <span className="t">{percent}%</span>
+      </div>
+      <div className="bar"><i style={{ width: `${percent}%` }} /></div>
+      <div className="sub">
+        <span>完成后自动连续检查 · 同项目一次制作一集</span>
+        <span className="lnk" style={cancelling ? { color: 'var(--ink-3)', pointerEvents: 'none' } : undefined} onClick={() => void cancel()}>
+          取消制作
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function MessageBubble({ message, isLatest, onDecide }: { message: MessageDto; isLatest: boolean; onDecide: (text: string) => void }): JSX.Element {
+  const meta = (message.meta ?? {}) as { kind?: string; splitSource?: string; content?: string };
   if (message.role === 'user') {
-    const meta = (message.meta ?? {}) as { content?: string };
     const isScript = message.kind === 'script';
     return (
-      <div style={{ borderBottom: '1px solid var(--rule-2)', padding: '10px 0 12px', marginBottom: 14 }}>
-        <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink-2)', letterSpacing: 1, marginBottom: 4 }}>
-          登记{isScript ? ' · 剧本' : ' · 回复'}
-        </div>
-        <div style={{ fontSize: 14.5 }}>
+      <div className="u-msg">
+        <div className="who">登记{isScript ? ' · 剧本' : ' · 回复'}</div>
+        <div className="txt">
           {isScript ? (
             <details>
               <summary style={{ cursor: 'pointer', color: 'var(--ink-2)' }}>{message.content} · 展开 ▸</summary>
-              <pre style={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit', fontSize: 13, color: 'var(--ink-2)', marginTop: 8, maxHeight: 240, overflowY: 'auto' }}>
-                {meta.content ?? ''}
-              </pre>
+              <pre>{meta.content ?? ''}</pre>
             </details>
           ) : (
             message.content
@@ -99,18 +190,27 @@ function MessageBubble({ message }: { message: MessageDto }): JSX.Element {
   if (message.kind === 'impact_confirm') {
     return <ImpactCard message={message} />;
   }
+  if (message.kind === 'question' && meta.kind === 'split_confirm') {
+    return <SplitPreviewCard message={message} pending={isLatest} onDecide={onDecide} />;
+  }
+  // 拆分结果 note：明细由确认卡承载，这里只留标题行避免重复
+  if (message.kind === 'note' && meta.splitSource) {
+    return (
+      <div className="a-note">
+        {message.content.split('\n')[0]}
+        <div className="kai" style={{ fontSize: 12.5, color: 'var(--ink-3)', marginTop: 2 }}>拆分明细见下方确认卡。</div>
+      </div>
+    );
+  }
   const isQuestion = message.kind === 'question';
-  const meta = (message.meta ?? {}) as { kind?: string };
   const hint =
     meta.kind === 'episode_no' ? '回复数字，例如「2」'
-    : meta.kind === 'shot_count' ? '回复数字；直接回车发送即默认 30'
+    : meta.kind === 'split_confirm' ? '点上方确认卡按钮，或回复「确认」/「取消」'
     : null;
   return (
-    <div style={{ padding: '9px 0', borderBottom: isQuestion ? 'none' : '1px solid var(--rule-2)', lineHeight: 1.7, marginBottom: isQuestion ? 0 : 14 }}>
-      <div style={{ fontSize: 14.5, fontFamily: isQuestion ? 'var(--kai)' : 'inherit', color: isQuestion ? 'var(--ink)' : 'var(--ink-2)' }}>
-        {message.content}
-        {isQuestion ? <span style={{ color: 'var(--blue)', marginLeft: 8 }}>（{hint}）</span> : null}
-      </div>
+    <div className="a-note" style={isQuestion ? { borderBottom: 'none' } : undefined}>
+      <span className={isQuestion ? 'kai' : undefined}>{message.content}</span>
+      {isQuestion && hint ? <span style={{ color: 'var(--blue)', fontWeight: 600 }}>（{hint}）</span> : null}
     </div>
   );
 }
@@ -122,6 +222,8 @@ export function Workspace(): JSX.Element {
   const [draft, setDraft] = useState('');
   const [tick, setTick] = useState(0);
   const [error, setError] = useState('');
+  const [selectedEpisodeId, setSelectedEpisodeId] = useState<string | null>(null);
+  const followRef = useRef<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -141,7 +243,19 @@ export function Workspace(): JSX.Element {
     return unsubscribe;
   }, [id, snapshot?.lastSeq, queryClient, snapshot]);
 
-  const activeEpisodeId = snapshot?.episodes.at(-1)?.id ?? null;
+  const activeTask = snapshot?.activeTask ?? null;
+  useEffect(() => {
+    if (activeTask?.episodeId) followRef.current = activeTask.episodeId;
+  }, [activeTask?.episodeId]);
+
+  // 当前查看的集：用户点选 > 正在制作的集 > 最近跟随的集 > 最后一集
+  const activeEpisodeId =
+    selectedEpisodeId
+    ?? activeTask?.episodeId
+    ?? followRef.current
+    ?? snapshot?.episodes.at(-1)?.id
+    ?? null;
+  const activeEpisode = snapshot?.episodes.find((ep) => ep.id === activeEpisodeId) ?? null;
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -186,77 +300,106 @@ export function Workspace(): JSX.Element {
   };
 
   const pendingQuestion = snapshot?.messages.at(-1);
-  const questionHint =
-    pendingQuestion?.kind === 'question'
-      ? ((pendingQuestion.meta ?? {}) as { kind?: string }).kind === 'episode_no'
-        ? '回复集数（数字）…'
-        : '回复镜头数（建议 20–40，默认 30）…'
-      : '粘贴一集已完成的剧本，或拖入 .md / .txt 文件…';
+  const pendingKind = pendingQuestion?.kind === 'question'
+    ? ((pendingQuestion.meta ?? {}) as { kind?: string }).kind
+    : null;
+  const composerHint = pendingKind === 'episode_no'
+    ? '回复集数（数字），或直接粘贴新一集剧本'
+    : pendingKind === 'split_confirm'
+      ? '点上方确认卡按钮，或回复「确认」/「取消」'
+      : '直接打字修改，或粘贴完整剧本（可一份包含多集）';
+
+  const taskProgress = activeTask && activeTask.kind === 'production' && activeTask.status === 'running'
+    ? (activeTask.progress as TaskProgress)
+    : null;
 
   return (
     <div style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 16, background: 'var(--paper-2)', borderBottom: '1.5px solid var(--ink)', padding: '11px 32px' }}>
-        <span className="lnk" onClick={() => navigate('/projects')}>← 项目</span>
-        <span style={{ fontSize: 19, fontWeight: 700, letterSpacing: 1 }}>{snapshot?.project.name ?? '…'}</span>
+      <div className="work-head">
+        <span className="back" onClick={() => navigate('/projects')}>← 项目</span>
+        <span className="pname">{snapshot?.project.name ?? '…'}</span>
         {(snapshot?.episodes.length ?? 0) > 0 ? (
-          <span style={{ border: '1px solid var(--ink)', borderRadius: 2, padding: '3px 12px', fontSize: 13 }}>
-            第 {snapshot?.episodes.at(-1)?.episodeNo} 集 · 已登记
-          </span>
+          <select
+            className="ep-select"
+            value={activeEpisodeId ?? ''}
+            onChange={(event) => setSelectedEpisodeId(event.target.value)}
+          >
+            {snapshot!.episodes.map((ep) => {
+              const isRunning = activeTask?.episodeId === ep.id && activeTask.status === 'running';
+              const state = isRunning ? '制作中'
+                : ep.status === 'completed' ? '已完成'
+                : ep.status === 'partial_failed' ? '部分完成'
+                : ep.status === 'failed' ? '失败'
+                : activeTask?.episodeId === ep.id ? '即将制作'
+                : '已登记';
+              return <option key={ep.id} value={ep.id}>第 {ep.episodeNo} 集 · {state}</option>;
+            })}
+          </select>
         ) : null}
-        <div style={{ flex: 1 }} />
-        <button className="btn" onClick={() => void exportZip()}>导出项目 ZIP</button>
+        <span className="sp" />
+        <button className={activeEpisode && (activeEpisode.status === 'completed' || activeEpisode.status === 'partial_failed') ? 'btn primary' : 'btn'} onClick={() => void exportZip()}>
+          导出项目 ZIP
+        </button>
       </div>
-      <div style={{ flex: 1, display: 'flex', minHeight: 0 }}>
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', borderRight: '1.5px solid var(--ink)', minWidth: 0 }}>
-          <div style={{ flex: 1, padding: '24px 30px', overflowY: 'auto' }}>
-            {(snapshot?.messages ?? []).map((message) => (
-              <MessageBubble key={message.id} message={message} />
+      <div className="work-body">
+        <div className="convo">
+          <div className="convo-scroll">
+            {(snapshot?.messages ?? []).map((message, index, all) => (
+              <MessageBubble
+                key={message.id}
+                message={message}
+                isLatest={index === all.length - 1}
+                onDecide={(text) => send.mutate({ content: text })}
+              />
             ))}
+            {taskProgress ? <ProgressCard taskId={activeTask!.id} progress={taskProgress} /> : null}
             {(snapshot?.messages.length ?? 0) === 0 ? (
               <div style={{ fontFamily: 'var(--kai)', color: 'var(--ink-2)', fontSize: 14 }}>
-                把第一集剧本贴进来吧——我会依次确认集数和镜头数，然后开始自动制作。
+                把完整剧本贴进来吧（可一份包含多集）——我来拆分成集，确认后依次自动制作。
               </div>
             ) : null}
             <div ref={bottomRef} />
           </div>
-          <div style={{ borderTop: '1px solid var(--rule)', padding: '14px 30px 20px', background: 'var(--paper)' }}>
-            <div style={{ border: '1px solid var(--ink)', borderRadius: 2, padding: '11px 14px', background: 'var(--card)' }}>
-              <textarea
-                value={draft}
-                onChange={(event) => setDraft(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter' && !event.shiftKey) {
-                    event.preventDefault();
-                    submit();
+          <div className="composer">
+            <div className="box">
+              <div className="line">
+                <textarea
+                  rows={1}
+                  placeholder={
+                    pendingKind === 'episode_no' ? '回复集数（数字）…'
+                    : pendingKind === 'split_confirm' ? '点上方确认卡按钮，或回复「确认」/「取消」…'
+                    : '直接打字修改，或粘贴完整剧本（可一份包含多集）…'
                   }
-                }}
-                placeholder={questionHint}
-                style={{ width: '100%', border: 'none', outline: 'none', resize: 'none', background: 'transparent', fontFamily: 'inherit', fontSize: 14, minHeight: 21, maxHeight: 160 }}
-                rows={2}
-              />
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 6 }}>
-                <span className="lnk" style={{ fontSize: 12.5 }} onClick={() => fileRef.current?.click()}>上传 .md / .txt</span>
-                <input
-                  ref={fileRef}
-                  type="file"
-                  accept=".md,.txt"
-                  style={{ display: 'none' }}
-                  onChange={(event) => {
-                    const file = event.target.files?.[0];
-                    if (file) onFile(file);
-                    event.target.value = '';
+                  value={draft}
+                  onChange={(event) => setDraft(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' && !event.shiftKey) {
+                      event.preventDefault();
+                      submit();
+                    }
                   }}
                 />
-                <div style={{ flex: 1 }} />
-                <button className="btn primary" style={{ padding: '5px 16px' }} disabled={!draft.trim() || send.isPending} onClick={submit}>
-                  登记
-                </button>
+                <button className="send" disabled={!draft.trim() || send.isPending} onClick={submit}>登记</button>
               </div>
             </div>
-            {error ? <div style={{ color: 'var(--red)', fontSize: 12, marginTop: 6 }}>{error}</div> : null}
+            <div className="hint">
+              {composerHint} · <span className="lnk" onClick={() => fileRef.current?.click()}>上传 .md / .txt</span>
+              <input
+                ref={fileRef}
+                type="file"
+                accept=".md,.txt"
+                style={{ display: 'none' }}
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  if (file) onFile(file);
+                  event.target.value = '';
+                }}
+              />
+            </div>
+            {error ? <div style={{ color: 'var(--red)', fontSize: 12, marginTop: 6 }}><span className="stamp" style={{ fontSize: 10.5, marginRight: 8 }}>错误</span>{error}</div> : null}
           </div>
         </div>
-        <WorkspaceBoard projectId={id ?? ''} activeEpisodeId={activeEpisodeId} invalidateKey={tick} />
+        <WorkspaceBoard projectId={id ?? ''} activeEpisodeId={activeEpisodeId} invalidateKey={tick} onExport={() => void exportZip()} />
       </div>
     </div>
   );

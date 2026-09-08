@@ -12,3 +12,6 @@ mastra.db
 *.log
 .mastra/
 .archify/
+
+# 前端构建产物
+dist/

@@ -4,14 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import type { ProjectSummary } from '@short-drama/shared';
 import { api } from '../api';
 
-const STATUS_TEXT: Record<ProjectSummary['latestStatus'], string> = {
-  running: '生成中',
-  completed: '已完成',
-  partial_failed: '部分完成',
-  failed: '生成失败',
-  idle: '空项目',
-};
-
 function relativeTime(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
   if (diff < 60_000) return '刚刚更新';
@@ -20,6 +12,17 @@ function relativeTime(iso: string): string {
   return `${Math.floor(diff / 86_400_000)} 天前`;
 }
 
+/** 项目状态角标（视觉稿 ② 的 mark 体系）。 */
+function StatusMark({ project }: { project: ProjectSummary }): JSX.Element | null {
+  if (!project.latestEpisodeNo) return null;
+  if (project.latestStatus === 'running') return <span className="mark run">第 {project.latestEpisodeNo} 集 · 制作中</span>;
+  if (project.latestStatus === 'completed') return <span className="mark ok">✓ 第 {project.latestEpisodeNo} 集已完成</span>;
+  if (project.latestStatus === 'partial_failed') return <span className="mark warn">第 {project.latestEpisodeNo} 集 · 部分完成可重试</span>;
+  if (project.latestStatus === 'failed') return <span className="mark warn">第 {project.latestEpisodeNo} 集 · 生成失败</span>;
+  return <span className="mark">第 {project.latestEpisodeNo} 集 · 已登记</span>;
+}
+
+/** 项目列表 = 日志索引页（视觉稿 ②）。 */
 export function Projects(): JSX.Element {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -49,103 +52,84 @@ export function Projects(): JSX.Element {
   });
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: 'var(--paper-2)', borderBottom: '1.5px solid var(--ink)', padding: '13px 26px' }}>
-        <div style={{ fontSize: 16, fontWeight: 700, letterSpacing: 1 }}>短剧分镜制作助手</div>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--paper)' }}>
+      <div className="page-head">
+        <div className="logo">短剧分镜制作助手</div>
         <div style={{ flex: 1 }} />
-        <div style={{ position: 'relative' }}>
-          <button
-            className="btn"
-            aria-label="更多"
-            onClick={() => setAdminOpen((open) => !open)}
-            style={{ border: 'none', fontSize: 17, padding: '4px 10px', color: 'var(--ink-3)' }}
-          >
-            ⋯
+        <div className="admin-menu">
+          <button className="icon" title="更多" aria-label="更多" onClick={() => setAdminOpen((open) => !open)}>
+            <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+              <circle cx="3" cy="8" r="1.6" fill="currentColor" /><circle cx="8" cy="8" r="1.6" fill="currentColor" /><circle cx="13" cy="8" r="1.6" fill="currentColor" />
+            </svg>
           </button>
           {adminOpen ? (
-            <div style={{
-              position: 'absolute', right: 0, top: 38, width: 262, zIndex: 40, background: 'var(--card)',
-              border: '1.5px solid var(--ink)', borderRadius: 2, padding: 14, boxShadow: '0 4px 14px rgba(34,36,44,.10)',
-            }}>
-              <div style={{ fontWeight: 700, fontSize: 12.5, marginBottom: 9 }}>管理员设置</div>
-              <input
-                type="password"
-                placeholder="管理员口令"
-                value={adminToken}
-                onChange={(event) => setAdminToken(event.target.value)}
-                style={{ width: '100%', marginBottom: 9, fontFamily: 'var(--mono)', fontSize: 12.5 }}
-              />
+            <div className="admin-pop">
+              <h6>管理员设置</h6>
+              <input className="pw" type="password" placeholder="管理员口令" value={adminToken} onChange={(event) => setAdminToken(event.target.value)} />
               <button className="btn" style={{ width: '100%' }} onClick={() => reset.mutate(adminToken)}>重置 Demo 数据</button>
-              <div style={{ color: 'var(--red)', fontSize: 12, marginTop: 9, fontFamily: 'var(--kai)', lineHeight: 1.6 }}>
-                {adminMsg || '将清空全部访客的项目、剧本与登记结果，不可恢复。'}
-              </div>
+              <div className="warn">{adminMsg || '将清空全部访客的项目、剧本与登记结果，不可恢复。'}</div>
             </div>
           ) : null}
         </div>
       </div>
 
-      <div style={{ flex: 1, overflowY: 'auto' }}>
-        <div style={{ maxWidth: 880, margin: '0 auto', padding: '30px 28px 60px' }}>
-          <div style={{ fontFamily: 'var(--kai)', color: 'var(--red)', fontSize: 13, marginBottom: 20, paddingLeft: 14, borderLeft: '1px solid rgba(192,57,43,.25)' }}>
-            公共 Demo：以下项目所有访客共享，均可登记、修改、导出；清空仅限管理员。
-          </div>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 14, marginBottom: 14 }}>
-            <h3 style={{ fontSize: 18, letterSpacing: 1 }}>项目索引</h3>
+      <div className="projects-body">
+        <div className="projects-inner">
+          <div className="share-note">公共 Demo：以下项目所有访客共享，均可登记、修改、导出；清空仅限管理员。</div>
+          <div className="projects-top">
+            <h3>项目索引</h3>
             <span style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--ink-3)' }}>按最近更新</span>
             <div style={{ flex: 1 }} />
             <button className="btn primary" onClick={() => setCreating(true)}>＋ 登记新项目</button>
           </div>
 
           {creating ? (
-            <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 2, padding: '14px 16px', marginBottom: 14, display: 'flex', gap: 10 }}>
-              <input
-                type="text"
-                autoFocus
-                placeholder="项目名称（如：城市心跳）"
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter' && name.trim()) create.mutate(name.trim());
-                }}
-                style={{ flex: 1 }}
-              />
-              <button className="btn primary" disabled={!name.trim()} onClick={() => create.mutate(name.trim())}>创建</button>
-              <button className="btn" onClick={() => setCreating(false)}>取消</button>
-            </div>
-          ) : null}
-
-          {projects.length === 0 ? (
-            <div style={{ color: 'var(--ink-3)', fontFamily: 'var(--kai)', padding: '30px 0', textAlign: 'center' }}>
-              暂无项目——点击「登记新项目」，粘贴第一集剧本即可开始
+            <div className="prow new" style={{ borderBottom: '1px solid var(--rule)', alignItems: 'center' }}>
+              <span className="no">＋</span>
+              <div className="main" style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                <input
+                  type="text"
+                  autoFocus
+                  placeholder="项目名称（如：城市心跳）"
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' && name.trim()) create.mutate(name.trim());
+                  }}
+                  style={{ flex: 1, fontSize: 14 }}
+                />
+                <button className="btn primary" disabled={!name.trim()} onClick={() => create.mutate(name.trim())}>创建</button>
+                <button className="btn" onClick={() => setCreating(false)}>取消</button>
+              </div>
             </div>
           ) : null}
 
           {projects.map((project, index) => (
-            <div
-              key={project.id}
-              onClick={() => navigate(`/projects/${project.id}`)}
-              style={{ display: 'flex', gap: 18, borderBottom: '1px solid var(--rule-2)', padding: '15px 4px', cursor: 'pointer' }}
-            >
-              <span style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--ink-3)', width: 34 }}>
-                {String(index + 1).padStart(2, '0')}
-              </span>
-              <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>
-                  <span style={{ fontSize: 16.5, fontWeight: 700 }}>{project.name}</span>
-                  <span style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--ink-3)' }}>{project.episodeCount} 集</span>
-                  <span style={{ marginLeft: 'auto', fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--ink-3)' }}>{relativeTime(project.updatedAt)}</span>
+            <div key={project.id} className="prow" onClick={() => navigate(`/projects/${project.id}`)}>
+              <span className="no">{String(index + 1).padStart(2, '0')}</span>
+              <div className="main">
+                <div className="r1">
+                  <span className="name">{project.name}</span>
+                  <span className="ep">{project.episodeCount} 集</span>
+                  <span className="when">{relativeTime(project.updatedAt)}</span>
                 </div>
-                <div style={{ display: 'flex', gap: 12, marginTop: 7, fontSize: 12.5, color: 'var(--ink-2)', flexWrap: 'wrap' }}>
-                  {project.latestEpisodeNo ? (
-                    <span className={`mark ${project.latestStatus === 'running' ? 'run' : project.latestStatus === 'partial_failed' || project.latestStatus === 'failed' ? 'warn' : 'ok'}`}>
-                      第 {project.latestEpisodeNo} 集 · {STATUS_TEXT[project.latestStatus]}
-                    </span>
-                  ) : null}
+                <div className="r2">
+                  <StatusMark project={project} />
+                  {!project.latestEpisodeNo ? <span style={{ color: 'var(--ink-3)' }}>待登记剧本</span> : null}
                   {project.openIssueCount > 0 ? <span className="mark warn">{project.openIssueCount} 穿帮待处理</span> : null}
                 </div>
               </div>
             </div>
           ))}
+
+          {!creating ? (
+            <div className="prow new" onClick={() => setCreating(true)}>
+              <span className="no">{String(projects.length + 1).padStart(2, '0')}</span>
+              <div className="main"><div className="r1"><span className="txt">登记新项目——粘贴完整剧本（可一份含多集）即可开始…</span></div></div>
+            </div>
+          ) : null}
+
+          {projects.length === 0 && creating ? null : null}
         </div>
       </div>
     </div>

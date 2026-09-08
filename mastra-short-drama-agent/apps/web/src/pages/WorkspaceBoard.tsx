@@ -1,8 +1,8 @@
-import { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { PipelineStage } from '@short-drama/shared';
+import { PIPELINE_STAGES, STAGE_LABELS } from '@short-drama/shared';
 import { api } from '../api';
+import { Circ } from '../Circ';
 
 export interface BoardData {
   episode: { id: string; episodeNo: number; status: string; shotTarget: number | null };
@@ -16,29 +16,26 @@ export interface BoardData {
   projectAssets: { id: string; kind: string; name: string; data: Record<string, unknown> }[];
 }
 
-const STAGE_ORDER: PipelineStage[] = ['parse', 'assets', 'scenes', 'shots', 'review', 'package'];
-const STAGE_TEXT: Record<PipelineStage, string> = {
-  parse: '剧本', assets: '资产', scenes: '场次', shots: '分镜', review: '检查', package: '包',
-};
-
-function Slate({ n, gold }: { n: string; gold?: boolean }): JSX.Element {
-  return (
-    <span style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 34, height: 26, flex: 'none', marginRight: 2 }}>
-      <svg viewBox="0 0 34 26" style={{ position: 'absolute', inset: 0 }}>
-        <ellipse cx="17" cy="13" rx="15" ry="12" fill="none" stroke={gold ? 'var(--gold)' : 'var(--ink)'} strokeWidth={gold ? 1.8 : 1.1} strokeDasharray={gold ? 'none' : 'none'} />
-      </svg>
-      <span style={{ fontFamily: 'var(--mono)', fontWeight: 600, fontSize: 12, color: gold ? 'var(--gold-deep)' : 'inherit' }}>{n}</span>
-    </span>
-  );
+/** 全局镜号：场次按顺序累计（视觉稿 margin 的「场 2 · 05–12」区间）。 */
+function sceneRanges(scenes: BoardData['scenes']): { sceneNo: number; from: number; to: number }[] {
+  let offset = 1;
+  return scenes.map((scene) => {
+    const from = offset;
+    const to = offset + scene.shots.length - 1;
+    offset += scene.shots.length;
+    return { sceneNo: scene.sceneNo, from, to };
+  });
 }
 
-export function WorkspaceBoard({ projectId, activeEpisodeId, invalidateKey }: { projectId: string; activeEpisodeId: string | null; invalidateKey: number }): JSX.Element {
-  const navigate = useNavigate();
+export function WorkspaceBoard({ projectId, activeEpisodeId, invalidateKey, onExport }: {
+  projectId: string;
+  activeEpisodeId: string | null;
+  invalidateKey: number;
+  onExport: () => void;
+}): JSX.Element {
   const queryClient = useQueryClient();
-  const [, setLocalTick] = useState(0);
   const refresh = (): void => {
     void queryClient.invalidateQueries({ queryKey: ['board', activeEpisodeId] });
-    setLocalTick((value) => value + 1);
   };
   const retryShot = useMutation({
     mutationFn: (scope: { sceneNo: number; sequence: number }) =>
@@ -53,7 +50,7 @@ export function WorkspaceBoard({ projectId, activeEpisodeId, invalidateKey }: { 
     mutationFn: (issueId: string) => api(`/issues/${issueId}/auto-fix`, { method: 'POST' }),
     onSuccess: () => refresh(),
   });
-  const { id } = useParams<{ id: string }>();
+
   const { data: board } = useQuery({
     queryKey: ['board', activeEpisodeId, invalidateKey],
     queryFn: () => api<BoardData>(`/episodes/${activeEpisodeId}/board`),
@@ -63,153 +60,177 @@ export function WorkspaceBoard({ projectId, activeEpisodeId, invalidateKey }: { 
 
   if (!activeEpisodeId) {
     return (
-      <div style={{ width: '44%', borderLeft: '1.5px solid var(--ink)', padding: '18px 26px', color: 'var(--ink-3)', fontFamily: 'var(--kai)' }}>
-        导入剧本后，制作过程与图版将在这里实时生长。
+      <div className="plates">
+        <div style={{ flex: 1, padding: '18px 26px', color: 'var(--ink-3)', fontFamily: 'var(--kai)' }}>
+          导入剧本后，制作过程与图版将在这里实时生长。
+        </div>
       </div>
     );
   }
 
   const currentStage = (board?.stages.stage ?? 'parse') as PipelineStage;
   const done = board?.taskStatus === 'completed' || board?.taskStatus === 'partial_failed';
+  const ranges = sceneRanges(board?.scenes ?? []);
+  const totalShots = (board?.scenes ?? []).reduce((sum, scene) => sum + scene.shots.length, 0);
+  const openIssues = (board?.issues ?? []).filter((issue) => issue.status === 'open').length;
+  const episodeDone = board?.episode.status === 'completed' || board?.episode.status === 'partial_failed';
+
+  const stageValue = (stage: PipelineStage): string => {
+    const state = board?.stages.stages[stage];
+    if (stage === 'shots') {
+      if (state === 'completed' || done) return String(board?.stages.shotsTotal || 0);
+      if (state === 'running') return `${board?.stages.shotsDone}/${board?.stages.shotsTotal}`;
+      return '—';
+    }
+    if (stage === 'package') return done ? '就绪' : '—';
+    if (state === 'completed') return '✓';
+    if (state === 'running') return '·';
+    return '—';
+  };
 
   return (
-    <div style={{ width: '44%', display: 'flex', minWidth: 0, borderLeft: '1.5px solid var(--ink)' }}>
-      {/* 编号边栏：阶段账 + 场次索引 */}
-      <div style={{ width: 118, flex: 'none', background: 'var(--paper-2)', position: 'relative', padding: '14px 0', overflowY: 'auto' }}>
-        <div style={{ position: 'absolute', right: 14, top: 0, bottom: 0, width: 1, background: 'rgba(192,57,43,.25)' }} />
-        {STAGE_ORDER.map((stage, index) => {
-          const state = board?.stages.stages[stage];
-          const isCurrent = !done && currentStage === stage;
+    <div className="plates" style={{ display: 'flex', flexDirection: 'row', minWidth: 0 }}>
+      {/* 编号边栏：场次镜号区间 + 阶段账（视觉稿 margin） */}
+      <div className="margin">
+        {(board?.scenes ?? []).map((scene) => {
+          const range = ranges.find((item) => item.sceneNo === scene.sceneNo);
+          const rangeText = range && range.to >= range.from ? `${String(range.from).padStart(2, '0')}–${String(range.to).padStart(2, '0')}` : '—';
           return (
-            <div key={stage} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 22px 5px 6px', fontSize: 11.5, color: state === 'completed' ? 'var(--ink-2)' : isCurrent ? 'var(--gold-deep)' : 'var(--ink-3)', fontFamily: 'var(--mono)' }}>
-              <Slate n={String(index + 1)} gold={isCurrent} />
-              <span>
-                {STAGE_TEXT[stage]}
-                {stage === 'shots' && board?.stages.shotsTotal ? ` ${board.stages.shotsDone}/${board.stages.shotsTotal}` : ''}
-              </span>
-              <span style={{ marginLeft: 'auto' }}>{state === 'completed' ? '✓' : isCurrent ? '·' : ''}</span>
+            <div key={scene.sceneNo} className="no">
+              场 {scene.sceneNo}<b>{rangeText}</b>
             </div>
           );
         })}
-        <div style={{ borderTop: '1px solid var(--rule)', margin: '8px 14px 8px 0' }} />
-        {(board?.scenes ?? []).map((scene) => (
-          <div key={scene.sceneNo} style={{ padding: '4px 22px 4px 6px', fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink-2)', textAlign: 'right' }}>
-            场{scene.sceneNo}
-            <b style={{ display: 'block', fontSize: 12.5, color: 'var(--ink)' }}>{scene.shots.length} 镜</b>
+        {(board?.scenes.length ?? 0) > 0 ? <div className="grp" /> : null}
+        {PIPELINE_STAGES.map((stage) => (
+          <div key={stage} className={!done && board?.stages.stage === stage ? 'no on' : 'no'}>
+            {STAGE_LABELS[stage]}<b>{stageValue(stage)}</b>
           </div>
         ))}
-        {(board?.issues.length ?? 0) > 0 ? (
-          <div style={{ padding: '4px 22px 4px 6px', fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--red)', textAlign: 'right' }}>
-            穿帮<b style={{ display: 'block', fontSize: 12.5 }}>{board!.issues.filter((issue) => issue.status === 'open').length}</b>
-          </div>
-        ) : null}
+        <div className="no">穿帮<b>{board ? openIssues : '—'}</b></div>
       </div>
 
       {/* 图版区 */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, padding: '12px 20px 9px', borderBottom: '1.5px solid var(--ink)' }}>
-          <b style={{ fontSize: 14 }}>图版区</b>
-          <span style={{ fontFamily: 'var(--mono)', fontSize: 11.5, color: 'var(--ink-2)' }}>
-            {board ? `第 ${board.episode.episodeNo} 集 · ${board.scenes.reduce((sum, scene) => sum + scene.shots.length, 0)} 镜` : '…'}
-          </span>
-          <div style={{ flex: 1 }} />
+        <div className="plate-head">
+          <b>{board ? `第 ${board.episode.episodeNo} 集 · 图版` : '图版区'}</b>
+          <span className="cnt">{board ? `${totalShots} 镜` : '…'}</span>
         </div>
-        <div style={{ flex: 1, overflowY: 'auto', padding: '14px 20px 40px' }}>
+        <div className="plates-scroll">
+          {!board ? <div style={{ color: 'var(--ink-3)', fontFamily: 'var(--kai)' }}>读取图版…</div> : null}
+          {board && board.scenes.length === 0 && board.taskStatus !== 'running' ? (
+            <div style={{ color: 'var(--ink-3)', fontFamily: 'var(--kai)' }}>尚未开始制作。</div>
+          ) : null}
+
+          {(board?.scenes ?? []).map((scene, sceneIndex) => {
+            const range = ranges[sceneIndex]!;
+            return (
+              <div key={scene.sceneNo}>
+                <div className="sec">
+                  <span>场{scene.sceneNo} · {scene.heading.slice(0, 18)}</span>
+                  <span style={{ fontFamily: 'var(--mono)' }}>{scene.shots.length} 镜</span>
+                </div>
+                {scene.shots.map((shot) => {
+                  const shotNo = range.from + shot.sequence - 1;
+                  const draft = shot.draft as Partial<{ shotSize: string; cameraMove: string; imagePrompt: string; videoPrompt: string; composition: string }>;
+                  return (
+                    <div key={shot.sequence} className="frame">
+                      <div className="top">
+                        <Circ n={String(shotNo).padStart(2, '0')} />
+                        <div className="specs">
+                          {draft.shotSize ? <span>{draft.shotSize}</span> : null}
+                          {draft.cameraMove ? <span>{draft.cameraMove}</span> : null}
+                        </div>
+                        <div className="acts">
+                          <span className="mframe">预览占位帧</span>
+                          {shot.promptVersions > 0 ? <span className="ver">v{shot.promptVersions}</span> : null}
+                          {shot.status !== 'done' ? <span className="mark warn">{shot.status === 'failed' ? '失败' : '待审'}</span> : null}
+                        </div>
+                      </div>
+                      {draft.imagePrompt ? (
+                        <>
+                          <div className="desc">{draft.composition ?? ''}</div>
+                          <div className="cont"><b>IMAGE PROMPT</b>{draft.imagePrompt}</div>
+                          <div className="cont"><b>VIDEO PROMPT</b>{draft.videoPrompt}</div>
+                        </>
+                      ) : (
+                        <div className="desc" style={{ color: 'var(--red)' }}>生成失败——可从下方穿帮记录单项重试。</div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })}
+
           {/* 项目级资产 */}
           {(board?.projectAssets.length ?? 0) > 0 ? (
             <>
-              <div style={{ fontSize: 12, color: 'var(--ink-2)', letterSpacing: 1, borderBottom: '1px solid var(--ink)', paddingBottom: 5, marginBottom: 9 }}>项目级资产 · {board!.projectAssets.length}</div>
+              <div className="sec"><span>项目级资产</span><span style={{ fontFamily: 'var(--mono)' }}>PROJECT</span></div>
               {board!.projectAssets.map((asset) => (
-                <div key={asset.id} style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 2, padding: '7px 12px', fontSize: 12.5, marginBottom: 6, display: 'flex', gap: 8, alignItems: 'baseline' }}>
-                  <Slate n={asset.name.slice(0, 1)} />
+                <div key={asset.id} className="asset-log">
                   <b>{asset.name}</b>
-                  <span style={{ fontFamily: 'var(--mono)', fontSize: 10.5, color: 'var(--blue)', border: '1px solid var(--blue)', borderRadius: 2, padding: '0 4px' }}>{asset.kind === 'character' ? '项目级' : asset.kind}</span>
-                  <span style={{ color: 'var(--ink-2)', fontSize: 12 }}>{String((asset.data as { canonicalDescription?: string; clothing?: string }).canonicalDescription ?? '').slice(0, 36)}</span>
+                  <span className="lv">{asset.kind === 'character' ? '项目级' : asset.kind}</span>
+                  <span className="d">{String((asset.data as { canonicalDescription?: string }).canonicalDescription ?? '').slice(0, 40)}</span>
                 </div>
               ))}
             </>
           ) : null}
 
-          {/* 场次与分镜图版 */}
-          {(board?.scenes ?? []).map((scene) => (
-            <div key={scene.sceneNo}>
-              <div style={{ fontSize: 12, color: 'var(--ink-2)', letterSpacing: 1, borderBottom: '1px solid var(--ink)', paddingBottom: 5, margin: '14px 0 9px', display: 'flex', gap: 8 }}>
-                <span>场{scene.sceneNo} · {scene.heading.slice(0, 18)}</span>
-                <span style={{ marginLeft: 'auto', fontFamily: 'var(--mono)' }}>{scene.shots.length} 镜</span>
-              </div>
-              {scene.shots.map((shot) => {
-                const draft = shot.draft as Partial<{ shotSize: string; cameraMove: string; imagePrompt: string; videoPrompt: string; composition: string; lighting: string; emotion: string }>;
-                return (
-                  <div key={shot.sequence} style={{ background: 'var(--card)', border: '1.5px solid var(--ink)', borderRadius: 2, padding: '10px 14px', marginBottom: 8 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
-                      <Slate n={String(shot.sequence).padStart(2, '0')} />
-                      <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink-2)' }}>{draft.shotSize ?? '—'} · {draft.cameraMove ?? '—'}</span>
-                      <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--ink-3)', border: '1px solid var(--rule)', borderRadius: 2, padding: '0 4px', marginLeft: 'auto' }}>预览占位帧</span>
-                      {shot.status !== 'done' ? <span className="mark warn">{shot.status === 'failed' ? '失败' : '待审'}</span> : null}
-                    </div>
-                    {draft.imagePrompt ? (
-                      <>
-                        <div style={{ fontSize: 12.5, color: 'var(--ink-2)', lineHeight: 1.55 }}>{draft.composition ?? ''}</div>
-                        <div style={{ margin: '6px 0 0 18px', fontSize: 11.5, color: 'var(--ink-2)' }}>
-                          <b style={{ display: 'block', fontFamily: 'var(--mono)', fontWeight: 400, fontSize: 10, letterSpacing: 1, color: 'var(--ink-3)' }}>IMAGE PROMPT</b>
-                          {draft.imagePrompt}
-                        </div>
-                        <div style={{ margin: '4px 0 0 18px', fontSize: 11.5, color: 'var(--ink-2)' }}>
-                          <b style={{ display: 'block', fontFamily: 'var(--mono)', fontWeight: 400, fontSize: 10, letterSpacing: 1, color: 'var(--ink-3)' }}>VIDEO PROMPT</b>
-                          {draft.videoPrompt}
-                        </div>
-                      </>
-                    ) : (
-                      <div style={{ fontSize: 12, color: 'var(--red)' }}>生成失败——可单项重试</div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          ))}
-
           {/* 穿帮记录 */}
           {(board?.issues.length ?? 0) > 0 ? (
             <>
-              <div style={{ fontSize: 12, color: 'var(--ink-2)', letterSpacing: 1, borderBottom: '1px solid var(--ink)', paddingBottom: 5, margin: '16px 0 9px' }}>穿帮记录 · {board!.issues.length}</div>
+              <div className="sec"><span>穿帮记录</span><span style={{ fontFamily: 'var(--mono)' }}>{openIssues} 待处理</span></div>
               {board!.issues.map((issue) => {
                 const [sn, sq] = issue.targetId.split(':').map(Number);
                 const open = issue.status === 'open';
+                const kindLabel = issue.kind === 'wording' ? '措辞' : issue.kind === 'fact' ? '事实' : '失败';
                 return (
-                  <div key={issue.id} style={{
-                    background: issue.kind === 'fact' || issue.kind === 'failure' ? 'var(--red-wash)' : 'var(--gold-wash)',
-                    border: `1px solid ${issue.kind === 'fact' || issue.kind === 'failure' ? '#e5c4bd' : '#e3d4a8'}`,
-                    borderRadius: 2, padding: '8px 12px', fontSize: 12.5, marginBottom: 7,
-                    color: issue.kind === 'fact' || issue.kind === 'failure' ? 'var(--red)' : 'var(--gold-deep)',
-                    opacity: open ? 1 : 0.62,
-                  }}>
-                    <span style={{ fontFamily: 'var(--mono)', fontSize: 10, border: '1px solid currentColor', borderRadius: 2, padding: '0 5px', marginRight: 7 }}>
-                      {issue.kind === 'wording' ? '措辞' : issue.kind === 'fact' ? '事实' : '失败'}
-                    </span>
-                    {issue.issue}
-                    <span style={{ marginLeft: 8, float: 'right', display: 'flex', gap: 6 }}>
-                      {!open ? <span style={{ fontFamily: 'var(--mono)', fontSize: 10.5 }}>{issue.status === 'ignored' ? '已忽略' : issue.status === 'auto_fixed' ? '已修订' : '已解决'}</span> : (
-                        <>
-                          {issue.kind === 'failure' ? <button className="btn" style={{ padding: '1px 9px', fontSize: 11.5 }} onClick={() => retryShot.mutate({ sceneNo: sn, sequence: sq })}>重试镜 {sn}-{sq}</button> : null}
-                          {issue.kind === 'wording' ? <button className="btn primary" style={{ padding: '1px 9px', fontSize: 11.5 }} onClick={() => autoFix.mutate(issue.id)}>自动修订</button> : null}
-                          {issue.kind === 'fact' ? <button className="btn" style={{ padding: '1px 9px', fontSize: 11.5 }} onClick={() => autoFix.mutate(issue.id)} disabled>需人工</button> : null}
-                          {issue.kind !== 'failure' ? <button className="btn" style={{ padding: '1px 9px', fontSize: 11.5 }} onClick={() => ignoreIssue.mutate(issue.id)}>忽略</button> : null}
-                        </>
-                      )}
-                    </span>
+                  <div key={issue.id} className={issue.kind === 'wording' ? 'issue word' : 'issue'} style={{ opacity: open ? 1 : 0.62 }}>
+                    <div className="ih">
+                      <span className="tag">{kindLabel}</span>
+                      <span>{issue.issue}</span>
+                      <span className="ia">
+                        {!open ? (
+                          <span style={{ fontFamily: 'var(--mono)', fontSize: 10.5 }}>
+                            {issue.status === 'ignored' ? '已忽略' : issue.status === 'auto_fixed' ? '已修订' : '已解决'}
+                          </span>
+                        ) : (
+                          <>
+                            {issue.kind === 'failure' ? <button className="btn" onClick={() => retryShot.mutate({ sceneNo: sn!, sequence: sq! })}>重试镜 {sn}-{sq}</button> : null}
+                            {issue.kind === 'wording' ? <button className="btn primary" onClick={() => autoFix.mutate(issue.id)}>自动修订</button> : null}
+                            {issue.kind === 'fact' ? <button className="btn" disabled>需人工</button> : null}
+                            {issue.kind !== 'failure' ? <button className="btn" onClick={() => ignoreIssue.mutate(issue.id)}>忽略</button> : null}
+                          </>
+                        )}
+                      </span>
+                    </div>
+                    {issue.suggestion ? <div className="why">{issue.suggestion}</div> : null}
                   </div>
                 );
               })}
             </>
           ) : null}
 
-          {!board ? <div style={{ color: 'var(--ink-3)', fontFamily: 'var(--kai)' }}>读取图版…</div> : null}
-          {board && board.scenes.length === 0 && board.taskStatus !== 'running' ? (
-            <div style={{ color: 'var(--ink-3)', fontFamily: 'var(--kai)' }}>尚未开始制作。</div>
+          {/* 生产包 */}
+          {board && episodeDone ? (
+            <>
+              <div className="sec"><span>生产包</span><span style={{ fontFamily: 'var(--mono)' }}>整项目 ZIP</span></div>
+              <div className="pkg">
+                <div className="files">
+                  <b>{board.episode.episodeNo} 集</b>已就绪<br />
+                  ├ project-assets.md<br />
+                  └ episode-{String(board.episode.episodeNo).padStart(2, '0')}/<span className="d">5 文件</span>
+                </div>
+                <div className="exp">
+                  <button className="btn primary" onClick={onExport}>导出项目 ZIP</button>
+                  <span>被忽略的穿帮将记录在 manifest.json</span>
+                </div>
+              </div>
+            </>
           ) : null}
         </div>
       </div>
-      <span className="lnk" style={{ display: 'none' }} onClick={() => navigate(`/projects/${id}`)} />
     </div>
   );
 }

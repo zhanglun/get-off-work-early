@@ -1,5 +1,15 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-<head><meta charset="UTF-8"><title>短剧分镜制作助手</title></head>
-<body><div id="root"></div><script type="module" src="/src/main.tsx"></script></body>
+<head><meta charset="UTF-8"><title>短剧分镜制作助手</title><meta name="viewport" content="width=device-width, initial-scale=1"></head>
+<body>
+<!--
+  DESIGN CONTRACT — 场记日志（视觉基线：DESIGN.md + docs/mockups/ui-visual-draft.html，comp-c 终裁）
+  THESIS: 产品是一本场记的连续性日志——剧本登记进来，场/镜/条逐一编号入册，穿帮用红笔记录，圈码标出进行中的条目；拒绝暗色工具套版与漫画分格刊。
+  OWN-WORLD: 米纸 #f7f6f1 + 墨黑 #22242c 结构线（1.5px 墨线分区）；工作蓝 #1f5f8b 只给动作；校对红 #c0392b 只给穿帮与印章；圈码金 #b8860b 只画手圈数字与注意标记；圈码椭圆是签名元素；楷体是助手眉批；等宽仅限编号/时间码/计数。
+  STORY: 用户把剧本登记进日志，看到场镜像条目一样被编号登记、生成、圈选；多集依次制作时跟随当前集的进度。
+  FIRST VIEWPORT: 工作区 = 顶栏 64px（返回 · 项目名 · 剧集选择 · 导出 ZIP）+ 编号边栏 118px（红页边线）+ 对话列（登记条目 / 确认卡 / 圈码进度卡）+ 图版列 44%（分镜图版 / 资产 / 穿帮 / 生产包）。
+  FINISH: unreviewed and undocumented is unfinished; every shipping screen carries its provenance back to the approved draft.
+-->
+<div id="root"></div><script type="module" src="/src/main.tsx"></script>
+</body>
 </html>
