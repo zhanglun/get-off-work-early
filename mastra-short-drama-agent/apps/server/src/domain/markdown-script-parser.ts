@@ -33,7 +33,7 @@ export function parseScriptMarkdown(scriptText: string): ParsedScript {
     scenes.push(current);
   };
 
-  for (const rawLine of lines) {
+  for (const [rawIndex, rawLine] of lines.entries()) {
     const line = rawLine.trim();
     if (!line) continue;
     if (!title && /^#\s+/.test(line) && !scenePattern.test(line)) {
@@ -61,6 +61,7 @@ export function parseScriptMarkdown(scriptText: string): ParsedScript {
         dialogues: [],
         notes: [],
         rawText: '',
+        startLine: rawIndex,
       };
       continue;
     }

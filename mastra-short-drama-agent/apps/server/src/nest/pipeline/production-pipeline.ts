@@ -8,6 +8,7 @@ import {
   generateShot,
   reviewShot,
   refineShot,
+  planShotsByModel,
 } from '../llm/agents.ts';
 import type { StoryBibleDraft } from '../../domain/story-schemas.ts';
 import type { ScenePlan } from '../llm/scene-schemas.ts';
@@ -21,7 +22,8 @@ export interface PipelineContext {
   episodeId: string;
   scriptVersionId: string;
   scriptText: string;
-  shotTarget: number;
+  /** 兼容在途旧任务：有值按目标分配；新任务为 null，由模型规划每场镜头数。 */
+  shotTarget: number | null;
 }
 
 export interface StageProgress {
@@ -78,7 +80,7 @@ export class ProductionPipeline {
     if (parsed.scenes.length === 0) {
       parsed.scenes = [{
         sceneNo: 1, heading: '全场', timeLabel: null, locationLabel: null,
-        characters: [], actions: [], dialogues: [], notes: [], rawText: ctx.scriptText,
+        characters: [], actions: [], dialogues: [], notes: [], rawText: ctx.scriptText, startLine: 0,
       }];
     }
     stages.parse = 'completed';
@@ -104,7 +106,9 @@ export class ProductionPipeline {
 
     // ── 分镜生成（镜头级并发、单镜失败隔离）──
     await this.progress(ctx.taskId, { stage: 'shots' }, stages);
-    const queue = this.distributeShots(scenePlans, ctx.shotTarget);
+    const queue = ctx.shotTarget != null
+      ? this.distributeShots(scenePlans, ctx.shotTarget)
+      : await this.planShots(ctx, scenePlans, parsed);
     const shotsTotal = queue.length;
     let shotsDone = 0;
     let shotsFailed = 0;
@@ -172,7 +176,7 @@ export class ProductionPipeline {
     assetId: string; assetName: string; fieldKey: string; before: string; after: string;
     episodes: { episodeNo: number; episodeId: string; scenes: number; shots: number; prompts: number }[];
   }): Promise<{ status: string; shotsDone: number }> {
-    await this.emit({ taskId, projectId, episodeId: input.episodes[0]!.episodeId, scriptVersionId: '', scriptText: '', shotTarget: 0 }, 'run_started', { kind: 'regeneration', episodes: input.episodes.length });
+    await this.emit({ taskId, projectId, episodeId: input.episodes[0]!.episodeId, scriptVersionId: '', scriptText: '', shotTarget: null }, 'run_started', { kind: 'regeneration', episodes: input.episodes.length });
     let done = 0;
     let total = 0;
     for (const row of input.episodes) {
@@ -281,7 +285,7 @@ export class ProductionPipeline {
     }
   }
 
-  /** 分配镜头数：目标总数按场次节拍比例分配。 */
+  /** 分配镜头数：目标总数按场次节拍比例分配（兼容旧任务路径）。 */
   private distributeShots(scenePlans: ScenePlan[], shotTarget: number): { scene: ScenePlan; sequence: number; beat: string }[] {
     const beatCounts = scenePlans.map((scene) => Math.max(1, scene.beats.length));
     const totalBeats = beatCounts.reduce((sum, count) => sum + count, 0);
@@ -295,6 +299,25 @@ export class ProductionPipeline {
         queue.push({ scene, sequence: i + 1, beat });
       }
     });
+    return queue;
+  }
+
+  /** 镜头规划：模型按内容密度决定每场镜头数；校验失败由 agent 层显式报错，不静默降级。 */
+  private async planShots(
+    ctx: PipelineContext,
+    scenePlans: ScenePlan[],
+    parsed: ReturnType<typeof parseScriptMarkdown>,
+  ): Promise<{ scene: ScenePlan; sequence: number; beat: string }[]> {
+    const plan = await planShotsByModel(scenePlans, parsed.scenes);
+    const total = [...plan.values()].reduce((sum, count) => sum + count, 0);
+    await this.emit(ctx, 'stage_progress', { stage: 'shots', planned: total });
+    const queue: { scene: ScenePlan; sequence: number; beat: string }[] = [];
+    for (const scene of scenePlans) {
+      const count = plan.get(scene.sceneNo) ?? 1;
+      for (let i = 0; i < count; i++) {
+        queue.push({ scene, sequence: i + 1, beat: scene.beats[i % scene.beats.length] });
+      }
+    }
     return queue;
   }
 
@@ -318,6 +341,10 @@ export class ProductionPipeline {
       conflicts: bible.conflicts,
     };
     const bibleRecord = await this.prisma.storyBible.create({ data: record });
+    // 版本换生清理：旧版本场次（及其镜头级联）是中断重跑的残留，不属于成品
+    if (existing) {
+      await this.prisma.scene.deleteMany({ where: { episodeId: ctx.episodeId, storyBibleId: { not: bibleRecord.id } } });
+    }
     for (const character of bible.characters) {
       const existing = await this.prisma.character.findFirst({ where: { storyBibleId: bibleRecord.id, name: character.name } });
       const data = {
@@ -426,14 +453,20 @@ export class ProductionPipeline {
     });
   }
 
-  /** 连续性检查：措辞类自动修订提示、事实类登记 Issue。 */
+  /** 连续性检查：措辞类自动修订提示、事实类登记 Issue。只查最新 StoryBible 的镜头。 */
   private async runContinuityReview(ctx: PipelineContext, bible: StoryBibleDraft, scenePlans: ScenePlan[]): Promise<number> {
     let count = 0;
-    const shots = await this.prisma.shot.findMany({
-      where: { scene: { episodeId: ctx.episodeId } },
-      orderBy: [{ scene: { sceneNo: 'asc' } }, { sequence: 'asc' }],
-      include: { scene: true },
+    const latestBible = await this.prisma.storyBible.findFirst({
+      where: { episodeId: ctx.episodeId },
+      orderBy: { version: 'desc' },
     });
+    const shots = latestBible
+      ? await this.prisma.shot.findMany({
+          where: { scene: { storyBibleId: latestBible.id } },
+          orderBy: [{ scene: { sceneNo: 'asc' } }, { sequence: 'asc' }],
+          include: { scene: true },
+        })
+      : [];
     for (const shot of shots) {
       const payload = shot.payload as Partial<ShotDraftV1>;
       if (!payload?.imagePrompt) continue;
@@ -454,7 +487,27 @@ export class ProductionPipeline {
       }
       const scenePlan = scenePlans.find((plan) => plan.sceneNo === shot.scene.sceneNo);
       if (!scenePlan) continue;
-      const review = await reviewShot(scenePlan, bible, payload as ShotDraftV1);
+      // 单镜审查失败隔离：登记失败 Issue 后继续，不炸整任务（与分镜生成阶段同纪律）
+      let review: Awaited<ReturnType<typeof reviewShot>>;
+      try {
+        review = await reviewShot(scenePlan, bible, payload as ShotDraftV1);
+      } catch (error) {
+        console.error(JSON.stringify({
+          event: 'shot_review_failed', episodeId: ctx.episodeId,
+          sceneNo: shot.scene.sceneNo, sequence: shot.sequence,
+          error: error instanceof Error ? error.message : String(error),
+        }));
+        await this.prisma.issue.create({
+          data: {
+            episodeId: ctx.episodeId, targetType: 'shot', targetId: `${shot.scene.sceneNo}:${shot.sequence}`,
+            kind: 'failure', rule: 'review', severity: 'medium',
+            issue: `镜 ${shot.scene.sceneNo}-${shot.sequence} 连续性检查失败：模型连续多次未响应`,
+            suggestion: '可重跑检查或忽略；不影响其余镜头。',
+          },
+        });
+        count++;
+        continue;
+      }
       for (const finding of review.value.findings) {
         await this.prisma.issue.create({
           data: {

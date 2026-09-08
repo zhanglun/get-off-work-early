@@ -13,7 +13,7 @@ export class TaskLeaseService {
   /** 领取一个 queued 任务：行锁 + 租约；同项目存在 running 任务时跳过（项目互斥）。 */
   async claim(): Promise<{
     id: string; kind: string; projectId: string; episodeId: string;
-    scriptVersionId: string; scriptText: string; shotTarget: number; inputRef: string;
+    scriptVersionId: string; scriptText: string; shotTarget: number | null; inputRef: string;
   } | null> {
     return this.prisma.$transaction(async (tx) => {
       const candidates = await tx.$queryRaw<Array<{ id: string }>>`
@@ -41,14 +41,14 @@ export class TaskLeaseService {
       });
       if ((task.kind !== 'production' && task.kind !== 'regeneration') || !task.projectId || !task.episodeId || !task.inputRef) return null;
       const input = JSON.parse(task.inputRef) as {
-        scriptVersionId: string; scriptText: string; shotTarget: number;
+        scriptVersionId: string; scriptText: string; shotTarget?: number;
       };
       return {
         id: task.id, kind: task.kind,
         projectId: task.projectId, episodeId: task.episodeId,
         scriptVersionId: input.scriptVersionId,
         scriptText: input.scriptText,
-        shotTarget: input.shotTarget,
+        shotTarget: input.shotTarget ?? null,
         inputRef: task.inputRef,
       };
     });

@@ -55,6 +55,15 @@ function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+/** 容错提取 JSON：模型可能在 JSON 前后输出推理文字或 Markdown 围栏。 */
+function extractJson(content: string): unknown {
+  const text = content.replace(/```(?:json)?/gi, '').trim();
+  const start = text.indexOf('{');
+  const end = text.lastIndexOf('}');
+  if (start === -1 || end === -1 || end <= start) throw new ModelRequestError('模型返回中没有 JSON 对象');
+  return JSON.parse(text.slice(start, end + 1));
+}
+
 /** 调用 OpenAI 兼容结构化接口；失败只重试并抛错，不生成替代数据。 */
 export async function generateStructured<T>(agent: StructuredAgent, prompt: string): Promise<GenerationResult<T>> {
   const config = getModelConfig();
@@ -63,8 +72,9 @@ export async function generateStructured<T>(agent: StructuredAgent, prompt: stri
   const startedAt = Date.now();
 
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 120_000);
+      const controller = new AbortController();
+      // 深度推理型模型的长结构化输出可能远超 2 分钟；300s 内失败才计入重试。
+      const timer = setTimeout(() => controller.abort(), 300_000);
     try {
       const response = await fetch(`${config.baseUrl}/chat/completions`, {
         method: 'POST',
@@ -88,7 +98,7 @@ export async function generateStructured<T>(agent: StructuredAgent, prompt: stri
       };
       const content = json.choices?.[0]?.message?.content;
       if (!content) throw new ModelRequestError('模型返回为空');
-      const value = agent.schema.parse(JSON.parse(content)) as T;
+      const value = agent.schema.parse(extractJson(content)) as T;
       return {
         value,
         model: config.model,

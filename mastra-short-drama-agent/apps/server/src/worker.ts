@@ -12,7 +12,7 @@ process.on('exit', (code) => console.log(`[worker] 进程退出 code=${code}`));
 
 interface ClaimedTask {
   id: string; kind: string; projectId: string; episodeId: string;
-  scriptVersionId: string; scriptText: string; shotTarget: number;
+  scriptVersionId: string; scriptText: string; shotTarget: number | null;
   inputRef?: string;
 }
 
@@ -44,7 +44,7 @@ async function bootstrap(): Promise<void> {
         return;
       }
       idleTicks = 0;
-      console.log(`[worker] 领取任务 ${task.id}（${task.kind}，episode ${task.episodeId}${task.kind === 'production' ? `，目标 ${task.shotTarget} 镜` : ''}）`);
+      console.log(`[worker] 领取任务 ${task.id}（${task.kind}，episode ${task.episodeId}${task.kind === 'production' ? (task.shotTarget != null ? `，目标 ${task.shotTarget} 镜` : '，镜头数由模型规划') : ''}）`);
       const heartbeat = setInterval(() => void lease.heartbeat(task.id), 30_000);
       try {
         const result = task.kind === 'regeneration'

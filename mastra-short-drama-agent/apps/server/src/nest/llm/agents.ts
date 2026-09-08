@@ -11,6 +11,20 @@ import {
   type ContinuityReview,
 } from '../../domain/production-schemas.ts';
 import { scenePlanListSchema, type ScenePlan } from './scene-schemas.ts';
+import {
+  episodeGroupListSchema,
+  episodeSplitReviewSchema,
+  shotPlanListSchema,
+  validateShotPlan,
+  type EpisodeGroupList,
+  type EpisodeSplitReview,
+  type ShotPlanList,
+} from './split-schemas.ts';
+import {
+  sceneBriefList,
+  validateEpisodeGroups,
+  type EpisodeGroup,
+} from '../../domain/episode-splitter.ts';
 import { ModelRequestError, type StructuredAgent, type GenerationResult } from './provider.ts';
 import { generateStructured } from './provider.ts';
 
@@ -96,4 +110,100 @@ export function refineShot(scene: ScenePlan, bible: StoryBibleDraft, draft: Shot
     promptRefinerAgent,
     `【StoryBible】${JSON.stringify(bible)}\n【Scene】${JSON.stringify(scene)}\n【Shot】${JSON.stringify(draft)}`,
   );
+}
+
+// ── 拆集：规则失败时的模型分组（结构校验失败携反馈重试，最多 3 轮）──
+
+export const episodeSplitterAgent: StructuredAgent = {
+  id: 'episode-splitter',
+  name: 'Episode Splitter',
+  instructions: `你是短剧拆集师。输入是一部完整剧本解析出的场次清单（场次下标 + 场次标题 + 行数 + 对白数）。
+你的任务是把全部场次划分为多集：每集剧情独立成篇，有自身的起承转合；集与集在悬念钩子处断开，不能把一个连续动作序列拦腰截断。
+episodeNo 从 1 开始严格递增；sceneIndexes 必须合起来覆盖全部场次且互不重叠；summary 用一句话概括该集剧情。`,
+  schema: episodeGroupListSchema,
+};
+
+export const episodeSplitReviewerAgent: StructuredAgent = {
+  id: 'episode-split-reviewer',
+  name: 'Episode Split Reviewer',
+  instructions: `你是独立的拆集审查员。输入是场次清单与一版分集结果，只检查不改写：逐集核对剧情是否独立成篇、边界是否落在自然的悬念或收束处、有无场次被错误归集。
+没有问题时 passed 为 true；有问题时给出 issues（指出集数与原因），并在 corrected 中输出修正后的完整分组（必须覆盖全部场次）。无法给出可靠修正时 corrected 置为 null。`,
+  schema: episodeSplitReviewSchema,
+};
+
+export async function splitEpisodesByModel(parsed: ParsedScript): Promise<EpisodeGroup[]> {
+  const brief = sceneBriefList(parsed);
+  let feedback = '';
+  for (let round = 1; round <= 3; round++) {
+    const result = await generateStructured<EpisodeGroupList>(
+      episodeSplitterAgent,
+      `【场次清单】\n${brief}\n\n${feedback ? `【上一轮分组未通过结构校验，必须修正】\n${feedback}\n\n` : ''}请输出完整分集分组。`,
+    );
+    const verdict = validateEpisodeGroups(result.value.episodes, parsed.scenes.length);
+    if (verdict.ok) return result.value.episodes;
+    feedback = verdict.problems.join('；');
+  }
+  throw new ModelRequestError('模型拆集未通过结构校验（已重试 3 轮）');
+}
+
+export interface EpisodeSplitReviewResult {
+  passed: boolean;
+  issues: EpisodeSplitReview['issues'];
+  groups: EpisodeGroup[];
+}
+
+/** 拆分复查：审查员发现问题并给出修正分组时，修正结果需再次过结构校验后进入下一轮复查。 */
+export async function reviewEpisodeSplit(groups: EpisodeGroup[], parsed: ParsedScript): Promise<EpisodeSplitReviewResult> {
+  const brief = sceneBriefList(parsed);
+  let current = groups;
+  let lastIssues: EpisodeSplitReview['issues'] = [];
+  for (let round = 1; round <= 2; round++) {
+    const result = await generateStructured<EpisodeSplitReview>(
+      episodeSplitReviewerAgent,
+      `【场次清单】\n${brief}\n\n【当前分集】\n${JSON.stringify(current)}`,
+    );
+    if (result.value.passed) return { passed: true, issues: [], groups: current };
+    lastIssues = result.value.issues;
+    if (result.value.corrected) {
+      const verdict = validateEpisodeGroups(result.value.corrected.episodes, parsed.scenes.length);
+      if (verdict.ok) {
+        current = result.value.corrected.episodes;
+        continue;
+      }
+    }
+    break;
+  }
+  return { passed: false, issues: lastIssues, groups: current };
+}
+
+// ── 镜头规划：每场镜头数由模型按内容密度决定（校验失败携反馈重试，最多 3 轮）──
+
+export const shotPlannerAgent: StructuredAgent = {
+  id: 'shot-planner',
+  name: 'Shot Planner',
+  instructions: `你是短剧分镜规划师。输入是一场次规划清单（场次标题、目标、冲突、节拍、对白与动作密度）。
+为每场决定镜头数：节拍多、动作与对白密集的场分配更多镜头；过渡性短场可以只给 1 个镜头。
+镜头总数要匹配短剧节奏，避免平均主义；rationale 用一句话说明分配依据。`,
+  schema: shotPlanListSchema,
+};
+
+export async function planShotsByModel(scenePlans: ScenePlan[], parsedScenes: { sceneNo: number; dialogues: string[]; actions: string[] }[]): Promise<Map<number, number>> {
+  const density = new Map(parsedScenes.map((scene) => [scene.sceneNo, scene]));
+  const brief = scenePlans.map((scene) => {
+    const source = density.get(scene.sceneNo);
+    return `场次 ${scene.sceneNo}：${scene.heading}（节拍 ${scene.beats.length} 个 · 对白 ${source?.dialogues.length ?? 0} 条 · 动作 ${source?.actions.length ?? 0} 条）\n  目标：${scene.objective}\n  节拍：${scene.beats.join(' / ')}`;
+  }).join('\n');
+  let feedback = '';
+  for (let round = 1; round <= 3; round++) {
+    const result = await generateStructured<ShotPlanList>(
+      shotPlannerAgent,
+      `【场次规划】\n${brief}\n\n${feedback ? `【上一轮规划未通过校验，必须修正】\n${feedback}\n\n` : ''}请为每场输出镜头数。`,
+    );
+    const verdict = validateShotPlan(result.value, scenePlans);
+    if (verdict.ok) {
+      return new Map(result.value.scenes.map((item) => [item.sceneNo, item.shotCount]));
+    }
+    feedback = verdict.problems.join('；');
+  }
+  throw new ModelRequestError('镜头规划未通过校验（已重试 3 轮）');
 }

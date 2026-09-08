@@ -71,7 +71,10 @@ export class IssuesController {
         reason: `措辞自动修订：${issue.issue}`, source: 'agent',
       },
     });
-    await this.events.append(issue.episodeId, 'artifact_updated', { artifact: 'shot', sceneNo, sequence, change: 'auto_fix' });
+    const episode = await this.prisma.episode.findUnique({ where: { id: issue.episodeId } });
+    if (episode) {
+      await this.events.append(episode.projectId, 'artifact_updated', { artifact: 'shot', sceneNo, sequence, change: 'auto_fix' });
+    }
     return { ok: true, changes: result.value.changes };
   }
 }

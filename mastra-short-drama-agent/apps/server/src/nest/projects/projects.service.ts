@@ -69,10 +69,16 @@ export class ProjectsService {
       },
     });
     if (!project) return null;
-    const activeTask = await this.prisma.domainTask.findFirst({
-      where: { projectId, status: { in: ['queued', 'running'] } },
-      orderBy: { createdAt: 'desc' },
+    // 快照活跃任务：优先正在运行的一集；串行队列中其余 queued 任务由界面状态条按集呈现。
+    const runningTask = await this.prisma.domainTask.findFirst({
+      where: { projectId, status: 'running' },
+      orderBy: { createdAt: 'asc' },
     });
+    const activeTask = runningTask ??
+      await this.prisma.domainTask.findFirst({
+        where: { projectId, status: 'queued' },
+        orderBy: { createdAt: 'asc' },
+      });
     return {
       project: { id: project.id, name: project.name, updatedAt: project.updatedAt.toISOString() },
       episodes: project.episodes.map(
@@ -93,7 +99,7 @@ export class ProjectsService {
         createdAt: msg.createdAt.toISOString(),
       })),
       activeTask: activeTask
-        ? { id: activeTask.id, kind: activeTask.kind, status: activeTask.status, progress: activeTask.progress }
+        ? { id: activeTask.id, kind: activeTask.kind, status: activeTask.status, episodeId: activeTask.episodeId, progress: activeTask.progress }
         : null,
       lastSeq: await this.events.lastSeq(projectId),
     };

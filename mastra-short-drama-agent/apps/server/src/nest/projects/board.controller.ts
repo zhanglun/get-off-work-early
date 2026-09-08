@@ -21,11 +21,18 @@ export class BoardController {
       where: { episodeId: id },
       orderBy: { createdAt: 'desc' },
     });
-    const scenes = await this.prisma.scene.findMany({
+    // 只展示最新 StoryBible 的场次：重启动恢复会生成新版本，旧版本场次属于历史
+    const latestBible = await this.prisma.storyBible.findFirst({
       where: { episodeId: id },
-      orderBy: { sceneNo: 'asc' },
-      include: { shots: { orderBy: { sequence: 'asc' }, include: { prompts: true } } },
+      orderBy: { version: 'desc' },
     });
+    const scenes = latestBible
+      ? await this.prisma.scene.findMany({
+          where: { storyBibleId: latestBible.id },
+          orderBy: { sceneNo: 'asc' },
+          include: { shots: { orderBy: { sequence: 'asc' }, include: { prompts: true } } },
+        })
+      : [];
     const issues = await this.prisma.issue.findMany({
       where: { episodeId: id },
       orderBy: { createdAt: 'asc' },

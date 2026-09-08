@@ -52,8 +52,8 @@ export const streamEventSchema = z.object({
 });
 export type StreamEvent = z.infer<typeof streamEventSchema>;
 
-// ── 对话补问链（依次：项目名 → 集数 → 镜头数）──
-export const QUESTION_KINDS = ['project_name', 'episode_no', 'shot_count'] as const;
+// ── 对话补问链（导入：多集拆分确认 / 单集集数；shot_count 为历史遗留兼容）──
+export const QUESTION_KINDS = ['project_name', 'episode_no', 'shot_count', 'split_confirm'] as const;
 export type QuestionKind = (typeof QUESTION_KINDS)[number];
 export const SHOT_COUNT_RANGE = { min: 20, max: 40, default: 30 } as const;
 
@@ -105,7 +105,7 @@ export const snapshotSchema = z.object({
   episodes: z.array(episodeSummarySchema),
   messages: z.array(messageDtoSchema),
   activeTask: z
-    .object({ id: z.string(), kind: z.string(), status: z.string(), progress: z.unknown() })
+    .object({ id: z.string(), kind: z.string(), status: z.string(), episodeId: z.string().nullable(), progress: z.unknown() })
     .nullable(),
   lastSeq: z.number().int(),
 });

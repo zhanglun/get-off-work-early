@@ -25,8 +25,9 @@ export class EventsService {
           console.error(JSON.stringify({ event: 'redis_publish_failed', projectId, seq: event.seq, error: String(error) }));
         }
         return event.seq;
-      } catch {
-        // seq 冲突：重试
+      } catch (error) {
+        // 非 seq 冲突的失败会耗尽重试；记录真实原因，避免静默吞错
+        console.error(JSON.stringify({ event: 'event_write_retry', projectId, type, attempt: attempt + 1, error: error instanceof Error ? error.message : String(error) }));
       }
     }
     throw new Error(`事件写入失败: ${projectId}/${type}`);

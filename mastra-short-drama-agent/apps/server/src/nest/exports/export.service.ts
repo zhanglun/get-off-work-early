@@ -40,8 +40,9 @@ export class ExportService {
     for (const episode of project.episodes) {
       const dir = `episode-${String(episode.episodeNo).padStart(2, '0')}`;
       const bible = await this.prisma.storyBible.findFirst({ where: { episodeId: episode.id }, orderBy: { version: 'desc' } });
+      // 只导出最新 StoryBible 的场次：历史运行残留的旧版本场次不属于成品
       const scenes = await this.prisma.scene.findMany({
-        where: { episodeId: episode.id },
+        where: bible ? { storyBibleId: bible.id } : { episodeId: episode.id },
         orderBy: { sceneNo: 'asc' },
         include: { shots: { orderBy: { sequence: 'asc' }, include: { prompts: true } } },
       });

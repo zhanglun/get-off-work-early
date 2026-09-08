@@ -12,6 +12,7 @@ export const parsedSceneSchema = z.object({
   dialogues: z.array(z.string()),
   notes: z.array(z.string()),
   rawText: z.string(),
+  startLine: z.number().int().nonnegative(),
 });
 
 export const parsedScriptSchema = z.object({
