@@ -4867,7 +4867,7 @@
         <div class="pulse-dot"></div>
         <h1>Agent Tool Call：参数不一致时的完整处理链路</h1>
       </div>
-      <p class="subtitle">案例：用户请求取消 ORD-42。先看一次成功调用，再逐层展开参数、业务、权限、外部故障和恢复 Cases。</p>
+      <p class="subtitle">案例：用户上传《服务协议.docx》并提问付款周期。先看一次成功调用，再逐层展开参数、业务、权限、外部故障和恢复 Cases。</p>
     </div>
 
     <script id="archify-guided-views-data" type="application/json">[{"id":"happy","label":"成功主链路","focus":["user","llm","runtime","schema","tool","service","recovery"],"note":"一次合法调用如何通过所有防线并返回成功结果。"},{"id":"shape","label":"结构参数 Cases","focus":["llm","runtime","schema","recovery"],"note":"JSON 损坏、未知工具、缺字段、类型错、枚举错和低风险自动修复。"},{"id":"business","label":"业务安全 Cases","focus":["runtime","schema","tool","auth","service","recovery"],"note":"Schema 通过后，工具与服务端仍必须验证资源、权限、状态与幂等。"},{"id":"outage","label":"故障恢复 Cases","focus":["tool","service","recovery","audit"],"note":"区分临时故障与永久错误，有限重试、熔断、降级和升级。"},{"id":"responsibility","label":"责任边界","focus":["llm","runtime","schema","tool","service","recovery","audit"],"note":"模型、框架、Tool 开发者和服务端各自负责什么。"}]</script>
@@ -4915,7 +4915,7 @@
     <div class="diagram-container" data-detail-level="read">
       <svg viewBox="0 0 1500 1700" role="img" aria-labelledby="archify-diagram-title archify-diagram-description" data-animation="trace" data-preset="signal-flow" data-quality-profile="showcase">
         <title id="archify-diagram-title">Agent Tool Call：参数不一致时的完整处理链路</title>
-        <desc id="archify-diagram-description">案例：用户请求取消 ORD-42。先看一次成功调用，再逐层展开参数、业务、权限、外部故障和恢复 Cases。</desc>
+        <desc id="archify-diagram-description">案例：用户上传《服务协议.docx》并提问付款周期。先看一次成功调用，再逐层展开参数、业务、权限、外部故障和恢复 Cases。</desc>
         <!-- Definitions -->
         <defs>
           <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
@@ -4991,19 +4991,19 @@
         <rect x="1390.5" y="1600" width="10" height="30" rx="3" class="c-database" stroke-width="1"/>
 
         <!-- Messages -->
-        <g data-edge-from="user" data-edge-to="llm" data-edge-label="取消 ORD-42（若未发货）" data-edge-key="0" data-edge-id="m01">
+        <g data-edge-from="user" data-edge-to="llm" data-edge-label="查服务协议付款周期" data-edge-key="0" data-edge-id="m01">
           <path data-composition-edge-from="user" data-composition-edge-to="llm" data-composition-edge-id="m01" data-composition-points="133.5,180;278.125,180" d="M 133.5 180 L 278.125 180" class="a-emphasis" data-animate="edge" style="--step:0" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
         <g data-detail="context">
           <rect x="140.0125" y="160" width="131.60000000000002" height="16" rx="3" class="c-mask"/>
-          <text x="205.8125" y="170" class="t-backend" font-size="9" text-anchor="middle">取消 ORD-42（若未发货）</text>
+          <text x="205.8125" y="170" class="t-backend" font-size="9" text-anchor="middle">查服务协议付款周期</text>
         </g>
         </g>
 
-        <g data-edge-from="llm" data-edge-to="runtime" data-edge-label="Tool Call: cancel_order(args)" data-edge-key="1" data-edge-id="m02">
+        <g data-edge-from="llm" data-edge-to="runtime" data-edge-label="Tool Call: file.search(args)" data-edge-key="1" data-edge-id="m02">
           <path data-composition-edge-from="llm" data-composition-edge-to="runtime" data-composition-edge-id="m02" data-composition-points="292.125,225;436.75,225" d="M 292.125 225 L 436.75 225" class="a-emphasis" data-animate="edge" style="--step:1" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
         <g data-detail="context">
           <rect x="283.0375" y="205" width="162.8" height="16" rx="3" class="c-mask"/>
-          <text x="364.4375" y="215" class="t-backend" font-size="9" text-anchor="middle">Tool Call: cancel_order(args)</text>
+          <text x="364.4375" y="215" class="t-backend" font-size="9" text-anchor="middle">Tool Call: file.search(args)</text>
         </g>
         <text data-detail="fine" x="304.125" y="243" class="t-dim" font-size="7">模型输出的是尝试性调用，不是安全保证</text>
         </g>
@@ -5040,11 +5040,11 @@
         </g>
         </g>
 
-        <g data-edge-from="service" data-edge-to="recovery" data-edge-label="200：事务成功 + order" data-edge-key="6" data-edge-id="m07">
+        <g data-edge-from="service" data-edge-to="recovery" data-edge-label="200：成功返回 Segment" data-edge-key="6" data-edge-id="m07">
           <path data-composition-edge-from="service" data-composition-edge-to="recovery" data-composition-edge-id="m07" data-composition-points="1085.25,450;1229.875,450" d="M 1085.25 450 L 1229.875 450" class="a-default" data-animate="edge" style="--step:6" stroke-width="1.4" stroke-dasharray="3,5" marker-end="url(#arrowhead)"/>
         <g data-detail="context">
           <rect x="1096.9625" y="430" width="121.2" height="16" rx="3" class="c-mask"/>
-          <text x="1157.5625" y="440" class="t-muted" font-size="9" text-anchor="middle">200：事务成功 + order</text>
+          <text x="1157.5625" y="440" class="t-muted" font-size="9" text-anchor="middle">200：成功返回 Segment</text>
         </g>
         </g>
 
@@ -5056,11 +5056,11 @@
         </g>
         </g>
 
-        <g data-edge-from="llm" data-edge-to="user" data-edge-label="已取消 ORD-42" data-edge-key="8" data-edge-id="m09">
+        <g data-edge-from="llm" data-edge-to="user" data-edge-label="带引用回答" data-edge-key="8" data-edge-id="m09">
           <path data-composition-edge-from="llm" data-composition-edge-to="user" data-composition-edge-id="m09" data-composition-points="278.125,540;133.5,540" d="M 278.125 540 L 133.5 540" class="a-default" data-animate="edge" style="--step:8" stroke-width="1.4" stroke-dasharray="3,5" marker-end="url(#arrowhead)"/>
         <g data-detail="context">
           <rect x="166.0125" y="520" width="79.60000000000001" height="16" rx="3" class="c-mask"/>
-          <text x="205.8125" y="530" class="t-muted" font-size="9" text-anchor="middle">已取消 ORD-42</text>
+          <text x="205.8125" y="530" class="t-muted" font-size="9" text-anchor="middle">带引用回答</text>
         </g>
         </g>
 
@@ -5169,11 +5169,11 @@
         <text data-detail="fine" x="304.125" y="1188" class="t-dim" font-size="7">模型只能根据反馈被动修正，不能保证成功</text>
         </g>
 
-        <g data-edge-from="tool" data-edge-to="auth" data-edge-label="Case F：订单不存在 / 无权限 / 状态非法" data-edge-key="22" data-edge-id="m23">
+        <g data-edge-from="tool" data-edge-to="auth" data-edge-label="Case F：Segment 不存在 / 无权限 / 状态非法" data-edge-key="22" data-edge-id="m23">
           <path data-composition-edge-from="tool" data-composition-edge-to="auth" data-composition-edge-id="m23" data-composition-points="768,1230;912.625,1230" d="M 768 1230 L 912.625 1230" class="a-security" data-animate="edge" style="--step:12" stroke-width="1.4" marker-end="url(#arrowhead-security)"/>
         <g data-detail="context">
           <rect x="735.5125" y="1210" width="209.6" height="16" rx="3" class="c-mask"/>
-          <text x="840.3125" y="1220" class="t-security" font-size="9" text-anchor="middle">Case F：订单不存在 / 无权限 / 状态非法</text>
+          <text x="840.3125" y="1220" class="t-security" font-size="9" text-anchor="middle">Case F：Segment 不存在 / 无权限 / 状态非法</text>
         </g>
         </g>
 
@@ -5341,14 +5341,14 @@
           <text data-detail="context" x="919.625" y="111" class="t-muted" font-size="7" text-anchor="middle">权限与业务规则</text>
         </g>
 
-        <g id="node-service" data-node-id="service" data-node-label="订单服务" tabindex="0" role="button" aria-label="Focus 订单服务, API + DB, Sequence participant" aria-pressed="false" data-node-kind="cloud" data-node-sublabel="API + DB" data-node-context="Sequence participant">
-          <title>订单服务 · API + DB · Sequence participant</title>
+        <g id="node-service" data-node-id="service" data-node-label="检索服务" tabindex="0" role="button" aria-label="Focus 检索服务, API + DB, Sequence participant" aria-pressed="false" data-node-kind="cloud" data-node-sublabel="API + DB" data-node-context="Sequence participant">
+          <title>检索服务 · API + DB · Sequence participant</title>
           <rect x="1013.75" y="72" width="129" height="54" rx="6" class="c-mask"/>
           <rect x="1013.75" y="72" width="129" height="54" rx="6" class="c-cloud" data-animate="node" style="--step:6" stroke-width="1.5"/>
           <g aria-hidden="true" data-semantic-sigil="cloud" class="semantic-sigil s-cloud" transform="translate(1019.75 78) scale(0.6875)">
             <path d="M4.3 12.5h7.3a2.4 2.4 0 0 0 .2-4.8 4 4 0 0 0-7.5-1.3A3.1 3.1 0 0 0 4.3 12.5Z"/>
           </g>
-          <text data-detail-anchor x="1078.25" y="94" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">订单服务</text>
+          <text data-detail-anchor x="1078.25" y="94" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">检索服务</text>
           <text data-detail="context" x="1078.25" y="111" class="t-muted" font-size="7" text-anchor="middle">API + DB</text>
         </g>
 
@@ -5592,8 +5592,8 @@
           <h3>读图方法｜先看成功，再看分支</h3>
         </div>
         <ul>
-          <li>&bull; 案例输入：取消 ORD-42，但仅当订单未发货。</li>
-          <li>&bull; 成功路径：用户 → LLM → Runtime → Schema → Tool → Policy/Auth → 订单服务 → Recovery → 用户。</li>
+          <li>&bull; 案例输入：file.search 检索付款周期，再 file.read 取证。</li>
+          <li>&bull; 成功路径：用户 → LLM → Runtime → Schema → Tool → Policy/Auth → 检索服务 → Recovery → 用户。</li>
           <li>&bull; 虚线表示格式化、异步审计或重试；红色/安全色表示拒绝或不可执行。</li>
           <li>&bull; 点击上方 Guided Views 可聚焦成功链路、结构错误、业务安全或故障恢复。</li>
         </ul>
@@ -5605,7 +5605,7 @@
           <h3>模型输出层｜模型并不主动修复</h3>
         </div>
         <ul>
-          <li>&bull; 正常 Case：生成 cancel_order({ order_id: &quot;ORD-42&quot;, reason: &quot;user_request&quot; })。</li>
+          <li>&bull; 正常 Case：生成 file.search({ query: &quot;付款周期&quot; })。</li>
           <li>&bull; JSON 损坏、未知工具名：Runtime 在执行前拒绝。</li>
           <li>&bull; 模型只有收到 PARSE_ERROR/UNKNOWN_TOOL 后，才可能在下一轮尝试修正。</li>
           <li>&bull; 语义看似合理不代表资源存在、权限足够或状态允许。</li>
@@ -5632,7 +5632,7 @@
           <h3>Tool + 服务端｜生产级兜底</h3>
         </div>
         <ul>
-          <li>&bull; Tool 内部二次验证订单存在性、业务状态、调用权限和幂等性。</li>
+          <li>&bull; Tool 内部二次验证 Revision 状态、业务条件、调用权限和幂等性。</li>
           <li>&bull; 服务端必须再次鉴权、执行事务、检查状态机和限额。</li>
           <li>&bull; Schema 合法只说明参数形状合法，不说明操作被允许。</li>
           <li>&bull; try/catch、timeout、取消、第三方错误必须转成 Tool Result，不能让 Agent 直接崩溃。</li>

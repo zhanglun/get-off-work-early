@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="generator" content="archify 2.15.0">
-  <title>Agent Tools 调用失败：全生命周期处理 Diagram</title>
+  <title>Agent 工具调用失败：全生命周期处理 Diagram</title>
   <script>
     // Resolve the theme before first paint so light-preference users don't
     // see a dark flash. The toolbar script below re-applies with UI state.
@@ -4865,12 +4865,12 @@
     <div class="header">
       <div class="header-row">
         <div class="pulse-dot"></div>
-        <h1>Agent Tools 调用失败：全生命周期处理</h1>
+        <h1>Agent 工具调用失败：全生命周期处理</h1>
       </div>
-      <p class="subtitle">案例：用户请求取消 ORD-42。覆盖模型、Runtime、Schema、Tool、服务端、结果校验、重试、降级、审批与审计。</p>
+      <p class="subtitle">案例：上传《服务协议.docx》→ file.search → file.read → 带引用回答；每一类失败都有对应出口。</p>
     </div>
 
-    <script id="archify-guided-views-data" type="application/json">[{"id":"happy","label":"成功主链路","focus":["user","llm","runtime","schema","tool","service","recovery"],"note":"一次合法调用如何通过所有防线并返回成功结果。"},{"id":"shape","label":"结构参数 Cases","focus":["llm","runtime","schema","recovery"],"note":"JSON 损坏、未知工具、缺字段、类型错、枚举错和低风险自动修复。"},{"id":"business","label":"业务安全 Cases","focus":["runtime","schema","tool","auth","service","recovery"],"note":"Schema 通过后，工具与服务端仍必须验证资源、权限、状态与幂等。"},{"id":"outage","label":"故障恢复 Cases","focus":["tool","service","recovery","audit"],"note":"区分临时故障与永久错误，有限重试、熔断、降级和升级。"},{"id":"responsibility","label":"责任边界","focus":["llm","runtime","schema","tool","service","recovery","audit"],"note":"模型、框架、Tool 开发者和服务端各自负责什么。"}]</script>
+    <script id="archify-guided-views-data" type="application/json">[{"id":"happy","label":"成功主链路","focus":["user","llm","parse","gate","tool","reply"],"note":"上传完成 → file.search 定位线索 → file.read 回读原文登记 Evidence → 带引用回答。"},{"id":"shape","label":"模型与 Schema 失败","focus":["llm","parse","shape"],"note":"形状错误在执行前拦截：strict 模式请求时就拒绝不合规 Schema；可修复的调用用 repairToolCall 在当前步内修复，不污染消息历史。"},{"id":"business","label":"业务失败与错误回传","focus":["tool","notready","nomatch"],"note":"NOT_READY 是稍候、NO_MATCH 是拒答——错误码一字之差，行为指引相反；两者都以结果形状回传模型，而不是换措辞空转。"},{"id":"side-effect","label":"副作用保护","focus":["register","replay","tool"],"note":"registerUpload 超时 = 结果未知：用同一个幂等键重放收敛，绝不换键；binaryHash 内容去重天然防重复解析。解析 ready 后，file.search 才能在该 Revision 内检索。"},{"id":"boundary","label":"责任边界","focus":["llm","parse","gate","denied"],"note":"模型负责提出，Schema 负责形状，权限门负责拒绝（先于一切放行评估），服务端负责最终安全。"}]</script>
 
     <div class="guided-views no-print" id="guided-views" hidden aria-label="Guided diagram views">
       <button id="guided-view-prev" type="button" aria-label="Previous guided view" title="Previous guided view ([)">&#8592;</button>
@@ -4913,9 +4913,9 @@
 
     <!-- Main Diagram -->
     <div class="diagram-container" data-detail-level="read">
-      <svg viewBox="0 0 1500 1700" role="img" aria-labelledby="archify-diagram-title archify-diagram-description" data-animation="trace" data-preset="signal-flow" data-quality-profile="showcase">
-        <title id="archify-diagram-title">Agent Tools 调用失败：全生命周期处理</title>
-        <desc id="archify-diagram-description">案例：用户请求取消 ORD-42。覆盖模型、Runtime、Schema、Tool、服务端、结果校验、重试、降级、审批与审计。</desc>
+      <svg viewBox="0 0 720 1024" role="img" aria-labelledby="archify-diagram-title archify-diagram-description" data-animation="trace" data-preset="signal-flow" data-quality-profile="showcase">
+        <title id="archify-diagram-title">Agent 工具调用失败：全生命周期处理</title>
+        <desc id="archify-diagram-description">案例：上传《服务协议.docx》→ file.search → file.read → 带引用回答；每一类失败都有对应出口。</desc>
         <!-- Definitions -->
         <defs>
           <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
@@ -4938,468 +4938,267 @@
         <!-- Background Grid -->
         <rect width="100%" height="100%" fill="url(#grid)" />
 
-        <!-- Time Segments -->
-        <rect data-graph-role="structural-frame" data-composition-frame-kind="segment" data-composition-frame-id="0" x="48" y="150" width="1404" height="210" rx="10" class="c-lane" stroke-width="1"/>
+        <!-- Swimlanes -->
+        <rect data-graph-role="structural-frame" data-composition-frame-kind="lane" data-composition-frame-id="lane-0" x="40" y="52" width="640" height="104" rx="10" class="c-lane" stroke-width="1"/>
+        <text x="54" y="74" class="t-dim" font-size="10" font-weight="600">01 / 用户与会话</text>
 
-        <rect data-graph-role="structural-frame" data-composition-frame-kind="segment" data-composition-frame-id="1" x="48" y="390" width="1404" height="460" rx="10" class="c-lane" stroke-width="1"/>
+        <rect data-graph-role="structural-frame" data-composition-frame-kind="lane" data-composition-frame-id="lane-1" x="40" y="176" width="640" height="104" rx="10" class="c-lane" stroke-width="1"/>
+        <text x="54" y="198" class="t-dim" font-size="10" font-weight="600">02 / 模型</text>
 
-        <rect data-graph-role="structural-frame" data-composition-frame-kind="segment" data-composition-frame-id="2" x="48" y="880" width="1404" height="370" rx="10" class="c-lane" stroke-width="1"/>
+        <rect data-graph-role="structural-frame" data-composition-frame-kind="lane" data-composition-frame-id="lane-2" x="40" y="300" width="640" height="104" rx="10" class="c-lane" stroke-width="1"/>
+        <text x="54" y="322" class="t-dim" font-size="10" font-weight="600">03 / Agent Runtime</text>
 
-        <rect data-graph-role="structural-frame" data-composition-frame-kind="segment" data-composition-frame-id="3" x="48" y="1280" width="1404" height="230" rx="10" class="c-lane" stroke-width="1"/>
+        <rect data-graph-role="structural-frame" data-composition-frame-kind="lane" data-composition-frame-id="lane-3" x="40" y="424" width="640" height="104" rx="10" class="c-lane" stroke-width="1"/>
+        <text x="54" y="446" class="t-dim" font-size="10" font-weight="600">04 / 校验与权限</text>
 
-        <rect data-graph-role="structural-frame" data-composition-frame-kind="segment" data-composition-frame-id="4" x="48" y="1540" width="1404" height="110" rx="10" class="c-lane" stroke-width="1"/>
+        <rect data-graph-role="structural-frame" data-composition-frame-kind="lane" data-composition-frame-id="lane-4" x="40" y="548" width="640" height="104" rx="10" class="c-lane" stroke-width="1"/>
+        <text x="54" y="570" class="t-dim" font-size="10" font-weight="600">05 / 文件工具</text>
 
-        <!-- Lifelines -->
-        <path d="M 126.5 142 L 126.5 1635" class="a-default" stroke-width="0.8" stroke-dasharray="3,7"/>
-        <path d="M 285.125 142 L 285.125 1635" class="a-default" stroke-width="0.8" stroke-dasharray="3,7"/>
-        <path d="M 443.75 142 L 443.75 1635" class="a-default" stroke-width="0.8" stroke-dasharray="3,7"/>
-        <path d="M 602.375 142 L 602.375 1635" class="a-default" stroke-width="0.8" stroke-dasharray="3,7"/>
-        <path d="M 761 142 L 761 1635" class="a-default" stroke-width="0.8" stroke-dasharray="3,7"/>
-        <path d="M 919.625 142 L 919.625 1635" class="a-default" stroke-width="0.8" stroke-dasharray="3,7"/>
-        <path d="M 1078.25 142 L 1078.25 1635" class="a-default" stroke-width="0.8" stroke-dasharray="3,7"/>
-        <path d="M 1236.875 142 L 1236.875 1635" class="a-default" stroke-width="0.8" stroke-dasharray="3,7"/>
-        <path d="M 1395.5 142 L 1395.5 1635" class="a-default" stroke-width="0.8" stroke-dasharray="3,7"/>
+        <rect data-graph-role="structural-frame" data-composition-frame-kind="lane" data-composition-frame-id="lane-5" x="40" y="672" width="640" height="104" rx="10" class="c-lane" stroke-width="1"/>
+        <text x="54" y="694" class="t-dim" font-size="10" font-weight="600">06 / 解析管线</text>
 
-        <!-- Activations -->
-        <rect x="280.125" y="178" width="10" height="60" rx="3" class="c-mask"/>
-        <rect x="280.125" y="178" width="10" height="60" rx="3" class="c-backend" stroke-width="1"/>
-        <rect x="438.75" y="220" width="10" height="115" rx="3" class="c-mask"/>
-        <rect x="438.75" y="220" width="10" height="115" rx="3" class="c-backend" stroke-width="1"/>
-        <rect x="597.375" y="265" width="10" height="60" rx="3" class="c-mask"/>
-        <rect x="597.375" y="265" width="10" height="60" rx="3" class="c-security" stroke-width="1"/>
-        <rect x="756" y="310" width="10" height="65" rx="3" class="c-mask"/>
-        <rect x="756" y="310" width="10" height="65" rx="3" class="c-backend" stroke-width="1"/>
-        <rect x="914.625" y="355" width="10" height="65" rx="3" class="c-mask"/>
-        <rect x="914.625" y="355" width="10" height="65" rx="3" class="c-security" stroke-width="1"/>
-        <rect x="1073.25" y="400" width="10" height="60" rx="3" class="c-mask"/>
-        <rect x="1073.25" y="400" width="10" height="60" rx="3" class="c-cloud" stroke-width="1"/>
-        <rect x="1231.875" y="445" width="10" height="80" rx="3" class="c-mask"/>
-        <rect x="1231.875" y="445" width="10" height="80" rx="3" class="c-messagebus" stroke-width="1"/>
-        <rect x="1390.5" y="625" width="10" height="25" rx="3" class="c-mask"/>
-        <rect x="1390.5" y="625" width="10" height="25" rx="3" class="c-database" stroke-width="1"/>
-        <rect x="438.75" y="685" width="10" height="155" rx="3" class="c-mask"/>
-        <rect x="438.75" y="685" width="10" height="155" rx="3" class="c-backend" stroke-width="1"/>
-        <rect x="597.375" y="895" width="10" height="195" rx="3" class="c-mask"/>
-        <rect x="597.375" y="895" width="10" height="195" rx="3" class="c-security" stroke-width="1"/>
-        <rect x="756" y="1225" width="10" height="135" rx="3" class="c-mask"/>
-        <rect x="756" y="1225" width="10" height="135" rx="3" class="c-backend" stroke-width="1"/>
-        <rect x="1073.25" y="1330" width="10" height="110" rx="3" class="c-mask"/>
-        <rect x="1073.25" y="1330" width="10" height="110" rx="3" class="c-cloud" stroke-width="1"/>
-        <rect x="1231.875" y="1268" width="10" height="262" rx="3" class="c-mask"/>
-        <rect x="1231.875" y="1268" width="10" height="262" rx="3" class="c-messagebus" stroke-width="1"/>
-        <rect x="1390.5" y="1600" width="10" height="30" rx="3" class="c-mask"/>
-        <rect x="1390.5" y="1600" width="10" height="30" rx="3" class="c-database" stroke-width="1"/>
+        <rect data-graph-role="structural-frame" data-composition-frame-kind="lane" data-composition-frame-id="lane-6" x="40" y="796" width="640" height="104" rx="10" class="c-lane" stroke-width="1"/>
+        <rect data-graph-role="structural-frame" data-composition-frame-kind="exception-lane" data-composition-frame-id="lane-6-exception" x="46" y="802" width="628" height="92" rx="8" class="c-security-group" stroke-width="1"/>
+        <text x="54" y="818" class="t-security" font-size="10" font-weight="600">EX / 失败与恢复</text>
 
-        <!-- Messages -->
-        <g data-edge-from="user" data-edge-to="llm" data-edge-label="取消 ORD-42（若未发货）" data-edge-key="0" data-edge-id="m01">
-          <path data-composition-edge-from="user" data-composition-edge-to="llm" data-composition-edge-id="m01" data-composition-points="133.5,180;278.125,180" d="M 133.5 180 L 278.125 180" class="a-emphasis" data-animate="edge" style="--step:0" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
-        <g data-detail="context">
-          <rect x="140.0125" y="160" width="131.60000000000002" height="16" rx="3" class="c-mask"/>
-          <text x="205.8125" y="170" class="t-backend" font-size="9" text-anchor="middle">取消 ORD-42（若未发货）</text>
-        </g>
-        </g>
+        <!-- Phase headers -->
 
-        <g data-edge-from="llm" data-edge-to="runtime" data-edge-label="Tool Call: cancel_order(args)" data-edge-key="1" data-edge-id="m02">
-          <path data-composition-edge-from="llm" data-composition-edge-to="runtime" data-composition-edge-id="m02" data-composition-points="292.125,225;436.75,225" d="M 292.125 225 L 436.75 225" class="a-emphasis" data-animate="edge" style="--step:1" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
-        <g data-detail="context">
-          <rect x="283.0375" y="205" width="162.8" height="16" rx="3" class="c-mask"/>
-          <text x="364.4375" y="215" class="t-backend" font-size="9" text-anchor="middle">Tool Call: cancel_order(args)</text>
-        </g>
-        <text data-detail="fine" x="304.125" y="243" class="t-dim" font-size="7">模型输出的是尝试性调用，不是安全保证</text>
-        </g>
 
-        <g data-edge-from="runtime" data-edge-to="schema" data-edge-label="解析 tool name + arguments" data-edge-key="2" data-edge-id="m03">
-          <path data-composition-edge-from="runtime" data-composition-edge-to="schema" data-composition-edge-id="m03" data-composition-points="450.75,270;595.375,270" d="M 450.75 270 L 595.375 270" class="a-default" data-animate="edge" style="--step:2" stroke-width="1.4" marker-end="url(#arrowhead)"/>
-        <g data-detail="context">
-          <rect x="449.4625" y="250" width="147.20000000000002" height="16" rx="3" class="c-mask"/>
-          <text x="523.0625" y="260" class="t-backend" font-size="9" text-anchor="middle">解析 tool name + arguments</text>
-        </g>
-        </g>
+        <!-- Workflow groups -->
 
-        <g data-edge-from="schema" data-edge-to="tool" data-edge-label="通过：required/type/enum" data-edge-key="3" data-edge-id="m04">
-          <path data-composition-edge-from="schema" data-composition-edge-to="tool" data-composition-edge-id="m04" data-composition-points="609.375,315;754,315" d="M 609.375 315 L 754 315" class="a-emphasis" data-animate="edge" style="--step:3" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
-        <g data-detail="context">
-          <rect x="613.2875" y="295" width="136.8" height="16" rx="3" class="c-mask"/>
-          <text x="681.6875" y="305" class="t-backend" font-size="9" text-anchor="middle">通过：required/type/enum</text>
-        </g>
-        </g>
 
-        <g data-edge-from="tool" data-edge-to="auth" data-edge-label="业务存在性 + 权限 + 状态" data-edge-key="4" data-edge-id="m05">
-          <path data-composition-edge-from="tool" data-composition-edge-to="auth" data-composition-edge-id="m05" data-composition-points="768,375;912.625,375" d="M 768 375 L 912.625 375" class="a-security" data-animate="edge" style="--step:4" stroke-width="1.4" marker-end="url(#arrowhead-security)"/>
-        <g data-detail="context">
-          <rect x="771.9125" y="355" width="136.8" height="16" rx="3" class="c-mask"/>
-          <text x="840.3125" y="365" class="t-security" font-size="9" text-anchor="middle">业务存在性 + 权限 + 状态</text>
-        </g>
-        </g>
+        <!-- Edge paths -->
+        <path data-edge-from="user" data-edge-to="llm" data-edge-label="提问" data-edge-key="0" data-edge-id="e1" data-composition-points="134,119;134,166;174,166;174,243" d="M 134 119 L 134 166 L 174 166 L 174 243" class="a-default" data-animate="edge" style="--step:0" stroke-width="1.4" marker-end="url(#arrowhead)"/>
+        <path data-edge-from="llm" data-edge-to="parse" data-edge-label="Tool Call" data-edge-key="1" data-edge-id="e2" data-composition-points="220,269;220,290;300,290;300,341" d="M 220 269 L 220 290 L 300 290 L 300 341" class="a-default" data-animate="edge" style="--step:1" stroke-width="1.4" marker-end="url(#arrowhead)"/>
+        <path data-edge-from="parse" data-edge-to="gate" data-edge-label="形状合法" data-edge-key="2" data-edge-id="e3" data-composition-points="346,367;346,414;384,414;384,491" d="M 346 367 L 346 414 L 384 414 L 384 491" class="a-default" data-animate="edge" style="--step:2" stroke-width="1.4" marker-end="url(#arrowhead)"/>
+        <path data-edge-from="gate" data-edge-to="tool" data-edge-label="allow" data-edge-key="3" data-edge-id="e4" data-composition-points="476,491;476,538;454,538;454,615" d="M 476 491 L 476 538 L 454 538 L 454 615" class="a-default" data-animate="edge" style="--step:3" stroke-width="1.4" marker-end="url(#arrowhead)"/>
+        <path data-edge-from="tool" data-edge-to="reply" data-edge-label="证据 + 引用" data-edge-key="4" data-edge-id="e5" data-composition-points="500,589;500,352;625,352;625,145" d="M 500 589 L 500 352 L 625 352 L 625 145" class="a-default" data-animate="edge" style="--step:4" stroke-width="1.4" marker-end="url(#arrowhead)"/>
+        <path data-edge-from="user" data-edge-to="register" data-edge-label="objectKey 登记" data-edge-key="5" data-edge-id="e6" data-composition-points="134,119;134,414;174,414;174,739" d="M 134 119 L 134 414 L 174 414 L 174 739" class="a-dashed" data-animate="edge" style="--step:11" stroke-width="1.4" marker-end="url(#arrowhead-dashed)"/>
+        <path data-edge-from="parse" data-edge-to="shape" data-edge-label="形状错误" data-edge-key="6" data-edge-id="e10" data-composition-points="300,393;300,600;300,600;300,837" d="M 300 393 L 300 600 L 300 600 L 300 837" class="a-default" data-animate="edge" style="--step:12" stroke-width="1.4" marker-end="url(#arrowhead)"/>
+        <path data-edge-from="gate" data-edge-to="denied" data-edge-label="deny" data-edge-key="7" data-edge-id="e11" data-composition-points="430,517;430,662;430,662;430,837" d="M 430 517 L 430 662 L 430 662 L 430 837" class="a-default" data-animate="edge" style="--step:12" stroke-width="1.4" marker-end="url(#arrowhead)"/>
+        <path data-edge-from="tool" data-edge-to="notready" data-edge-label="解析中" data-edge-key="8" data-edge-id="e12" data-composition-points="500,641;500,724;500,724;500,837" d="M 500 641 L 500 724 L 500 724 L 500 837" class="a-default" data-animate="edge" style="--step:12" stroke-width="1.4" marker-end="url(#arrowhead)"/>
+        <path data-edge-from="tool" data-edge-to="nomatch" data-edge-key="9" data-edge-id="e13" data-composition-points="500,641;500,724;625,724;625,837" d="M 500 641 L 500 724 L 625 724 L 625 837" class="a-default" data-animate="edge" style="--step:12" stroke-width="1.4" marker-end="url(#arrowhead)"/>
+        <path data-edge-from="register" data-edge-to="replay" data-edge-label="超时 = 未知" data-edge-key="10" data-edge-id="e14" data-composition-points="174,739;174,786;134,786;134,863" d="M 174 739 L 174 786 L 134 786 L 134 863" class="a-default" data-animate="edge" style="--step:12" stroke-width="1.4" marker-end="url(#arrowhead)"/>
 
-        <g data-edge-from="auth" data-edge-to="service" data-edge-label="授权且可取消：受控执行" data-edge-key="5" data-edge-id="m06">
-          <path data-composition-edge-from="auth" data-composition-edge-to="service" data-composition-edge-id="m06" data-composition-points="926.625,405;1071.25,405" d="M 926.625 405 L 1071.25 405" class="a-emphasis" data-animate="edge" style="--step:5" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
-        <g data-detail="context">
-          <rect x="935.7375" y="385" width="126.4" height="16" rx="3" class="c-mask"/>
-          <text x="998.9375" y="395" class="t-backend" font-size="9" text-anchor="middle">授权且可取消：受控执行</text>
-        </g>
-        </g>
-
-        <g data-edge-from="service" data-edge-to="recovery" data-edge-label="200：事务成功 + order" data-edge-key="6" data-edge-id="m07">
-          <path data-composition-edge-from="service" data-composition-edge-to="recovery" data-composition-edge-id="m07" data-composition-points="1085.25,450;1229.875,450" d="M 1085.25 450 L 1229.875 450" class="a-default" data-animate="edge" style="--step:6" stroke-width="1.4" stroke-dasharray="3,5" marker-end="url(#arrowhead)"/>
-        <g data-detail="context">
-          <rect x="1096.9625" y="430" width="121.2" height="16" rx="3" class="c-mask"/>
-          <text x="1157.5625" y="440" class="t-muted" font-size="9" text-anchor="middle">200：事务成功 + order</text>
-        </g>
-        </g>
-
-        <g data-edge-from="recovery" data-edge-to="llm" data-edge-label="Tool Result: ok=true" data-edge-key="7" data-edge-id="m08">
-          <path data-composition-edge-from="recovery" data-composition-edge-to="llm" data-composition-edge-id="m08" data-composition-points="1229.875,495;292.125,495" d="M 1229.875 495 L 292.125 495" class="a-default" data-animate="edge" style="--step:7" stroke-width="1.4" stroke-dasharray="3,5" marker-end="url(#arrowhead)"/>
-        <g data-detail="context">
-          <rect x="703" y="475" width="116" height="16" rx="3" class="c-mask"/>
-          <text x="761" y="485" class="t-muted" font-size="9" text-anchor="middle">Tool Result: ok=true</text>
-        </g>
-        </g>
-
-        <g data-edge-from="llm" data-edge-to="user" data-edge-label="已取消 ORD-42" data-edge-key="8" data-edge-id="m09">
-          <path data-composition-edge-from="llm" data-composition-edge-to="user" data-composition-edge-id="m09" data-composition-points="278.125,540;133.5,540" d="M 278.125 540 L 133.5 540" class="a-default" data-animate="edge" style="--step:8" stroke-width="1.4" stroke-dasharray="3,5" marker-end="url(#arrowhead)"/>
-        <g data-detail="context">
-          <rect x="166.0125" y="520" width="79.60000000000001" height="16" rx="3" class="c-mask"/>
-          <text x="205.8125" y="530" class="t-muted" font-size="9" text-anchor="middle">已取消 ORD-42</text>
-        </g>
-        </g>
-
-        <g data-edge-from="runtime" data-edge-to="recovery" data-edge-label="审计：调用、参数、耗时" data-edge-key="9" data-edge-id="m10">
-          <path data-composition-edge-from="runtime" data-composition-edge-to="recovery" data-composition-edge-id="m10" data-composition-points="450.75,585;1229.875,585" d="M 450.75 585 L 1229.875 585" class="a-dashed" data-animate="edge" style="--step:9" stroke-width="1.4" marker-end="url(#arrowhead-dashed)"/>
-        <g data-detail="context">
-          <rect x="777.1125" y="565" width="126.4" height="16" rx="3" class="c-mask"/>
-          <text x="840.3125" y="575" class="t-messagebus" font-size="9" text-anchor="middle">审计：调用、参数、耗时</text>
-        </g>
-        </g>
-
-        <g data-edge-from="recovery" data-edge-to="audit" data-edge-label="append trace event" data-edge-key="10" data-edge-id="m11">
-          <path data-composition-edge-from="recovery" data-composition-edge-to="audit" data-composition-edge-id="m11" data-composition-points="1243.875,630;1388.5,630" d="M 1243.875 630 L 1388.5 630" class="a-dashed" data-animate="edge" style="--step:10" stroke-width="1.4" marker-end="url(#arrowhead-dashed)"/>
-        <g data-detail="context">
-          <rect x="1263.3875" y="610" width="105.60000000000001" height="16" rx="3" class="c-mask"/>
-          <text x="1316.1875" y="620" class="t-messagebus" font-size="9" text-anchor="middle">append trace event</text>
-        </g>
-        </g>
-
-        <g data-edge-from="llm" data-edge-to="runtime" data-edge-label="Case B：JSON 截断 / envelope 错" data-edge-key="11" data-edge-id="m12">
-          <path data-composition-edge-from="llm" data-composition-edge-to="runtime" data-composition-edge-id="m12" data-composition-points="292.125,690;436.75,690" d="M 292.125 690 L 436.75 690" class="a-security" data-animate="edge" style="--step:11" stroke-width="1.4" marker-end="url(#arrowhead-security)"/>
-        <g data-detail="context">
-          <rect x="277.8375" y="670" width="173.20000000000002" height="16" rx="3" class="c-mask"/>
-          <text x="364.4375" y="680" class="t-security" font-size="9" text-anchor="middle">Case B：JSON 截断 / envelope 错</text>
-        </g>
-        </g>
-
-        <g data-edge-from="runtime" data-edge-to="recovery" data-edge-label="PARSE_ERROR；不执行 Tool" data-edge-key="12" data-edge-id="m13">
-          <path data-composition-edge-from="runtime" data-composition-edge-to="recovery" data-composition-edge-id="m13" data-composition-points="450.75,735;1229.875,735" d="M 450.75 735 L 1229.875 735" class="a-security" data-animate="edge" style="--step:12" stroke-width="1.4" marker-end="url(#arrowhead-security)"/>
-        <g data-detail="context">
-          <rect x="771.9125" y="715" width="136.8" height="16" rx="3" class="c-mask"/>
-          <text x="840.3125" y="725" class="t-security" font-size="9" text-anchor="middle">PARSE_ERROR；不执行 Tool</text>
-        </g>
-        </g>
-
-        <g data-edge-from="llm" data-edge-to="runtime" data-edge-label="Case C：未知工具名" data-edge-key="13" data-edge-id="m14">
-          <path data-composition-edge-from="llm" data-composition-edge-to="runtime" data-composition-edge-id="m14" data-composition-points="292.125,780;436.75,780" d="M 292.125 780 L 436.75 780" class="a-security" data-animate="edge" style="--step:12" stroke-width="1.4" marker-end="url(#arrowhead-security)"/>
-        <g data-detail="context">
-          <rect x="311.6375" y="760" width="105.60000000000001" height="16" rx="3" class="c-mask"/>
-          <text x="364.4375" y="770" class="t-security" font-size="9" text-anchor="middle">Case C：未知工具名</text>
-        </g>
-        </g>
-
-        <g data-edge-from="runtime" data-edge-to="recovery" data-edge-label="UNKNOWN_TOOL；不执行 Tool" data-edge-key="14" data-edge-id="m15">
-          <path data-composition-edge-from="runtime" data-composition-edge-to="recovery" data-composition-edge-id="m15" data-composition-points="450.75,825;1229.875,825" d="M 450.75 825 L 1229.875 825" class="a-security" data-animate="edge" style="--step:12" stroke-width="1.4" marker-end="url(#arrowhead-security)"/>
-        <g data-detail="context">
-          <rect x="769.3125" y="805" width="142" height="16" rx="3" class="c-mask"/>
-          <text x="840.3125" y="815" class="t-security" font-size="9" text-anchor="middle">UNKNOWN_TOOL；不执行 Tool</text>
-        </g>
-        </g>
-
-        <g data-edge-from="runtime" data-edge-to="schema" data-edge-label="Case D：缺字段 / 类型错 / enum 错" data-edge-key="15" data-edge-id="m16">
-          <path data-composition-edge-from="runtime" data-composition-edge-to="schema" data-composition-edge-id="m16" data-composition-points="450.75,900;595.375,900" d="M 450.75 900 L 595.375 900" class="a-security" data-animate="edge" style="--step:12" stroke-width="1.4" marker-end="url(#arrowhead-security)"/>
-        <g data-detail="context">
-          <rect x="431.2625" y="880" width="183.6" height="16" rx="3" class="c-mask"/>
-          <text x="523.0625" y="890" class="t-security" font-size="9" text-anchor="middle">Case D：缺字段 / 类型错 / enum 错</text>
-        </g>
-        </g>
-
-        <g data-edge-from="schema" data-edge-to="recovery" data-edge-label="VALIDATION_ERROR + path + expected" data-edge-key="16" data-edge-id="m17">
-          <path data-composition-edge-from="schema" data-composition-edge-to="recovery" data-composition-edge-id="m17" data-composition-points="609.375,945;1229.875,945" d="M 609.375 945 L 1229.875 945" class="a-security" data-animate="edge" style="--step:12" stroke-width="1.4" marker-end="url(#arrowhead-security)"/>
-        <g data-detail="context">
-          <rect x="825.225" y="925" width="188.8" height="16" rx="3" class="c-mask"/>
-          <text x="919.625" y="935" class="t-security" font-size="9" text-anchor="middle">VALIDATION_ERROR + path + expected</text>
-        </g>
-        </g>
-
-        <g data-edge-from="schema" data-edge-to="runtime" data-edge-label="Case E：低风险可转换（&quot;30&quot;→30）" data-edge-key="17" data-edge-id="m18">
-          <path data-composition-edge-from="schema" data-composition-edge-to="runtime" data-composition-edge-id="m18" data-composition-points="595.375,990;450.75,990" d="M 595.375 990 L 450.75 990" class="a-dashed" data-animate="edge" style="--step:12" stroke-width="1.4" marker-end="url(#arrowhead-dashed)"/>
-        <g data-detail="context">
-          <rect x="436.4625" y="970" width="173.20000000000002" height="16" rx="3" class="c-mask"/>
-          <text x="523.0625" y="980" class="t-messagebus" font-size="9" text-anchor="middle">Case E：低风险可转换（&quot;30&quot;→30）</text>
-        </g>
-        </g>
-
-        <g data-edge-from="runtime" data-edge-to="tool" data-edge-label="规范化参数；记录原值与新值" data-edge-key="18" data-edge-id="m19">
-          <path data-composition-edge-from="runtime" data-composition-edge-to="tool" data-composition-edge-id="m19" data-composition-points="450.75,1035;754,1035" d="M 450.75 1035 L 754 1035" class="a-dashed" data-animate="edge" style="--step:12" stroke-width="1.4" marker-end="url(#arrowhead-dashed)"/>
-        <g data-detail="context">
-          <rect x="528.775" y="1015" width="147.20000000000002" height="16" rx="3" class="c-mask"/>
-          <text x="602.375" y="1025" class="t-messagebus" font-size="9" text-anchor="middle">规范化参数；记录原值与新值</text>
-        </g>
-        </g>
-
-        <g data-edge-from="schema" data-edge-to="recovery" data-edge-label="高风险/不可修复：拒绝静默修复" data-edge-key="19" data-edge-id="m20">
-          <path data-composition-edge-from="schema" data-composition-edge-to="recovery" data-composition-edge-id="m20" data-composition-points="609.375,1080;1229.875,1080" d="M 609.375 1080 L 1229.875 1080" class="a-security" data-animate="edge" style="--step:12" stroke-width="1.4" marker-end="url(#arrowhead-security)"/>
-        <g data-detail="context">
-          <rect x="838.225" y="1060" width="162.8" height="16" rx="3" class="c-mask"/>
-          <text x="919.625" y="1070" class="t-security" font-size="9" text-anchor="middle">高风险/不可修复：拒绝静默修复</text>
-        </g>
-        </g>
-
-        <g data-edge-from="recovery" data-edge-to="llm" data-edge-label="错误反馈：code/message/details" data-edge-key="20" data-edge-id="m21">
-          <path data-composition-edge-from="recovery" data-composition-edge-to="llm" data-composition-edge-id="m21" data-composition-points="1229.875,1125;292.125,1125" d="M 1229.875 1125 L 292.125 1125" class="a-default" data-animate="edge" style="--step:12" stroke-width="1.4" stroke-dasharray="3,5" marker-end="url(#arrowhead)"/>
-        <g data-detail="context">
-          <rect x="677" y="1105" width="168" height="16" rx="3" class="c-mask"/>
-          <text x="761" y="1115" class="t-muted" font-size="9" text-anchor="middle">错误反馈：code/message/details</text>
-        </g>
-        </g>
-
-        <g data-edge-from="llm" data-edge-to="runtime" data-edge-label="下一轮尝试修正参数" data-edge-key="21" data-edge-id="m22">
-          <path data-composition-edge-from="llm" data-composition-edge-to="runtime" data-composition-edge-id="m22" data-composition-points="292.125,1170;436.75,1170" d="M 292.125 1170 L 436.75 1170" class="a-dashed" data-animate="edge" style="--step:12" stroke-width="1.4" marker-end="url(#arrowhead-dashed)"/>
-        <g data-detail="context">
-          <rect x="311.6375" y="1150" width="105.60000000000001" height="16" rx="3" class="c-mask"/>
-          <text x="364.4375" y="1160" class="t-messagebus" font-size="9" text-anchor="middle">下一轮尝试修正参数</text>
-        </g>
-        <text data-detail="fine" x="304.125" y="1188" class="t-dim" font-size="7">模型只能根据反馈被动修正，不能保证成功</text>
-        </g>
-
-        <g data-edge-from="tool" data-edge-to="auth" data-edge-label="Case F：订单不存在 / 无权限 / 状态非法" data-edge-key="22" data-edge-id="m23">
-          <path data-composition-edge-from="tool" data-composition-edge-to="auth" data-composition-edge-id="m23" data-composition-points="768,1230;912.625,1230" d="M 768 1230 L 912.625 1230" class="a-security" data-animate="edge" style="--step:12" stroke-width="1.4" marker-end="url(#arrowhead-security)"/>
-        <g data-detail="context">
-          <rect x="735.5125" y="1210" width="209.6" height="16" rx="3" class="c-mask"/>
-          <text x="840.3125" y="1220" class="t-security" font-size="9" text-anchor="middle">Case F：订单不存在 / 无权限 / 状态非法</text>
-        </g>
-        </g>
-
-        <g data-edge-from="auth" data-edge-to="recovery" data-edge-label="ORDER_NOT_FOUND / PERMISSION_DENIED / INVALID_STATE" data-edge-key="23" data-edge-id="m24">
-          <path data-composition-edge-from="auth" data-composition-edge-to="recovery" data-composition-edge-id="m24" data-composition-points="926.625,1275;1229.875,1275" d="M 926.625 1275 L 1229.875 1275" class="a-security" data-animate="edge" style="--step:12" stroke-width="1.4" marker-end="url(#arrowhead-security)"/>
-        <g data-detail="context">
-          <rect x="939.65" y="1255" width="277.2" height="16" rx="3" class="c-mask"/>
-          <text x="1078.25" y="1265" class="t-security" font-size="9" text-anchor="middle">ORDER_NOT_FOUND / PERMISSION_DENIED / INVALID_STATE</text>
-        </g>
-        </g>
-
-        <g data-edge-from="tool" data-edge-to="service" data-edge-label="Case G：幂等键 + 服务端再次鉴权" data-edge-key="24" data-edge-id="m25">
-          <path data-composition-edge-from="tool" data-composition-edge-to="service" data-composition-edge-id="m25" data-composition-points="768,1335;1071.25,1335" d="M 768 1335 L 1071.25 1335" class="a-emphasis" data-animate="edge" style="--step:12" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
-        <g data-detail="context">
-          <rect x="833.025" y="1315" width="173.20000000000002" height="16" rx="3" class="c-mask"/>
-          <text x="919.625" y="1325" class="t-backend" font-size="9" text-anchor="middle">Case G：幂等键 + 服务端再次鉴权</text>
-        </g>
-        </g>
-
-        <g data-edge-from="service" data-edge-to="recovery" data-edge-label="Case H：timeout / 5xx；retryable=true" data-edge-key="25" data-edge-id="m26">
-          <path data-composition-edge-from="service" data-composition-edge-to="recovery" data-composition-edge-id="m26" data-composition-points="1085.25,1380;1229.875,1380" d="M 1085.25 1380 L 1229.875 1380" class="a-dashed" data-animate="edge" style="--step:12" stroke-width="1.4" marker-end="url(#arrowhead-dashed)"/>
-        <g data-detail="context">
-          <rect x="1055.3625" y="1360" width="204.4" height="16" rx="3" class="c-mask"/>
-          <text x="1157.5625" y="1370" class="t-messagebus" font-size="9" text-anchor="middle">Case H：timeout / 5xx；retryable=true</text>
-        </g>
-        </g>
-
-        <g data-edge-from="service" data-edge-to="recovery" data-edge-label="Case I：永久业务拒绝；retryable=false" data-edge-key="26" data-edge-id="m27">
-          <path data-composition-edge-from="service" data-composition-edge-to="recovery" data-composition-edge-id="m27" data-composition-points="1085.25,1410;1229.875,1410" d="M 1085.25 1410 L 1229.875 1410" class="a-security" data-animate="edge" style="--step:12" stroke-width="1.4" marker-end="url(#arrowhead-security)"/>
-        <g data-detail="context">
-          <rect x="1055.3625" y="1390" width="204.4" height="16" rx="3" class="c-mask"/>
-          <text x="1157.5625" y="1400" class="t-security" font-size="9" text-anchor="middle">Case I：永久业务拒绝；retryable=false</text>
-        </g>
-        </g>
-
-        <g data-edge-from="recovery" data-edge-to="runtime" data-edge-label="最多 2–3 次：参数修正或指数退避" data-edge-key="27" data-edge-id="m28">
-          <path data-composition-edge-from="recovery" data-composition-edge-to="runtime" data-composition-edge-id="m28" data-composition-points="1229.875,1450;450.75,1450" d="M 1229.875 1450 L 450.75 1450" class="a-dashed" data-animate="edge" style="--step:12" stroke-width="1.4" marker-end="url(#arrowhead-dashed)"/>
-        <g data-detail="context">
-          <rect x="753.7125" y="1430" width="173.20000000000002" height="16" rx="3" class="c-mask"/>
-          <text x="840.3125" y="1440" class="t-messagebus" font-size="9" text-anchor="middle">最多 2–3 次：参数修正或指数退避</text>
-        </g>
-        </g>
-
-        <g data-edge-from="recovery" data-edge-to="user" data-edge-label="达到上限：询问/人工审批/失败解释" data-edge-key="28" data-edge-id="m29">
-          <path data-composition-edge-from="recovery" data-composition-edge-to="user" data-composition-edge-id="m29" data-composition-points="1229.875,1495;133.5,1495" d="M 1229.875 1495 L 133.5 1495" class="a-default" data-animate="edge" style="--step:12" stroke-width="1.4" stroke-dasharray="3,5" marker-end="url(#arrowhead)"/>
-        <g data-detail="context">
-          <rect x="592.4875" y="1475" width="178.4" height="16" rx="3" class="c-mask"/>
-          <text x="681.6875" y="1485" class="t-muted" font-size="9" text-anchor="middle">达到上限：询问/人工审批/失败解释</text>
-        </g>
-        </g>
-
-        <g data-edge-from="recovery" data-edge-to="service" data-edge-label="连续故障：熔断/降级，停止继续调用" data-edge-key="29" data-edge-id="m30">
-          <path data-composition-edge-from="recovery" data-composition-edge-to="service" data-composition-edge-id="m30" data-composition-points="1229.875,1525;1085.25,1525" d="M 1229.875 1525 L 1085.25 1525" class="a-security" data-animate="edge" style="--step:12" stroke-width="1.4" marker-end="url(#arrowhead-security)"/>
-        <g data-detail="context">
-          <rect x="1065.7625" y="1505" width="183.6" height="16" rx="3" class="c-mask"/>
-          <text x="1157.5625" y="1515" class="t-security" font-size="9" text-anchor="middle">连续故障：熔断/降级，停止继续调用</text>
-        </g>
-        </g>
-
-        <g data-edge-from="runtime" data-edge-to="audit" data-edge-label="写入审计事件" data-edge-key="30" data-edge-id="m31">
-          <path data-composition-edge-from="runtime" data-composition-edge-to="audit" data-composition-edge-id="m31" data-composition-points="450.75,1570;1388.5,1570" d="M 450.75 1570 L 1388.5 1570" class="a-dashed" data-animate="edge" style="--step:12" stroke-width="1.4" marker-end="url(#arrowhead-dashed)"/>
-        <g data-detail="context">
-          <rect x="882.425" y="1550" width="74.4" height="16" rx="3" class="c-mask"/>
-          <text x="919.625" y="1560" class="t-messagebus" font-size="9" text-anchor="middle">写入审计事件</text>
-        </g>
-        </g>
-
-        <g data-edge-from="audit" data-edge-to="user" data-edge-label="可解释结果" data-edge-key="31" data-edge-id="m32">
-          <path data-composition-edge-from="audit" data-composition-edge-to="user" data-composition-edge-id="m32" data-composition-points="1388.5,1610;133.5,1610" d="M 1388.5 1610 L 133.5 1610" class="a-default" data-animate="edge" style="--step:12" stroke-width="1.4" stroke-dasharray="3,5" marker-end="url(#arrowhead)"/>
-        <g data-detail="context">
-          <rect x="729" y="1590" width="64" height="16" rx="3" class="c-mask"/>
-          <text x="761" y="1600" class="t-muted" font-size="9" text-anchor="middle">可解释结果</text>
-        </g>
-        </g>
-
-        <!-- Segment Labels -->
-        <g data-graph-role="segment-label" data-segment-id="0">
-          <rect x="56" y="128" width="97.2" height="18" rx="3" class="c-mask"/>
-          <text x="62" y="141" class="t-dim" font-size="9" font-weight="600">A · 一次成功调用</text>
-        </g>
-        <g data-graph-role="segment-label" data-segment-id="1">
-          <rect x="56" y="368" width="138.8" height="18" rx="3" class="c-mask"/>
-          <text x="62" y="381" class="t-dim" font-size="9" font-weight="600">B · 模型、协议与解析失败</text>
-        </g>
-        <g data-graph-role="segment-label" data-segment-id="2">
-          <rect x="56" y="858" width="149.20000000000002" height="18" rx="3" class="c-mask"/>
-          <text x="62" y="871" class="t-dim" font-size="9" font-weight="600">C · Schema、业务与权限失败</text>
-        </g>
-        <g data-graph-role="segment-label" data-segment-id="3">
-          <rect x="56" y="1258" width="138.8" height="18" rx="3" class="c-mask"/>
-          <text x="62" y="1271" class="t-dim" font-size="9" font-weight="600">D · 执行故障、结果与恢复</text>
-        </g>
-        <g data-graph-role="segment-label" data-segment-id="4">
-          <rect x="56" y="1518" width="138.8" height="18" rx="3" class="c-mask"/>
-          <text x="62" y="1531" class="t-dim" font-size="9" font-weight="600">E · 编排、审计与责任边界</text>
-        </g>
-
-        <!-- Participants -->
-        <g id="node-user" data-node-id="user" data-node-label="用户/UI" tabindex="0" role="button" aria-label="Focus 用户/UI, 自然语言请求, Sequence participant" aria-pressed="false" data-node-kind="external" data-node-sublabel="自然语言请求" data-node-context="Sequence participant">
-          <title>用户/UI · 自然语言请求 · Sequence participant</title>
-          <rect x="62" y="72" width="129" height="54" rx="6" class="c-mask"/>
-          <rect x="62" y="72" width="129" height="54" rx="6" class="c-external" data-animate="node" style="--step:0" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="external" class="semantic-sigil s-external" transform="translate(68 78) scale(0.6875)">
+        <!-- Nodes -->
+        <g id="node-user" data-node-id="user" data-node-label="用户" tabindex="0" role="button" aria-label="Focus 用户, 付款周期？, 用户与会话" aria-pressed="false" data-node-kind="external" data-node-sublabel="付款周期？" data-node-context="用户与会话">
+          <title>用户 · 付款周期？ · 用户与会话</title>
+          <rect x="42" y="93" width="92" height="52" rx="6" class="c-mask"/>
+          <rect x="42" y="93" width="92" height="52" rx="6" class="c-external" data-animate="node" style="--step:0" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="external" class="semantic-sigil s-external" transform="translate(48 99) scale(0.6875)">
             <rect x="2.5" y="5" width="8.5" height="8" rx="1.5"/>
             <path d="M8 2.5h5.5V8M13.5 2.5 7.5 8.5"/>
           </g>
-          <text data-detail-anchor x="126.5" y="94" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">用户/UI</text>
-          <text data-detail="context" x="126.5" y="111" class="t-muted" font-size="7" text-anchor="middle">自然语言请求</text>
+          <text data-detail-anchor x="88" y="114" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">用户</text>
+          <text data-detail="context" x="88" y="131" class="t-muted" font-size="8" text-anchor="middle">付款周期？</text>
         </g>
 
-        <g id="node-llm" data-node-id="llm" data-node-label="LLM" tabindex="0" role="button" aria-label="Focus LLM, 意图与参数, Sequence participant" aria-pressed="false" data-node-kind="backend" data-node-sublabel="意图与参数" data-node-context="Sequence participant">
-          <title>LLM · 意图与参数 · Sequence participant</title>
-          <rect x="220.625" y="72" width="129" height="54" rx="6" class="c-mask"/>
-          <rect x="220.625" y="72" width="129" height="54" rx="6" class="c-backend" data-animate="node" style="--step:1" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(226.625 78) scale(0.6875)">
+        <g id="node-reply" data-node-id="reply" data-node-label="带引用回答" tabindex="0" role="button" aria-label="Focus 带引用回答, 引用 + 页码, 用户与会话" aria-pressed="false" data-node-kind="frontend" data-node-sublabel="引用 + 页码" data-node-context="用户与会话">
+          <title>带引用回答 · 引用 + 页码 · 用户与会话</title>
+          <rect x="579" y="93" width="92" height="52" rx="6" class="c-mask"/>
+          <rect x="579" y="93" width="92" height="52" rx="6" class="c-frontend" data-animate="node" style="--step:5" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="frontend" class="semantic-sigil s-frontend" transform="translate(585 99) scale(0.6875)">
+            <rect x="2" y="3" width="12" height="10" rx="2"/>
+            <path d="M2 6.5h12"/>
+            <circle cx="4.1" cy="4.8" r=".7" class="sigil-fill"/>
+            <circle cx="6.3" cy="4.8" r=".7" class="sigil-fill"/>
+          </g>
+          <text data-detail-anchor x="625" y="114" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">带引用回答</text>
+          <text data-detail="context" x="625" y="131" class="t-muted" font-size="8" text-anchor="middle">引用 + 页码</text>
+        </g>
+
+        <g id="node-llm" data-node-id="llm" data-node-label="模型提议" tabindex="0" role="button" aria-label="Focus 模型提议, file.search, 模型" aria-pressed="false" data-node-kind="backend" data-node-sublabel="file.search" data-node-context="模型">
+          <title>模型提议 · file.search · 模型</title>
+          <rect x="174" y="217" width="92" height="52" rx="6" class="c-mask"/>
+          <rect x="174" y="217" width="92" height="52" rx="6" class="c-backend" data-animate="node" style="--step:1" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(180 223) scale(0.6875)">
             <path d="M6 3 3 8l3 5M10 3l3 5-3 5"/>
           </g>
-          <text data-detail-anchor x="285.125" y="94" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">LLM</text>
-          <text data-detail="context" x="285.125" y="111" class="t-muted" font-size="7" text-anchor="middle">意图与参数</text>
+          <text data-detail-anchor x="220" y="238" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">模型提议</text>
+          <text data-detail="context" x="220" y="255" class="t-muted" font-size="8" text-anchor="middle">file.search</text>
         </g>
 
-        <g id="node-runtime" data-node-id="runtime" data-node-label="Agent Runtime" tabindex="0" role="button" aria-label="Focus Agent Runtime, 解析与编排, Sequence participant" aria-pressed="false" data-node-kind="backend" data-node-sublabel="解析与编排" data-node-context="Sequence participant">
-          <title>Agent Runtime · 解析与编排 · Sequence participant</title>
-          <rect x="379.25" y="72" width="129" height="54" rx="6" class="c-mask"/>
-          <rect x="379.25" y="72" width="129" height="54" rx="6" class="c-backend" data-animate="node" style="--step:2" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(385.25 78) scale(0.6875)">
-            <path d="M6 3 3 8l3 5M10 3l3 5-3 5"/>
-          </g>
-          <text data-detail-anchor x="443.75" y="94" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Agent Runtime</text>
-          <text data-detail="context" x="443.75" y="111" class="t-muted" font-size="7" text-anchor="middle">解析与编排</text>
-        </g>
-
-        <g id="node-schema" data-node-id="schema" data-node-label="Schema Guard" tabindex="0" role="button" aria-label="Focus Schema Guard, 结构校验, Sequence participant" aria-pressed="false" data-node-kind="security" data-node-sublabel="结构校验" data-node-context="Sequence participant">
-          <title>Schema Guard · 结构校验 · Sequence participant</title>
-          <rect x="537.875" y="72" width="129" height="54" rx="6" class="c-mask"/>
-          <rect x="537.875" y="72" width="129" height="54" rx="6" class="c-security" data-animate="node" style="--step:3" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="security" class="semantic-sigil s-security" transform="translate(543.875 78) scale(0.6875)">
+        <g id="node-parse" data-node-id="parse" data-node-label="解析与 Schema" tabindex="0" role="button" aria-label="Focus 解析与 Schema, 形状校验, Agent Runtime" aria-pressed="false" data-node-kind="security" data-node-sublabel="形状校验" data-node-context="Agent Runtime">
+          <title>解析与 Schema · 形状校验 · Agent Runtime</title>
+          <rect x="254" y="341" width="92" height="52" rx="6" class="c-mask"/>
+          <rect x="254" y="341" width="92" height="52" rx="6" class="c-security" data-animate="node" style="--step:2" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="security" class="semantic-sigil s-security" transform="translate(260 347) scale(0.6875)">
             <path d="M8 2.2 13 4v3.5c0 3.1-1.8 5.4-5 6.5-3.2-1.1-5-3.4-5-6.5V4Z"/>
             <path d="m5.8 8 1.5 1.5 3-3"/>
           </g>
-          <text data-detail-anchor x="602.375" y="94" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Schema Guard</text>
-          <text data-detail="context" x="602.375" y="111" class="t-muted" font-size="7" text-anchor="middle">结构校验</text>
+          <text data-detail-anchor x="300" y="362" class="t-primary" font-size="10.7" font-weight="600" text-anchor="middle">解析与 Schema</text>
+          <text data-detail="context" x="300" y="379" class="t-muted" font-size="8" text-anchor="middle">形状校验</text>
         </g>
 
-        <g id="node-tool" data-node-id="tool" data-node-label="Tool" tabindex="0" role="button" aria-label="Focus Tool, 开发者实现, Sequence participant" aria-pressed="false" data-node-kind="backend" data-node-sublabel="开发者实现" data-node-context="Sequence participant">
-          <title>Tool · 开发者实现 · Sequence participant</title>
-          <rect x="696.5" y="72" width="129" height="54" rx="6" class="c-mask"/>
-          <rect x="696.5" y="72" width="129" height="54" rx="6" class="c-backend" data-animate="node" style="--step:4" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(702.5 78) scale(0.6875)">
-            <path d="M6 3 3 8l3 5M10 3l3 5-3 5"/>
-          </g>
-          <text data-detail-anchor x="761" y="94" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Tool</text>
-          <text data-detail="context" x="761" y="111" class="t-muted" font-size="7" text-anchor="middle">开发者实现</text>
-        </g>
-
-        <g id="node-auth" data-node-id="auth" data-node-label="Policy/Auth" tabindex="0" role="button" aria-label="Focus Policy/Auth, 权限与业务规则, Sequence participant" aria-pressed="false" data-node-kind="security" data-node-sublabel="权限与业务规则" data-node-context="Sequence participant">
-          <title>Policy/Auth · 权限与业务规则 · Sequence participant</title>
-          <rect x="855.125" y="72" width="129" height="54" rx="6" class="c-mask"/>
-          <rect x="855.125" y="72" width="129" height="54" rx="6" class="c-security" data-animate="node" style="--step:5" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="security" class="semantic-sigil s-security" transform="translate(861.125 78) scale(0.6875)">
+        <g id="node-gate" data-node-id="gate" data-node-label="权限门" tabindex="0" role="button" aria-label="Focus 权限门, deny 先于 allow, 校验与权限" aria-pressed="false" data-node-kind="security" data-node-sublabel="deny 先于 allow" data-node-context="校验与权限">
+          <title>权限门 · deny 先于 allow · 校验与权限</title>
+          <rect x="384" y="465" width="92" height="52" rx="6" class="c-mask"/>
+          <rect x="384" y="465" width="92" height="52" rx="6" class="c-security" data-animate="node" style="--step:3" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="security" class="semantic-sigil s-security" transform="translate(390 471) scale(0.6875)">
             <path d="M8 2.2 13 4v3.5c0 3.1-1.8 5.4-5 6.5-3.2-1.1-5-3.4-5-6.5V4Z"/>
             <path d="m5.8 8 1.5 1.5 3-3"/>
           </g>
-          <text data-detail-anchor x="919.625" y="94" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Policy/Auth</text>
-          <text data-detail="context" x="919.625" y="111" class="t-muted" font-size="7" text-anchor="middle">权限与业务规则</text>
+          <text data-detail-anchor x="430" y="486" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">权限门</text>
+          <text data-detail="context" x="430" y="503" class="t-muted" font-size="8" text-anchor="middle">deny 先于 allow</text>
         </g>
 
-        <g id="node-service" data-node-id="service" data-node-label="订单服务" tabindex="0" role="button" aria-label="Focus 订单服务, API + DB, Sequence participant" aria-pressed="false" data-node-kind="cloud" data-node-sublabel="API + DB" data-node-context="Sequence participant">
-          <title>订单服务 · API + DB · Sequence participant</title>
-          <rect x="1013.75" y="72" width="129" height="54" rx="6" class="c-mask"/>
-          <rect x="1013.75" y="72" width="129" height="54" rx="6" class="c-cloud" data-animate="node" style="--step:6" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="cloud" class="semantic-sigil s-cloud" transform="translate(1019.75 78) scale(0.6875)">
-            <path d="M4.3 12.5h7.3a2.4 2.4 0 0 0 .2-4.8 4 4 0 0 0-7.5-1.3A3.1 3.1 0 0 0 4.3 12.5Z"/>
-          </g>
-          <text data-detail-anchor x="1078.25" y="94" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">订单服务</text>
-          <text data-detail="context" x="1078.25" y="111" class="t-muted" font-size="7" text-anchor="middle">API + DB</text>
-        </g>
-
-        <g id="node-recovery" data-node-id="recovery" data-node-label="Recovery" tabindex="0" role="button" aria-label="Focus Recovery, 反馈/重试/降级, Sequence participant" aria-pressed="false" data-node-kind="messagebus" data-node-sublabel="反馈/重试/降级" data-node-context="Sequence participant">
-          <title>Recovery · 反馈/重试/降级 · Sequence participant</title>
-          <rect x="1172.375" y="72" width="129" height="54" rx="6" class="c-mask"/>
-          <rect x="1172.375" y="72" width="129" height="54" rx="6" class="c-messagebus" data-animate="node" style="--step:7" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="messagebus" class="semantic-sigil s-messagebus" transform="translate(1178.375 78) scale(0.6875)">
+        <g id="node-tool" data-node-id="tool" data-node-label="文件工具" tabindex="0" role="button" aria-label="Focus 文件工具, search → read, 文件工具" aria-pressed="false" data-node-kind="messagebus" data-node-sublabel="search → read" data-node-context="文件工具">
+          <title>文件工具 · search → read · 文件工具</title>
+          <rect x="454" y="589" width="92" height="52" rx="6" class="c-mask"/>
+          <rect x="454" y="589" width="92" height="52" rx="6" class="c-messagebus" data-animate="node" style="--step:4" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="messagebus" class="semantic-sigil s-messagebus" transform="translate(460 595) scale(0.6875)">
             <path d="M2.5 4.5h11M2.5 8h11M2.5 11.5h11"/>
             <circle cx="5" cy="4.5" r="1" class="sigil-fill"/>
             <circle cx="10.5" cy="8" r="1" class="sigil-fill"/>
             <circle cx="7" cy="11.5" r="1" class="sigil-fill"/>
           </g>
-          <text data-detail-anchor x="1236.875" y="94" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Recovery</text>
-          <text data-detail="context" x="1236.875" y="111" class="t-muted" font-size="7" text-anchor="middle">反馈/重试/降级</text>
+          <text data-detail-anchor x="500" y="610" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">文件工具</text>
+          <text data-detail="context" x="500" y="627" class="t-muted" font-size="8" text-anchor="middle">search → read</text>
         </g>
 
-        <g id="node-audit" data-node-id="audit" data-node-label="Trace/Audit" tabindex="0" role="button" aria-label="Focus Trace/Audit, 审计与观测, Sequence participant" aria-pressed="false" data-node-kind="database" data-node-sublabel="审计与观测" data-node-context="Sequence participant">
-          <title>Trace/Audit · 审计与观测 · Sequence participant</title>
-          <rect x="1331" y="72" width="129" height="54" rx="6" class="c-mask"/>
-          <rect x="1331" y="72" width="129" height="54" rx="6" class="c-database" data-animate="node" style="--step:8" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="database" class="semantic-sigil s-database" transform="translate(1337 78) scale(0.6875)">
+        <g id="node-register" data-node-id="register" data-node-label="registerUpload" tabindex="0" role="button" aria-label="Focus registerUpload, rev:parse:v3, 解析管线" aria-pressed="false" data-node-kind="database" data-node-sublabel="rev:parse:v3" data-node-context="解析管线">
+          <title>registerUpload · rev:parse:v3 · 解析管线</title>
+          <rect x="174" y="713" width="92" height="52" rx="6" class="c-mask"/>
+          <rect x="174" y="713" width="92" height="52" rx="6" class="c-database" data-animate="node" style="--step:12" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="database" class="semantic-sigil s-database" transform="translate(180 719) scale(0.6875)">
             <ellipse cx="8" cy="4" rx="5" ry="2"/>
             <path d="M3 4v8c0 1.1 2.2 2 5 2s5-.9 5-2V4M3 8c0 1.1 2.2 2 5 2s5-.9 5-2"/>
           </g>
-          <text data-detail-anchor x="1395.5" y="94" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Trace/Audit</text>
-          <text data-detail="context" x="1395.5" y="111" class="t-muted" font-size="7" text-anchor="middle">审计与观测</text>
+          <text data-detail-anchor x="220" y="734" class="t-primary" font-size="10" font-weight="600" text-anchor="middle">registerUpload</text>
+          <text data-detail="context" x="220" y="751" class="t-muted" font-size="8" text-anchor="middle">rev:parse:v3</text>
+        </g>
+
+        <g id="node-shape" data-node-id="shape" data-node-label="形状错误" tabindex="0" role="button" aria-label="Focus 形状错误, 类型 / 枚举错, 失败与恢复" aria-pressed="false" data-node-kind="security" data-node-sublabel="类型 / 枚举错" data-node-context="失败与恢复">
+          <title>形状错误 · 类型 / 枚举错 · 失败与恢复</title>
+          <rect x="254" y="837" width="92" height="52" rx="6" class="c-mask"/>
+          <rect x="254" y="837" width="92" height="52" rx="6" class="c-security" data-animate="node" style="--step:12" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="security" class="semantic-sigil s-security" transform="translate(260 843) scale(0.6875)">
+            <path d="M8 2.2 13 4v3.5c0 3.1-1.8 5.4-5 6.5-3.2-1.1-5-3.4-5-6.5V4Z"/>
+            <path d="m5.8 8 1.5 1.5 3-3"/>
+          </g>
+          <text data-detail-anchor x="300" y="858" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">形状错误</text>
+          <text data-detail="context" x="300" y="875" class="t-muted" font-size="8" text-anchor="middle">类型 / 枚举错</text>
+        </g>
+
+        <g id="node-denied" data-node-id="denied" data-node-label="权限拒绝" tabindex="0" role="button" aria-label="Focus 权限拒绝, DENIED, 失败与恢复" aria-pressed="false" data-node-kind="security" data-node-sublabel="DENIED" data-node-context="失败与恢复">
+          <title>权限拒绝 · DENIED · 失败与恢复</title>
+          <rect x="400" y="837" width="60" height="52" rx="6" class="c-mask"/>
+          <rect x="400" y="837" width="60" height="52" rx="6" class="c-security" data-animate="node" style="--step:12" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="security" class="semantic-sigil s-security" transform="translate(406 843) scale(0.6875)">
+            <path d="M8 2.2 13 4v3.5c0 3.1-1.8 5.4-5 6.5-3.2-1.1-5-3.4-5-6.5V4Z"/>
+            <path d="m5.8 8 1.5 1.5 3-3"/>
+          </g>
+          <text data-detail-anchor x="430" y="858" class="t-primary" font-size="10.8" font-weight="600" text-anchor="middle">权限拒绝</text>
+          <text data-detail="context" x="430" y="875" class="t-muted" font-size="8" text-anchor="middle">DENIED</text>
+        </g>
+
+        <g id="node-notready" data-node-id="notready" data-node-label="NOT_READY" tabindex="0" role="button" aria-label="Focus NOT_READY, 稍候, 失败与恢复" aria-pressed="false" data-node-kind="security" data-node-sublabel="稍候" data-node-context="失败与恢复">
+          <title>NOT_READY · 稍候 · 失败与恢复</title>
+          <rect x="470" y="837" width="60" height="52" rx="6" class="c-mask"/>
+          <rect x="470" y="837" width="60" height="52" rx="6" class="c-security" data-animate="node" style="--step:12" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="security" class="semantic-sigil s-security" transform="translate(476 843) scale(0.6875)">
+            <path d="M8 2.2 13 4v3.5c0 3.1-1.8 5.4-5 6.5-3.2-1.1-5-3.4-5-6.5V4Z"/>
+            <path d="m5.8 8 1.5 1.5 3-3"/>
+          </g>
+          <text data-detail-anchor x="500" y="858" class="t-primary" font-size="9.6" font-weight="600" text-anchor="middle">NOT_READY</text>
+          <text data-detail="context" x="500" y="875" class="t-muted" font-size="8" text-anchor="middle">稍候</text>
+        </g>
+
+        <g id="node-nomatch" data-node-id="nomatch" data-node-label="NO_MATCH" tabindex="0" role="button" aria-label="Focus NO_MATCH, 拒答, 失败与恢复" aria-pressed="false" data-node-kind="security" data-node-sublabel="拒答" data-node-context="失败与恢复">
+          <title>NO_MATCH · 拒答 · 失败与恢复</title>
+          <rect x="579" y="837" width="92" height="52" rx="6" class="c-mask"/>
+          <rect x="579" y="837" width="92" height="52" rx="6" class="c-security" data-animate="node" style="--step:12" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="security" class="semantic-sigil s-security" transform="translate(585 843) scale(0.6875)">
+            <path d="M8 2.2 13 4v3.5c0 3.1-1.8 5.4-5 6.5-3.2-1.1-5-3.4-5-6.5V4Z"/>
+            <path d="m5.8 8 1.5 1.5 3-3"/>
+          </g>
+          <text data-detail-anchor x="625" y="858" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">NO_MATCH</text>
+          <text data-detail="context" x="625" y="875" class="t-muted" font-size="8" text-anchor="middle">拒答</text>
+        </g>
+
+        <g id="node-replay" data-node-id="replay" data-node-label="同键重放" tabindex="0" role="button" aria-label="Focus 同键重放, 不换键, 失败与恢复" aria-pressed="false" data-node-kind="messagebus" data-node-sublabel="不换键" data-node-context="失败与恢复">
+          <title>同键重放 · 不换键 · 失败与恢复</title>
+          <rect x="42" y="837" width="92" height="52" rx="6" class="c-mask"/>
+          <rect x="42" y="837" width="92" height="52" rx="6" class="c-messagebus" data-animate="node" style="--step:12" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="messagebus" class="semantic-sigil s-messagebus" transform="translate(48 843) scale(0.6875)">
+            <path d="M2.5 4.5h11M2.5 8h11M2.5 11.5h11"/>
+            <circle cx="5" cy="4.5" r="1" class="sigil-fill"/>
+            <circle cx="10.5" cy="8" r="1" class="sigil-fill"/>
+            <circle cx="7" cy="11.5" r="1" class="sigil-fill"/>
+          </g>
+          <text data-detail-anchor x="88" y="858" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">同键重放</text>
+          <text data-detail="context" x="88" y="875" class="t-muted" font-size="8" text-anchor="middle">不换键</text>
+        </g>
+
+        <!-- Edge labels -->
+        <g data-detail="context" data-edge-from="user" data-edge-to="llm" data-edge-label="提问" data-edge-key="0" data-edge-id="e1">
+          <rect x="139" y="146" width="30" height="14" rx="3" class="c-mask"/>
+          <text x="154" y="156" class="t-muted" font-size="8" text-anchor="middle">提问</text>
+        </g>
+        <g data-detail="context" data-edge-from="llm" data-edge-to="parse" data-edge-label="Tool Call" data-edge-key="1" data-edge-id="e2">
+          <rect x="233.4" y="270" width="53.199999999999996" height="14" rx="3" class="c-mask"/>
+          <text x="260" y="280" class="t-muted" font-size="8" text-anchor="middle">Tool Call</text>
+        </g>
+        <g data-detail="context" data-edge-from="parse" data-edge-to="gate" data-edge-label="形状合法" data-edge-key="2" data-edge-id="e3">
+          <rect x="340.8" y="394" width="48.4" height="14" rx="3" class="c-mask"/>
+          <text x="365" y="404" class="t-muted" font-size="8" text-anchor="middle">形状合法</text>
+        </g>
+        <g data-detail="context" data-edge-from="gate" data-edge-to="tool" data-edge-label="allow" data-edge-key="3" data-edge-id="e4">
+          <rect x="448" y="518" width="34" height="14" rx="3" class="c-mask"/>
+          <text x="465" y="528" class="t-muted" font-size="8" text-anchor="middle">allow</text>
+        </g>
+        <g data-detail="context" data-edge-from="tool" data-edge-to="reply" data-edge-label="证据 + 引用" data-edge-key="4" data-edge-id="e5">
+          <rect x="531.1" y="332" width="62.8" height="14" rx="3" class="c-mask"/>
+          <text x="562.5" y="342" class="t-muted" font-size="8" text-anchor="middle">证据 + 引用</text>
+        </g>
+        <g data-detail="context" data-edge-from="user" data-edge-to="register" data-edge-label="objectKey 登记" data-edge-key="5" data-edge-id="e6">
+          <rect x="115.4" y="394" width="77.2" height="14" rx="3" class="c-mask"/>
+          <text x="154" y="404" class="t-database" font-size="8" text-anchor="middle">objectKey 登记</text>
+        </g>
+        <g data-detail="context" data-edge-from="parse" data-edge-to="shape" data-edge-label="形状错误" data-edge-key="6" data-edge-id="e10">
+          <rect x="275.8" y="580" width="48.4" height="14" rx="3" class="c-mask"/>
+          <text x="300" y="590" class="t-muted" font-size="8" text-anchor="middle">形状错误</text>
+        </g>
+        <g data-detail="context" data-edge-from="gate" data-edge-to="denied" data-edge-label="deny" data-edge-key="7" data-edge-id="e11">
+          <rect x="415" y="642" width="30" height="14" rx="3" class="c-mask"/>
+          <text x="430" y="652" class="t-muted" font-size="8" text-anchor="middle">deny</text>
+        </g>
+        <g data-detail="context" data-edge-from="tool" data-edge-to="notready" data-edge-label="解析中" data-edge-key="8" data-edge-id="e12">
+          <rect x="446.6" y="704" width="38.8" height="14" rx="3" class="c-mask"/>
+          <text x="466" y="714" class="t-muted" font-size="8" text-anchor="middle">解析中</text>
+        </g>
+
+        <g data-detail="context" data-edge-from="register" data-edge-to="replay" data-edge-label="超时 = 未知" data-edge-key="10" data-edge-id="e14">
+          <rect x="122.6" y="766" width="62.8" height="14" rx="3" class="c-mask"/>
+          <text x="154" y="776" class="t-muted" font-size="8" text-anchor="middle">超时 = 未知</text>
         </g>
 
         <!-- Legend -->
-        <g data-legend>
-          <text x="40" y="1626" class="t-primary" font-size="12" font-weight="650">Legend</text>
-          <g data-legend-semantic-kind="emphasis" data-legend-x="40" data-legend-baseline="1646" data-legend-width="78">
-            <path d="M 40 1643 L 74 1643" class="a-emphasis" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
-            <text x="83" y="1646" class="t-muted" font-size="10" font-weight="500">request</text>
+        <g data-legend data-legend-bridge>
+          <text x="20" y="924" class="t-primary" font-size="12" font-weight="650">Legend</text>
+          <g data-legend-semantic-kind="frontend" data-legend-kind="frontend" data-legend-label="User UI" data-legend-x="20" data-legend-baseline="944" data-legend-width="74">
+            <rect x="20" y="936" width="14" height="9" rx="2" class="c-frontend" stroke-width="1"/>
+            <text x="42" y="944" class="t-muted" font-size="7.5" font-weight="500">User UI</text>
           </g>
-          <g data-legend-semantic-kind="return" data-legend-x="140" data-legend-baseline="1646" data-legend-width="73">
-            <path d="M 140 1643 L 174 1643" class="a-default" stroke-width="1.4" stroke-dasharray="3,5" marker-end="url(#arrowhead)"/>
-            <text x="183" y="1646" class="t-muted" font-size="10" font-weight="500">return</text>
+          <g data-legend-semantic-kind="backend" data-legend-kind="backend" data-legend-label="Agent logic" data-legend-x="101" data-legend-baseline="944" data-legend-width="91">
+            <rect x="101" y="936" width="14" height="9" rx="2" class="c-backend" stroke-width="1"/>
+            <text x="123" y="944" class="t-muted" font-size="7.5" font-weight="500">Agent logic</text>
           </g>
-          <g data-legend-semantic-kind="security" data-legend-x="235" data-legend-baseline="1646" data-legend-width="83">
-            <path d="M 235 1643 L 269 1643" class="a-security" stroke-width="1.4" marker-end="url(#arrowhead-security)"/>
-            <text x="278" y="1646" class="t-muted" font-size="10" font-weight="500">security</text>
+          <g data-legend-semantic-kind="security" data-legend-kind="security" data-legend-label="Policy" data-legend-x="199" data-legend-baseline="944" data-legend-width="70">
+            <rect x="199" y="936" width="14" height="9" rx="2" class="c-security" stroke-width="1"/>
+            <text x="221" y="944" class="t-muted" font-size="7.5" font-weight="500">Policy</text>
           </g>
-          <g data-legend-semantic-kind="dashed" data-legend-x="340" data-legend-baseline="1646" data-legend-width="98">
-            <path d="M 340 1643 L 374 1643" class="a-dashed" stroke-width="1.4" marker-end="url(#arrowhead-dashed)"/>
-            <text x="383" y="1646" class="t-muted" font-size="10" font-weight="500">async trace</text>
+          <g data-legend-semantic-kind="messagebus" data-legend-kind="messagebus" data-legend-label="Tool action" data-legend-x="276" data-legend-baseline="944" data-legend-width="91">
+            <rect x="276" y="936" width="14" height="9" rx="2" class="c-messagebus" stroke-width="1"/>
+            <text x="298" y="944" class="t-muted" font-size="7.5" font-weight="500">Tool action</text>
           </g>
-          <g data-legend-semantic-kind="default" data-legend-x="460" data-legend-baseline="1646" data-legend-width="118">
-            <path d="M 460 1643 L 494 1643" class="a-default" stroke-width="1.4" marker-end="url(#arrowhead)"/>
-            <text x="503" y="1646" class="t-muted" font-size="10" font-weight="500">default message</text>
+          <g data-legend-semantic-kind="database" data-legend-kind="database" data-legend-label="Context / trace" data-legend-x="374" data-legend-baseline="944" data-legend-width="109">
+            <rect x="374" y="936" width="14" height="9" rx="2" class="c-database" stroke-width="1"/>
+            <text x="396" y="944" class="t-muted" font-size="7.5" font-weight="500">Context / trace</text>
+          </g>
+          <g data-legend-semantic-kind="external" data-legend-kind="external" data-legend-label="External system" data-legend-x="490" data-legend-baseline="944" data-legend-width="109">
+            <rect x="490" y="936" width="14" height="9" rx="2" class="c-external" stroke-width="1"/>
+            <text x="512" y="944" class="t-muted" font-size="7.5" font-weight="500">External system</text>
           </g>
         </g>
       </svg>
@@ -5589,81 +5388,48 @@
       <div class="card">
         <div class="card-header">
           <div class="card-dot cyan"></div>
-          <h3>读图方法｜先看成功，再看失败分类</h3>
+          <h3>错误是结果，不是异常</h3>
         </div>
         <ul>
-          <li>&bull; 案例输入：取消 ORD-42，但仅当订单未发货。</li>
-          <li>&bull; 成功路径：用户 → LLM → Runtime → Schema → Tool → Policy/Auth → 订单服务 → Recovery → 用户。</li>
-          <li>&bull; 虚线表示格式化、异步审计或重试；红色/安全色表示拒绝或不可执行。</li>
-          <li>&bull; 点击上方 Guided Views 可聚焦成功链路、结构错误、业务安全或故障恢复。</li>
+          <li>&bull; Anthropic is_error：模型收到后 retry 2-3 次 with corrections</li>
+          <li>&bull; Vercel tool-error part：支持自动化 LLM 往返</li>
+          <li>&bull; Mastra webFetchTool：isError: true，故意不抛出</li>
         </ul>
       </div>
 
       <div class="card">
         <div class="card-header">
           <div class="card-dot amber"></div>
-          <h3>模型与协议层｜失败不止是参数错误</h3>
+          <h3>结果三分法</h3>
         </div>
         <ul>
-          <li>&bull; 正常 Case：生成 cancel_order({ order_id: &quot;ORD-42&quot;, reason: &quot;user_request&quot; })。</li>
-          <li>&bull; JSON 损坏、未知工具名：Runtime 在执行前拒绝。</li>
-          <li>&bull; 模型只有收到 PARSE_ERROR/UNKNOWN_TOOL 后，才可能在下一轮尝试修正。</li>
-          <li>&bull; 语义看似合理不代表资源存在、权限足够或状态允许。</li>
+          <li>&bull; 成功：副作用已提交</li>
+          <li>&bull; 干净失败：未开始执行，可安全重试（参数拒绝、409）</li>
+          <li>&bull; 结果未知：超时 / 5xx——同幂等键重放收敛，绝不换键</li>
         </ul>
       </div>
 
       <div class="card">
         <div class="card-header">
           <div class="card-dot violet"></div>
-          <h3>Runtime + Schema｜执行前的结构防线</h3>
+          <h3>副作用保护</h3>
         </div>
         <ul>
-          <li>&bull; 解析器检查 tool name、JSON、调用 envelope。</li>
-          <li>&bull; Schema 检查 required、type、enum、长度、范围和额外字段。</li>
-          <li>&bull; 校验失败应产生带 path、expected、received 的结构化错误。</li>
-          <li>&bull; 是否自动反馈模型、是否自动重试，不是 Tool 机制必然保证，取决于框架/编排代码。</li>
-          <li>&bull; 低风险可转换可以规范化；高风险字段不要静默猜测。</li>
+          <li>&bull; binaryHash 内容去重 = 天然幂等缓存</li>
+          <li>&bull; 任务键 revisionId:parse:parser-v3 防重复处理</li>
+          <li>&bull; 补偿是语义逆操作，且自身必须幂等可恢复</li>
         </ul>
       </div>
 
       <div class="card">
         <div class="card-header">
           <div class="card-dot rose"></div>
-          <h3>Tool + 服务端｜业务与安全最终兜底</h3>
+          <h3>让 Run 有终点</h3>
         </div>
         <ul>
-          <li>&bull; Tool 内部二次验证订单存在性、业务状态、调用权限和幂等性。</li>
-          <li>&bull; 服务端必须再次鉴权、执行事务、检查状态机和限额。</li>
-          <li>&bull; Schema 合法只说明参数形状合法，不说明操作被允许。</li>
-          <li>&bull; try/catch、timeout、取消、第三方错误必须转成 Tool Result，不能让 Agent 直接崩溃。</li>
-        </ul>
-      </div>
-
-      <div class="card">
-        <div class="card-header">
-          <div class="card-dot orange"></div>
-          <h3>Recovery｜分层重试、降级与终止</h3>
-        </div>
-        <ul>
-          <li>&bull; 参数错误：反馈明确错误，让模型修正；不要无限循环。</li>
-          <li>&bull; timeout/5xx：retryable=true，指数退避并限制次数。</li>
-          <li>&bull; 永久业务拒绝：retryable=false，不要盲目重试。</li>
-          <li>&bull; 达到预算或高风险：询问用户、人工审批、熔断或降级。</li>
-          <li>&bull; 最终回复必须解释成功、失败原因或下一步。</li>
-        </ul>
-      </div>
-
-      <div class="card">
-        <div class="card-header">
-          <div class="card-dot emerald"></div>
-          <h3>全局结论｜失败处理的责任边界</h3>
-        </div>
-        <ul>
-          <li>&bull; 模型：提出意图与参数；根据反馈尝试修正。</li>
-          <li>&bull; Agent 框架：解析、调用 Schema、传递错误、编排重试。</li>
-          <li>&bull; Tool 开发者：业务规则、资源、权限、状态、幂等、异常捕获。</li>
-          <li>&bull; 服务端：最终鉴权、事务一致性和不可绕过的安全边界。</li>
-          <li>&bull; 原则：不要相信模型参数；不要只相信 Schema；不要把权限交给模型；不要无限重试。</li>
+          <li>&bull; NOT_READY 是稍候重试；NO_MATCH 是停止查询</li>
+          <li>&bull; 评测权重：知道何时停（0.45）远大于机械重试（0.05）</li>
+          <li>&bull; partial / unable_to_confirm / failed 都是合法收口</li>
         </ul>
       </div>
     </div>

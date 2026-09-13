@@ -1,0 +1,335 @@
+{
+  "schema_version": 1,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Agent 工具调用失败：全生命周期处理",
+    "subtitle": "案例：上传《服务协议.docx》→ file.search → file.read → 带引用回答；每一类失败都有对应出口。",
+    "animation": "trace",
+    "visual_preset": "signal-flow",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "happy",
+        "label": "成功主链路",
+        "focus": [
+          "user",
+          "llm",
+          "parse",
+          "gate",
+          "tool",
+          "reply"
+        ],
+        "note": "上传完成 → file.search 定位线索 → file.read 回读原文登记 Evidence → 带引用回答。"
+      },
+      {
+        "id": "shape",
+        "label": "模型与 Schema 失败",
+        "focus": [
+          "llm",
+          "parse",
+          "shape"
+        ],
+        "note": "形状错误在执行前拦截：strict 模式请求时就拒绝不合规 Schema；可修复的调用用 repairToolCall 在当前步内修复，不污染消息历史。"
+      },
+      {
+        "id": "business",
+        "label": "业务失败与错误回传",
+        "focus": [
+          "tool",
+          "notready",
+          "nomatch"
+        ],
+        "note": "NOT_READY 是稍候、NO_MATCH 是拒答——错误码一字之差，行为指引相反；两者都以结果形状回传模型，而不是换措辞空转。"
+      },
+      {
+        "id": "side-effect",
+        "label": "副作用保护",
+        "focus": [
+          "register",
+          "replay",
+          "tool"
+        ],
+        "note": "registerUpload 超时 = 结果未知：用同一个幂等键重放收敛，绝不换键；binaryHash 内容去重天然防重复解析。解析 ready 后，file.search 才能在该 Revision 内检索。"
+      },
+      {
+        "id": "boundary",
+        "label": "责任边界",
+        "focus": [
+          "llm",
+          "parse",
+          "gate",
+          "denied"
+        ],
+        "note": "模型负责提出，Schema 负责形状，权限门负责拒绝（先于一切放行评估），服务端负责最终安全。"
+      }
+    ]
+  },
+  "lanes": [
+    {
+      "id": "ui",
+      "label": "用户与会话"
+    },
+    {
+      "id": "model",
+      "label": "模型"
+    },
+    {
+      "id": "runtime",
+      "label": "Agent Runtime"
+    },
+    {
+      "id": "guard",
+      "label": "校验与权限"
+    },
+    {
+      "id": "tools",
+      "label": "文件工具"
+    },
+    {
+      "id": "pipeline",
+      "label": "解析管线"
+    },
+    {
+      "id": "recovery",
+      "label": "失败与恢复",
+      "variant": "exception"
+    }
+  ],
+  "mainPath": [
+    "user",
+    "llm",
+    "parse",
+    "gate",
+    "tool",
+    "reply"
+  ],
+  "nodes": [
+    {
+      "id": "user",
+      "lane": "ui",
+      "col": 0,
+      "type": "external",
+      "label": "用户",
+      "sublabel": "付款周期？"
+    },
+    {
+      "id": "reply",
+      "lane": "ui",
+      "col": 5,
+      "type": "frontend",
+      "label": "带引用回答",
+      "sublabel": "引用 + 页码"
+    },
+    {
+      "id": "llm",
+      "lane": "model",
+      "col": 1,
+      "type": "backend",
+      "label": "模型提议",
+      "sublabel": "file.search"
+    },
+    {
+      "id": "parse",
+      "lane": "runtime",
+      "col": 2,
+      "type": "security",
+      "label": "解析与 Schema",
+      "sublabel": "形状校验"
+    },
+    {
+      "id": "gate",
+      "lane": "guard",
+      "col": 3,
+      "type": "security",
+      "label": "权限门",
+      "sublabel": "deny 先于 allow"
+    },
+    {
+      "id": "tool",
+      "lane": "tools",
+      "col": 4,
+      "type": "messagebus",
+      "label": "文件工具",
+      "sublabel": "search → read"
+    },
+    {
+      "id": "register",
+      "lane": "pipeline",
+      "col": 1,
+      "type": "database",
+      "label": "registerUpload",
+      "sublabel": "rev:parse:v3"
+    },
+    {
+      "id": "shape",
+      "lane": "recovery",
+      "col": 2,
+      "type": "security",
+      "label": "形状错误",
+      "sublabel": "类型 / 枚举错"
+    },
+    {
+      "id": "denied",
+      "lane": "recovery",
+      "col": 3,
+      "type": "security",
+      "label": "权限拒绝",
+      "sublabel": "DENIED",
+      "width": 60
+    },
+    {
+      "id": "notready",
+      "lane": "recovery",
+      "col": 4,
+      "type": "security",
+      "label": "NOT_READY",
+      "sublabel": "稍候",
+      "width": 60
+    },
+    {
+      "id": "nomatch",
+      "lane": "recovery",
+      "col": 5,
+      "type": "security",
+      "label": "NO_MATCH",
+      "sublabel": "拒答"
+    },
+    {
+      "id": "replay",
+      "lane": "recovery",
+      "col": 0,
+      "type": "messagebus",
+      "label": "同键重放",
+      "sublabel": "不换键"
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "from": "user",
+      "to": "llm",
+      "label": "提问",
+      "role": "main"
+    },
+    {
+      "id": "e2",
+      "from": "llm",
+      "to": "parse",
+      "label": "Tool Call",
+      "role": "main",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "e3",
+      "from": "parse",
+      "to": "gate",
+      "label": "形状合法",
+      "role": "main"
+    },
+    {
+      "id": "e4",
+      "from": "gate",
+      "to": "tool",
+      "label": "allow",
+      "role": "main"
+    },
+    {
+      "id": "e5",
+      "from": "tool",
+      "to": "reply",
+      "label": "证据 + 引用",
+      "role": "main",
+      "fromSide": "top",
+      "toSide": "bottom"
+    },
+    {
+      "id": "e6",
+      "from": "user",
+      "to": "register",
+      "label": "objectKey 登记",
+      "role": "async",
+      "variant": "dashed",
+      "route": "drop"
+    },
+    {
+      "id": "e10",
+      "from": "parse",
+      "to": "shape",
+      "label": "形状错误",
+      "role": "error",
+      "route": "drop"
+    },
+    {
+      "id": "e11",
+      "from": "gate",
+      "to": "denied",
+      "label": "deny",
+      "role": "error",
+      "route": "drop"
+    },
+    {
+      "id": "e12",
+      "from": "tool",
+      "to": "notready",
+      "label": "解析中",
+      "role": "error",
+      "route": "drop",
+      "labelDx": -34
+    },
+    {
+      "id": "e13",
+      "from": "tool",
+      "to": "nomatch",
+      "role": "error",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "e14",
+      "from": "register",
+      "to": "replay",
+      "label": "超时 = 未知",
+      "role": "error",
+      "route": "drop"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "错误是结果，不是异常",
+      "items": [
+        "Anthropic is_error：模型收到后 retry 2-3 次 with corrections",
+        "Vercel tool-error part：支持自动化 LLM 往返",
+        "Mastra webFetchTool：isError: true，故意不抛出"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "结果三分法",
+      "items": [
+        "成功：副作用已提交",
+        "干净失败：未开始执行，可安全重试（参数拒绝、409）",
+        "结果未知：超时 / 5xx——同幂等键重放收敛，绝不换键"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "副作用保护",
+      "items": [
+        "binaryHash 内容去重 = 天然幂等缓存",
+        "任务键 revisionId:parse:parser-v3 防重复处理",
+        "补偿是语义逆操作，且自身必须幂等可恢复"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "让 Run 有终点",
+      "items": [
+        "NOT_READY 是稍候重试；NO_MATCH 是停止查询",
+        "评测权重：知道何时停（0.45）远大于机械重试（0.05）",
+        "partial / unable_to_confirm / failed 都是合法收口"
+      ]
+    }
+  ]
+}
